@@ -1,0 +1,33 @@
+In this example, we illustrate how to instrument a Fortran and C code with TAU.
+Please edit the config/make.def file and config/suite.def file to choose the
+name of the compilers (F90 = tau_f90.sh, CC = tau_cc.sh) and the problem size
+respectively. The suite.def file contains a list of applications to be built
+and the problem size (S, W, A, B, C...) and the number of CPUs to use. For 
+instance, lu.W.4 stands for W problem built for 4 cpus. 
+
+We should use a TAU stub makefile with -mpi and -pdt in its name. To try
+the simplest, use
+% export TAU_MAKEFILE=$TAU/Makefile.tau-icpc-papi-mpi-pdt
+
+% make clean
+% make
+% cd bin
+% bsub -I ...
+% cd <NPB3.1/bin>
+% mpirun -np 4 ./lu.W.4
+% pprof
+% paraprof
+
+
+To use hardware performance counters from PAPI:
+% export TAU_METRICS TIME:PAPI_FP_INS:PAPI_L1_DCM
+NOTE: It is important to delete previous performnace data
+% rm -f profile*
+% mpirun -np 4 ./lu.W.4
+% paraprof & 
+
+To use communication matrix display:
+% export TAU_COMM_MATRIX=1
+% mpirun -np 4 ./lu.W.4
+% paraprof &
+

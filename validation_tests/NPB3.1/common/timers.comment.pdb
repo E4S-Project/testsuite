@@ -1,0 +1,120 @@
+<PDB 3.0>
+lang fortran
+
+so#0 timers.f
+scom co#0 fortran so#0 1 1 so#0 2 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#1 fortran so#0 6 1 so#0 7 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#2 fortran so#0 20 1 so#0 21 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#3 fortran so#0 25 1 so#0 26 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#4 fortran so#0 40 1 so#0 41 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#5 fortran so#0 45 1 so#0 46 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#6 fortran so#0 62 1 so#0 63 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+scom co#7 fortran so#0 67 1 so#0 68 70 c---------------------------------------------------------------------\nc---------------------------------------------------------------------
+
+ty#0 void (n)
+yacs priv
+ykind ffunc
+yrett ty#1
+yargt ty#2 n NULL 0 0
+
+ty#1 void
+yacs priv
+ykind fvoid
+
+ty#2 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#3 void (n)
+yacs priv
+ykind ffunc
+yrett ty#4
+yargt ty#5 n NULL 0 0
+
+ty#4 void
+yacs priv
+ykind fvoid
+
+ty#5 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#6 void (n)
+yacs priv
+ykind ffunc
+yrett ty#7
+yargt ty#8 n NULL 0 0
+
+ty#7 void
+yacs priv
+ykind fvoid
+
+ty#8 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#9 double (n)
+yacs priv
+ykind ffunc
+yrett ty#10
+yargt ty#11 n NULL 0 0
+
+ty#10 double
+yacs priv
+ykind ffloat
+yfkind dbl
+
+ty#11 int32
+yacs priv
+ykind fint
+yikind int
+
+ro#0 TIMER_CLEAR
+rloc so#0 4 7
+rsig ty#0
+rlink f90
+rkind fext
+rpos so#0 4 7 so#0 4 7 so#0 17 9 so#0 17 9
+rbody st#0
+rstmt st#0 fassign so#0 15 7 so#0 15 22 st#1 NA
+rstmt st#1 freturn so#0 16 7 so#0 16 12 st#2 NA
+rstmt st#2 freturn so#0 17 7 so#0 17 9 NA NA
+
+ro#18 TIMER_START
+rloc so#0 23 7
+rsig ty#3
+rlink f90
+rkind fext
+rpos so#0 23 7 so#0 23 7 so#0 37 9 so#0 37 9
+rbody st#0
+rstmt st#0 fassign so#0 34 7 so#0 34 28 st#1 NA
+rstmt st#1 freturn so#0 36 7 so#0 36 12 st#2 NA
+rstmt st#2 freturn so#0 37 7 so#0 37 9 NA NA
+
+ro#36 TIMER_STOP
+rloc so#0 43 7
+rsig ty#6
+rlink f90
+rkind fext
+rpos so#0 43 7 so#0 43 7 so#0 59 9 so#0 59 9
+rbody st#0
+rstmt st#0 fassign so#0 54 7 so#0 54 23 st#1 NA
+rstmt st#1 fassign so#0 55 7 so#0 55 24 st#2 NA
+rstmt st#2 fassign so#0 56 7 so#0 56 33 st#3 NA
+rstmt st#3 freturn so#0 58 7 so#0 58 12 st#4 NA
+rstmt st#4 freturn so#0 59 7 so#0 59 9 NA NA
+
+ro#37 TIMER_READ
+rloc so#0 65 7
+rsig ty#9
+rlink f90
+rkind fext
+rpos so#0 65 7 so#0 65 7 so#0 77 9 so#0 77 9
+rbody st#0
+rstmt st#0 fassign so#0 75 7 so#0 75 29 st#1 NA
+rstmt st#1 freturn so#0 76 7 so#0 76 12 st#2 NA
+rstmt st#2 freturn so#0 77 7 so#0 77 9 NA NA
+

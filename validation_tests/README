@@ -1,0 +1,14 @@
+This demo shows some capabilities of the ECP Singularity container. 
+
+wget http://tau.uoregon.edu/ecp.simg
+module load singularity
+singularity exec ./ecp.simg /bin/bash --rcfile /etc/bashrc
+
+cd <demo> (This directory) 
+cd NPB3.1; ./clean.sh; ./compile.sh; ./run.sh
+cd ../mpi4py; ./run.sh
+cd ../trilinos/MultiLevelPreconditioner_Maxwell; ./clean.sh; ./compile.sh ; ./run.sh
+
+
+For further information, please contact:
+Sameer Shende <sameer@cs.uoregon.edu>

@@ -1,0 +1,170 @@
+<PDB 3.0>
+lang fortran
+
+so#0 print_results.f
+scom co#0 fortran so#0 23 1 so#0 26 46 c   If this is not a grid-based problem (EP, FT, CG), then\nc   we only print n1, which contains some measure of the\nc   problem size. In that case, n2 and n3 are both zero.\nc   Otherwise, we print the grid size n1xn2xn3
+
+ty#0 void (name, class, n1, n2, n3, niter, nprocs_compiled, nprocs_total, t, mops, optype, verified, npbversion, compiletime, cs1, cs2, cs3, cs4, cs5, cs6, cs7)
+yacs priv
+ykind ffunc
+yrett ty#1
+yargt ty#2 name NULL 0 0
+yargt ty#3 class NULL 0 0
+yargt ty#4 n1 NULL 0 0
+yargt ty#5 n2 NULL 0 0
+yargt ty#6 n3 NULL 0 0
+yargt ty#7 niter NULL 0 0
+yargt ty#8 nprocs_compiled NULL 0 0
+yargt ty#9 nprocs_total NULL 0 0
+yargt ty#10 t NULL 0 0
+yargt ty#11 mops NULL 0 0
+yargt ty#12 optype NULL 0 0
+yargt ty#13 verified NULL 0 0
+yargt ty#14 npbversion NULL 0 0
+yargt ty#15 compiletime NULL 0 0
+yargt ty#16 cs1 NULL 0 0
+yargt ty#17 cs2 NULL 0 0
+yargt ty#18 cs3 NULL 0 0
+yargt ty#19 cs4 NULL 0 0
+yargt ty#20 cs5 NULL 0 0
+yargt ty#21 cs6 NULL 0 0
+yargt ty#22 cs7 NULL 0 0
+
+ty#1 void
+yacs priv
+ykind fvoid
+
+ty#2 character
+yacs priv
+ykind fchar
+
+ty#3 character
+yacs priv
+ykind fchar
+
+ty#4 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#5 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#6 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#7 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#8 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#9 int32
+yacs priv
+ykind fint
+yikind int
+
+ty#10 double
+yacs priv
+ykind ffloat
+yfkind dbl
+
+ty#11 double
+yacs priv
+ykind ffloat
+yfkind dbl
+
+ty#12 character
+yacs priv
+ykind fchar
+
+ty#13 logical32
+yacs priv
+ykind flogic
+yikind int
+
+ty#14 character
+yacs priv
+ykind fchar
+
+ty#15 character
+yacs priv
+ykind fchar
+
+ty#16 character
+yacs priv
+ykind fchar
+
+ty#17 character
+yacs priv
+ykind fchar
+
+ty#18 character
+yacs priv
+ykind fchar
+
+ty#19 character
+yacs priv
+ykind fchar
+
+ty#20 character
+yacs priv
+ykind fchar
+
+ty#21 character
+yacs priv
+ykind fchar
+
+ty#22 character
+yacs priv
+ykind fchar
+
+ro#1 PRINT_RESULTS
+rloc so#0 2 7
+rsig ty#0
+rlink f90
+rkind fext
+rpos so#0 2 7 so#0 2 7 so#0 115 12 so#0 115 12
+rbody st#0
+rstmt st#0 fio so#0 17 10 so#0 17 27 st#1 NA
+rstmt st#1 fio so#0 20 10 so#0 20 27 st#2 NA
+rstmt st#2 fif so#0 28 10 so#0 43 14 st#11 st#3 st#10
+rstmt st#3 fif so#0 29 13 so#0 39 17 NA st#4 st#9
+rstmt st#4 fio so#0 30 16 so#0 30 47 st#5 NA
+rstmt st#5 fdo so#0 31 16 so#0 33 21 st#8 st#6
+rstmt st#6 fsingle_if so#0 32 19 so#0 32 57 NA st#7
+rstmt st#7 fassign so#0 32 43 so#0 32 57 NA NA
+rstmt st#8 fio so#0 34 16 so#0 34 32 NA NA
+rstmt st#9 fio so#0 37 16 so#0 37 30 NA NA
+rstmt st#10 fio so#0 41 13 so#0 41 33 NA NA
+rstmt st#11 fio so#0 45 10 so#0 45 27 st#12 NA
+rstmt st#12 fio so#0 48 10 so#0 48 23 st#13 NA
+rstmt st#13 fio so#0 51 10 so#0 51 33 st#14 NA
+rstmt st#14 fio so#0 54 10 so#0 54 36 st#15 NA
+rstmt st#15 fio so#0 57 10 so#0 57 25 st#16 NA
+rstmt st#16 fio so#0 60 10 so#0 60 48 st#17 NA
+rstmt st#17 fio so#0 63 10 so#0 63 28 st#18 NA
+rstmt st#18 fif so#0 66 10 so#0 70 14 st#21 st#19 st#20
+rstmt st#19 fio so#0 67 13 so#0 67 38 NA NA
+rstmt st#20 fio so#0 69 13 so#0 69 38 NA NA
+rstmt st#21 fio so#0 73 10 so#0 73 31 st#22 NA
+rstmt st#22 fio so#0 76 10 so#0 76 32 st#23 NA
+rstmt st#23 fio so#0 80 10 so#0 80 26 st#24 NA
+rstmt st#24 fio so#0 84 10 so#0 84 26 st#25 NA
+rstmt st#25 fio so#0 87 10 so#0 87 26 st#26 NA
+rstmt st#26 fio so#0 90 10 so#0 90 26 st#27 NA
+rstmt st#27 fio so#0 93 10 so#0 93 26 st#28 NA
+rstmt st#28 fio so#0 96 10 so#0 96 26 st#29 NA
+rstmt st#29 fio so#0 99 10 so#0 99 26 st#30 NA
+rstmt st#30 fio so#0 102 10 so#0 102 22 st#31 NA
+rstmt st#31 freturn so#0 114 10 so#0 114 15 st#32 NA
+rstmt st#32 freturn so#0 115 10 so#0 115 12 NA NA
+
