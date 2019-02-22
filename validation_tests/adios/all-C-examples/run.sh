@@ -9,6 +9,7 @@ spack load c-blosc
 spack load mpich
 
 
+cd adios-1.13.1/examples/C/arrays
 
 echo "Arrays Write Example"
 mpirun -np 8 ./arrays_write
