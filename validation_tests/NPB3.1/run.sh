@@ -1,4 +1,7 @@
 #!/bin/bash
+spack load mpich
+spack load tau
+
 cd bin
 mpirun -np 4 ./lu.W.4
 
