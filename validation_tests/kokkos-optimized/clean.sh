@@ -1,4 +1,4 @@
 #!/bin/bash
-export KOKKOS=`spack location -i kokkos%gcc@7.3.0`
+export KOKKOS=`spack location -i kokkos`
 make clean
 

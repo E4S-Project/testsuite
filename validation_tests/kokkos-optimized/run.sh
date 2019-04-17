@@ -4,7 +4,8 @@
 spack load hwloc
 spack load kokkos
 spack load mpich
-ldd ./lulesh.host
+#ldd ./lulesh.host
+ulimit -c unlimited
 mpirun -np 8 ./lulesh.host -i 4
 if [ $? = 0 ]; then
   echo "Running with TAU:" 
