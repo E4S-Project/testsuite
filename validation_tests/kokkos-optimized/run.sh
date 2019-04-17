@@ -1,7 +1,9 @@
 #!/bin/bash
 . ../../setup.sh
 
-spack load hwloc@1.11.9
+spack load hwloc
+spack load kokkos
+spack load mpich
 ldd ./lulesh.host
 mpirun -np 8 ./lulesh.host -i 4
 if [ $? = 0 ]; then

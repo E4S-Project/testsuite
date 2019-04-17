@@ -1,5 +1,8 @@
 #!/bin/bash
-export KOKKOS=`spack location -i kokkos%gcc@7.3.0`
+
+. ../../setup.sh
+spack load mpich
+export KOKKOS=`spack location -i kokkos`
 echo "KOKKOS=$KOKKOS"
 make
 
