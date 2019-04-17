@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. ../../setup.sh
 spack load sundials
 spack load mpich
 

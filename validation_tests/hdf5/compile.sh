@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. ../../setup.sh
 spack load \trrej6a
 spack load mpich
 module load hdf5

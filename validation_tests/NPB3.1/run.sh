@@ -1,4 +1,5 @@
 #!/bin/bash
+. ../../setup.sh
 spack load mpich
 spack load tau
 

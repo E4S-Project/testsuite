@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. ../../setup.sh
 
 spack load hwloc@1.11.9
 ldd ./lulesh.host

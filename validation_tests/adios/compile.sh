@@ -1,5 +1,5 @@
-#!/bin/bash
-
+#!/bin/bash -e
+. ../../setup.sh
 spack load adios
 spack load lz4
 spack load zfp
