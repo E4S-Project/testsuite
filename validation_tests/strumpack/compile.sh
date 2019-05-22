@@ -1,10 +1,9 @@
 #!/bin/bash
 . ../../setup.sh
-spack load blas
-spack load lapack
+spack load openblas
 spack load metis
 spack load parmetis
-spack load scalapack
+spack load netlib-scalapack
 spack load strumpack
 spack load mpich
 
