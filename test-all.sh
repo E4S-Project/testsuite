@@ -59,4 +59,9 @@ iterate_files() {
 }
 
 #set -x
-iterate_directories validation_tests
+
+basedir=validation_tests
+    if [[ $# -gt 0 && -d $1 ]] ; then
+       basedir=$1
+     fi
+iterate_directories $basedir
