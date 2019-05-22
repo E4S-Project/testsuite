@@ -1,7 +1,6 @@
 #!/bin/bash
 . ../../setup.sh
-spack load blas
-spack load lapack
+spack load openblas
 spack load magma
 spack load cuda
 
