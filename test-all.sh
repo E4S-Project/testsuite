@@ -7,6 +7,7 @@ iterate_directories() {
     testdir=$1
     if [ -d $testdir ] ; then
         cd $testdir
+        echo "==="
         echo $testdir
         ran_test=true
         iterate_files
@@ -23,17 +24,35 @@ iterate_directories() {
 # If so, set a flag so we don't recurse further.
 iterate_files() {
     cwd=`pwd`
+    local _ret
     if [ -e "$cwd/run.sh" ] ; then
         if [ -e "$cwd/clean.sh" ] ; then
             echo "Cleaning $cwd"
             ./clean.sh >& ./clean.log
+            _ret=$?
+           if [ $_ret -ne 0 ] ; then
+             echo "Clean failed" >&2
+             return $_ret
+           fi
         fi
         if [ -e "$cwd/compile.sh" ] ; then
             echo "Compiling $cwd"
             ./compile.sh >& ./compile.log
+            _ret=$?
+           if [ $_ret -ne 0 ] ; then
+             echo "Compile failed" >&2
+             return $_ret
+           fi
+
         fi
         echo "Running $cwd"
         ./run.sh >& run.log
+        _ret=$?
+           if [ $_ret -ne 0 ] ; then
+             echo "Run failed" >&2
+             return $_ret
+           fi
+
     else
         ran_test=false
     fi
