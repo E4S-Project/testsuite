@@ -1,6 +1,6 @@
 #!/bin/bash
 . ../../setup.sh
-spack load openblas
+spack load openblas threads=openmp
 spack load metis
 spack load parmetis
 spack load netlib-scalapack
