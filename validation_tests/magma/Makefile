@@ -6,9 +6,9 @@
 # Paths where MAGMA, CUDA, and OpenBLAS are installed.
 # MAGMADIR can be .. to test without installing.
 #MAGMADIR     ?= ..
-MAGMADIR     ?= "/usr/local/packages/ecp/spack/opt/spack/linux-centos7-x86_64/gcc-4.8.5/magma-2.4.0-7cc275vlzmhypm5uuubj4krfsoqshhmr"
-CUDADIR      ?= "/usr/local/packages/ecp/spack/opt/spack/linux-centos7-x86_64/gcc-4.8.5/cuda-9.1.85-jdm3sceu6wmaxlqgmi3lhbky5uyga2o"
-OPENBLASDIR  ?= "/usr/local/packages/ecp/spack/opt/spack/linux-centos7-x86_64/gcc-7.3.0/openblas-0.2.20-tq4e7crjp5kedl55ubqkq5mf77kbdwbp"
+MAGMADIR     ?= "${MAGMA_ROOT}"
+CUDADIR      ?= "${CUDA_ROOT}"
+OPENBLASDIR  ?= "${OPENBLAS_ROOT}"
 CC            = gcc
 FORT          = gfortran
 LD            = gcc
@@ -21,7 +21,6 @@ LDFLAGS       = -Wall #-fopenmp
 # Flags and paths to MAGMA, CUDA, and LAPACK/BLAS
 MAGMA_CFLAGS     := -DADD_ \
                     -I$(MAGMADIR)/include \
-                    -I$(MAGMADIR)/sparse/include \
                     -I$(CUDADIR)/include
 
 MAGMA_F90FLAGS   := -Dmagma_devptr_t="integer(kind=8)" \
