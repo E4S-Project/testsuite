@@ -5,7 +5,7 @@ CC        = mpicc
 F77       = mpif77
 CXX       = mpicxx
 F90       = mpif90
-HYPRE_DIR = "/usr/local/packages/ecp/spack/opt/spack/linux-centos7-x86_64/gcc-7.3.0/hypre-2.13.0-3kjvfl7rz3e7f6eojvojyfegcwdl6ehb"
+HYPRE_DIR = "${HYPRE_ROOT}"
 
 ########################################################################
 # Compiling and linking options
