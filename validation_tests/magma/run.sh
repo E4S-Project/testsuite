@@ -1,6 +1,6 @@
 #!/bin/bash
 . ../../setup.sh
-spack load openblas
+spack load openblas threads=openmp
 spack load magma
 spack load cuda
 
