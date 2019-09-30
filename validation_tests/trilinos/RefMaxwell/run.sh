@@ -1,3 +1,2 @@
-. ../setup.sh
-
+#!/bin/bash
 mpirun -np 4 ./RefMaxwell

@@ -1,0 +1,4 @@
+./r2.sh: line 7: ./clean.sh: No such file or directory
+./r2.sh: line 7: ./clean.sh: No such file or directory
+./r2.sh: line 10: ./clean.sh: No such file or directory
+./r2.sh: line 12: ./clean.sh: No such file or directory
