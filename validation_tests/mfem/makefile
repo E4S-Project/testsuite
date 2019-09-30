@@ -21,7 +21,7 @@ SRC = ./
 
 #MFEM_INSTALL_DIR = `spack location --install-dir mfem`
 #/usr/local/packages/ecp/spack/opt/spack/linux-centos7-x86_64/gcc-7.3.0/mfem-3.3.2-sdrntzuthtzqophdl63b3ujmzy5ytb4g
- CONFIG_MK = $(MFEM_INSTALL_DIR)/share/mfem/config.mk
+CONFIG_MK = $(MFEM_ROOT)/share/mfem/config.mk
 
 
 
