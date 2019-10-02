@@ -2,7 +2,7 @@
 
 # Get Trilinos as one entity
 include $(TRILINOS)/include/Makefile.export.Trilinos
-#include $(TRILINOS)/include/Makefile.export.Anasazi
+include $(TRILINOS)/include/Makefile.export.Anasazi
 
 # Make sure to use same compilers and flags as Trilinos
 CXX=$(Trilinos_CXX_COMPILER)

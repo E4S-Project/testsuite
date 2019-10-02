@@ -6,3 +6,6 @@ spack load netcdf
 spack load netlib-scalapack
 spack load suite-sparse
 spack load matio
+spack load trilinos
+spack load /3ejl
+spack load openblas threads=openmp
