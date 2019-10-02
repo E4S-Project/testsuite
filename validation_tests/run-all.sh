@@ -5,7 +5,7 @@ function e() {
   return $?
 }
 
-for d in "hypre" "sundials" "strumpack" "trilinos" "superlu-dist"
+for d in "hypre" "sundials" "strumpack" "trilinos" "superlu-dist" "superlu"
 do
   passed=0
   (cd "${d}" && e "clean.sh" && e "compile.sh" && e "run.sh") && passed=1
