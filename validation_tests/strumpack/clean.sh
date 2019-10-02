@@ -1,5 +1,3 @@
 #!/bin/bash
 
-rm -rf a.out *.o cbuckle time.log
-
-
+rm -rf a.out *.o time.log
