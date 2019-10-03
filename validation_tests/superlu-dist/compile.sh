@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cwd=`pwd`
 for i in `cat testdirs.txt`; do
-  cd "${i}" && ./compile.sh && cd .. || exit 1
+  cd "${cwd}"
+  cd "${i}" && ./compile.sh || exit 1
 done
