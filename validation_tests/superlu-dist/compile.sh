@@ -1,5 +1,6 @@
 #!/bin/bash
-spack load superlu-dist
+
+. ./setup.sh
 
 mpicc \
 -I${SUPERLU_DIST_ROOT}/include -I${METIS_ROOT}/include -I${PARMETIS_ROOT}/include \
