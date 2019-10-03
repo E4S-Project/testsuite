@@ -1,4 +1,5 @@
 #!/bin/bash
+export TRILINOS=`spack location -i trilinos`
 spack load metis
 spack load parmetis
 spack load hdf5+fortran
