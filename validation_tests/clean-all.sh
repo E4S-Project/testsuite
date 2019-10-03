@@ -5,7 +5,7 @@ function e() {
   return $?
 }
 
-for d in "hypre" "sundials" "strumpack" "trilinos" "superlu-dist" "superlu"
+for d in `cat testdirs.txt`
 do
   (cd "${d}" && e "clean.sh")
 done

@@ -1,0 +1,6 @@
+hypre
+sundials
+strumpack
+trilinos
+superlu-dist
+superlu

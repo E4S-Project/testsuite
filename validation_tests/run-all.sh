@@ -1,11 +1,15 @@
 #!/bin/bash
 
+wd=`pwd`
+date=`date '+%y%m%d.%H%M%S'`
+logf="${wd}/test-output.${date}.log"
+
 function e() {
-  ./"${1}" > /dev/null 2>&1
+  ./"${1}" >> "${logf}" 2>&1
   return $?
 }
 
-for d in "hypre" "sundials" "strumpack" "trilinos" "superlu-dist" "superlu"
+for d in `cat testdirs.txt`
 do
   passed=0
   (cd "${d}" && e "clean.sh" && e "compile.sh" && e "run.sh") && passed=1
@@ -15,3 +19,5 @@ do
     printf "${d} FAILED**\n"
   fi
 done
+
+printf "Combined test output written to: ${logf}\n\n"
