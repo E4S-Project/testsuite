@@ -4,3 +4,4 @@ strumpack
 trilinos
 superlu-dist
 superlu
+qthreads

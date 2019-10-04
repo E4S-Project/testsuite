@@ -1,8 +1,3 @@
 #!/bin/bash
-. ../../setup.sh
-spack load qthreads 
-
-./a.out
-
-
-
+. ./setup.sh
+./a.out || exit 1
