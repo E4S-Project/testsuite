@@ -5,3 +5,4 @@ trilinos
 superlu-dist
 superlu
 qthreads
+tasmanian
