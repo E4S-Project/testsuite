@@ -6,5 +6,3 @@ export OMP_PROC_BIND=1
 export TAU_TRACE=1
 export TAU_TRACE_FORMAT=otf2
 tau_exec -T ompt,tr6,serial -ompt ./lulesh.host 
-
-

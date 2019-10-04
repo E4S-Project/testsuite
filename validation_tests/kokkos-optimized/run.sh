@@ -1,9 +1,5 @@
 #!/bin/bash
-. ../../setup.sh
-
-spack load hwloc
-spack load kokkos
-spack load mpich
+. ./setup.sh
 #ldd ./lulesh.host
 ulimit -c unlimited
 mpirun -np 8 ./lulesh.host -i 4
