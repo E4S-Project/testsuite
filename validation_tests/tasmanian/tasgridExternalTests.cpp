@@ -177,7 +177,7 @@ bool ExternalTester::testGlobalRule(const BaseFunction *f, TasGrid::TypeOneDRule
     double *x = new double[f->getNumInputs()]; setRandomX(f->getNumInputs(),x);
     if (rule == rule_fourier){ for(int i=0; i<f->getNumInputs(); i++) x[i] = 0.5*(x[i]+1.0); }    // map to canonical [0,1]^d
     bool bPass = true;
-    const char *custom_filename = (rule == rule_customtabulated) ? "SparseGrids/GaussPattersonRule.table" : 0;
+    const char *custom_filename = (rule == rule_customtabulated) ? "GaussPattersonRule.table" : 0;
     for(int i=0; i<num_global_tests; i++){
         if (rule == rule_fourier){
             grid.makeFourierGrid(f->getNumInputs(), ((interpolation) ? f->getNumOutputs() : 0), depths[i], type, anisotropic);
@@ -437,7 +437,7 @@ bool ExternalTester::performGLobalTest(TasGrid::TypeOneDRule rule) const{
         }}
     }else if (rule == TasGrid::rule_customtabulated){
         {
-        std::ifstream ftest("SparseGrids/GaussPattersonRule.table");
+        std::ifstream ftest("GaussPattersonRule.table");
         if (!ftest.good()){
             ftest.close();
             cout << "WARNING: cannot find GaussPattersonRule.table file and cannot test the custom rule!" << endl;

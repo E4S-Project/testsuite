@@ -1,4 +1,5 @@
 #!/bin/bash
+. ./setup.sh
 
 g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I${TASMANIAN_ROOT}/include -c gridtest_main.cpp -o gridtest_main.o
 g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I${TASMANIAN_ROOT}/include -c tasgridTestFunctions.cpp -o tasgridTestFunctions.o

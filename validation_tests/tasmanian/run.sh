@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
-./gridtest
-./tasdream -test
-#./testTSG.py && { echo "SUCCESS: Test completed successfully"; }
+. ./setup.sh
+
+OMP_NUM_THREADS=4 ./gridtest
+OMP_NUM_THREADS=4 ./tasdream -test
