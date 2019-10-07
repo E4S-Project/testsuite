@@ -1,5 +1,6 @@
 #!/bin/bash
 
+. ../setup.sh
 . ./setup.sh
 
 cwd=`pwd`
