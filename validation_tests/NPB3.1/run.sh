@@ -1,18 +1,31 @@
 #!/bin/bash
 . ../../setup.sh
 spack load mpich
-spack load tau
+spack load tau@develop
 
 cd bin
-mpirun -np 4 ./lu.W.4
+mpirun -np 4 ./lu.W.4 
+retVal=$?
+if [ $retVal -ne 0 ] ; then
+  exit $retVal
+fi
+ 
 
-if [ $? = 0 ]; then
+#if [ $? = 0 ]; then
   echo "Running with TAU:" 
+  export TAU_METRICS=time:PAPI_L1_DCM
   mpirun -np 4 tau_exec -ebs ./lu.W.4
+  retVal=$?
+  if [ $retVal -ne 0 ] ; then
+    exit $retVal
+  fi
+  
+  #cd bin
+  pprof -a
   echo "To view performance data, please use:"
   echo "cd bin"
   echo "pprof -a | more "
-fi
+#fi
 # To use TAU:
 #mpirun -np 4 tau_exec -ebs ./lu.W.4
 # pprof
