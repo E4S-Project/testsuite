@@ -11,13 +11,13 @@ gridtest_main.o tasgridTestFunctions.o tasgridExternalTests.o tasgridUnitTests.o
 -o gridtest -ltasmaniansparsegrid -lm
 
 
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdream_main.cpp -o tasdream_main.o
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamBenchmark.cpp -o tasdreamBenchmark.o
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamExternalTests.cpp -o tasdreamExternalTests.o
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamTestPDFs.cpp -o tasdreamTestPDFs.o
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c TasmanianDREAM.cpp -o TasmanianDREAM.o
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tdrCorePDF.cpp -o tdrCorePDF.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdream_main.cpp -o tasdream_main.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamBenchmark.cpp -o tasdreamBenchmark.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamExternalTests.cpp -o tasdreamExternalTests.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tasdreamTestPDFs.cpp -o tasdreamTestPDFs.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c TasmanianDREAM.cpp -o TasmanianDREAM.o
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tdrCorePDF.cpp -o tdrCorePDF.o
 
-g++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -L${TASMANIAN_ROOT}/lib \
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -L${TASMANIAN_ROOT}/lib \
 tasdream_main.o tasdreamBenchmark.o TasmanianDREAM.o tdrCorePDF.o tasdreamExternalTests.o tasdreamTestPDFs.o \
 -o tasdream -ltasmaniandream -ltasmaniansparsegrid -lm
