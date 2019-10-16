@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+bold=$(tput bold)$(tput setaf 1)
+normal=$(tput sgr0)
+
 ran_test=true
 
 #  If $1 is a directory, run tests or recurse into it.
@@ -31,7 +34,7 @@ iterate_files() {
             ./clean.sh >& ./clean.log
             _ret=$?
            if [ $_ret -ne 0 ] ; then
-             echo "Clean failed" >&2
+             echo "Clean ${bold}failed${normal}" >&2
              return $_ret
            fi
         fi
@@ -40,7 +43,7 @@ iterate_files() {
             ./compile.sh >& ./compile.log
             _ret=$?
            if [ $_ret -ne 0 ] ; then
-             echo "Compile failed" >&2
+             echo "Compile ${bold}failed${normal}" >&2
              return $_ret
            fi
 
@@ -49,7 +52,7 @@ iterate_files() {
         ./run.sh >& run.log
         _ret=$?
            if [ $_ret -ne 0 ] ; then
-             echo "Run failed" >&2
+             echo "Run ${bold}failed${normal}" >&2
              return $_ret
            fi
 
