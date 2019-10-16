@@ -2,6 +2,6 @@
 . ../../setup.sh
 spack load umpire 
 
-g++ malloc.cxx -lumpire -lumpire_op -lumpire_resource -lumpire_strategy -lumpire_util -lumpire_tpl_judy
+g++ malloc.cxx -I$UMPIRE_ROOT/include/ -L$UMPIRE_ROOT/lib  -lumpire 
 
 
