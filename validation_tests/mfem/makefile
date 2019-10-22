@@ -34,15 +34,15 @@ else
    EXAMPLES = $(PAR_EXAMPLES) $(SEQ_EXAMPLES)
 endif
 SUBDIRS =
-ifeq ($(MFEM_USE_SUNDIALS),YES)
-   SUBDIRS += sundials
-endif
-ifeq ($(MFEM_USE_PETSC),YES)
-   SUBDIRS += petsc
-endif
-ifeq ($(MFEM_USE_PUMI),YES)
-   SUBDIRS += pumi
-endif
+#ifeq ($(MFEM_USE_SUNDIALS),YES)
+#   SUBDIRS += sundials
+#endif
+#ifeq ($(MFEM_USE_PETSC),YES)
+#   SUBDIRS += petsc
+#endif
+#ifeq ($(MFEM_USE_PUMI),YES)
+#   SUBDIRS += pumi
+#endif
 SUBDIRS_ALL = $(addsuffix /all,$(SUBDIRS))
 SUBDIRS_TEST = $(addsuffix /test,$(SUBDIRS))
 SUBDIRS_CLEAN = $(addsuffix /clean,$(SUBDIRS))
