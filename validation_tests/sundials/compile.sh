@@ -1,4 +1,4 @@
 #!/bin/bash
-#cp -r `spack location -i sundials`/examples .
+. ./setup.sh
 cd examples/nvector/parallel/
 make  

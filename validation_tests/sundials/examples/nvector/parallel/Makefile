@@ -21,21 +21,21 @@
 
 SHELL = sh
 
-prefix       = /spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/sundials-4.1.0-zcot6t4hb6hbkydothsxlbfh5gbbbprp
-exec_prefix  = /spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/sundials-4.1.0-zcot6t4hb6hbkydothsxlbfh5gbbbprp
-includedir   = /spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/sundials-4.1.0-zcot6t4hb6hbkydothsxlbfh5gbbbprp/include
-libdir       = /spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/sundials-4.1.0-zcot6t4hb6hbkydothsxlbfh5gbbbprp/lib64
+prefix       = ${SUNDIALS_ROOT} 
+exec_prefix  = ${SUNDIALS_ROOT} 
+includedir   = ${SUNDIALS_ROOT}/include 
+libdir       = ${SUNDIALS_ROOT}/lib64 
 
-CPP         = /spack/opt/spack/linux-rhel7-x86_64/gcc-4.8.5/gcc-7.3.0-qemsqrcwkk52f6neef4kg5wvoucsroif/bin/gcc
+CPP         = gcc
 CPPFLAGS    = -O3 -DNDEBUG
-CC          = /spack/opt/spack/linux-rhel7-x86_64/gcc-4.8.5/gcc-7.3.0-qemsqrcwkk52f6neef4kg5wvoucsroif/bin/gcc
+CC          = gcc
 CFLAGS      = -O3 -DNDEBUG
 LDFLAGS     = 
 LIBS        =  -lm /usr/lib64/librt.so
 
-LINKFLAGS = -Wl,-rpath,/spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/sundials-4.1.0-zcot6t4hb6hbkydothsxlbfh5gbbbprp/lib64
+LINKFLAGS = -Wl,-rpath,${libdir} 
 
-MPICC       = /spack/opt/spack/linux-rhel7-x86_64/gcc-7.3.0/mpich-3.2.1-lcdvbejz7w7ohecffa2qdng7y6dfxbab/bin/mpicc
+MPICC       = mpicc
 MPI_INC_DIR = .
 MPI_LIB_DIR = .
 MPI_LIBS    = 
