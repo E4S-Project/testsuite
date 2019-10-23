@@ -18,6 +18,6 @@ mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASM
 mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c TasmanianDREAM.cpp -o TasmanianDREAM.o
 mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -I../SparseGrids -I${TASMANIAN_ROOT}/include -c tdrCorePDF.cpp -o tdrCorePDF.o
 
-mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -L${TASMANIAN_ROOT}/lib \
+mpic++ -O3 -std=c++11 -fopenmp -fPIC -Wstrict-aliasing -L${TASMANIAN_ROOT}/lib -L${OPENBLAS_ROOT}/lib \
 tasdream_main.o tasdreamBenchmark.o TasmanianDREAM.o tdrCorePDF.o tasdreamExternalTests.o tasdreamTestPDFs.o \
--o tasdream -ltasmaniandream -ltasmaniansparsegrid -lm
+-o tasdream -ltasmaniandream -ltasmaniansparsegrid -lm -lopenblas
