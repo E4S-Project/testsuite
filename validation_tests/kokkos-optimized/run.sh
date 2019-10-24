@@ -1,7 +1,9 @@
 #!/bin/bash
 . ./setup.sh
 #ldd ./lulesh.host
-ulimit -c unlimited
+#ulimit -c unlimited
+export OMP_PROC_BIND=spread 
+export OMP_PLACES=threads
 mpirun -np 8 ./lulesh.host -i 4
 result=$?
 if [ $result = 0 ]; then

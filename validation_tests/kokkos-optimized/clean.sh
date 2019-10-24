@@ -1,4 +1,4 @@
 #!/bin/bash
-export KOKKOS=`spack location -i kokkos`
+. ./setup.sh
 make clean
 rm -f *.o
