@@ -1,8 +1,5 @@
 #!/bin/bash
-. ../../setup.sh
-spack load openblas threads=openmp
-spack load magma
-spack load cuda
+. ./setup.sh
 
 ./example_sparse    
 ./example_sparse_operator    
