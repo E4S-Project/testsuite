@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+. ./setup.sh
+
 bold=$(tput bold)$(tput setaf 1)
 normal=$(tput sgr0)
 

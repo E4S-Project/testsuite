@@ -1,11 +1,14 @@
 #!/bin/bash
 . ../../setup.sh
+
+spackLoadUnique strumpack
+
 spack load openblas threads=openmp
-spack load metis
-spack load parmetis
-spack load netlib-scalapack
-spack load strumpack
-spack load mpich
+#spack load metis
+#spack load parmetis
+#spack load netlib-scalapack
+#spack load strumpack
+#spack load mpich
 
 #if [ ! -d "cbuckle" ]; then
 #	curl -O https://www.cise.ufl.edu/research/sparse/MM/TKK/cbuckle.tar.gz
