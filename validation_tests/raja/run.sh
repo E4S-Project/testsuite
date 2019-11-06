@@ -1,5 +1,5 @@
 #!/bin/bash
-. ../../setup.sh
+#. ../../setup.sh
 . ./setup.sh
 ./ex1_vector-addition_solution 
 ./ex2_approx-pi_solution 

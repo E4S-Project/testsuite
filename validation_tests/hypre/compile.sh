@@ -1,7 +1,7 @@
 #!/bin/bash
-
-spack load openblas threads=openmp
-spack load hypre+internal-superlu
-spack load mpich
+. ./setup.sh
+#spack load openblas threads=openmp
+#spack load hypre+internal-superlu
+#spack load mpich
 
 make bigint 

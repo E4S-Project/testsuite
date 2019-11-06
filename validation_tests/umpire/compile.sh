@@ -1,6 +1,6 @@
 #!/bin/bash
-. ../../setup.sh
-spack load umpire 
+. ./setup.sh
+#spack load umpire 
 
 g++ malloc.cxx -I$UMPIRE_ROOT/include/ -L$UMPIRE_ROOT/lib  -lumpire 
 

@@ -1,3 +1,5 @@
+#!/bin/bash
 . ../../setup.sh
-ONERAJA=`oneSpackHash raja`
-spack load $ONERAJA 
+spackLoadUnique raja
+#ONERAJA=`oneSpackHash raja`
+#spack load $ONERAJA 

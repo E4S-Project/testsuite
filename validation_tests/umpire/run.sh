@@ -1,6 +1,6 @@
 #!/bin/bash
-. ../../setup.sh
-spack load umpire 
+. ./setup.sh
+#spack load umpire 
 
 ./a.out
 
