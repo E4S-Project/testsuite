@@ -1,7 +1,9 @@
 #!/bin/bash
-. ../../setup.sh
-spack load mpich
-spack load tau@develop
+#!/bin/bash
+. ./setup.sh
+#if [ $retVal -ne 0 ] ; then
+#  exit $retVal
+#fi
 
 cd bin
 mpirun -np 4 ./lu.W.4 

@@ -1,7 +1,10 @@
 #!/bin/bash
-. ../../setup.sh
-
-spackLoadUnique strumpack
+. ./setup.sh
+#retVal=$?
+#if [ $retVal -ne 0 ] ; then
+#  exit $retVal
+#fi
+#spackLoadUnique strumpack
 #spackLoadUnique openblas threads=openmp
 #spack load openblas threads=openmp
 #spack load metis

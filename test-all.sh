@@ -3,6 +3,7 @@
 . ./setup.sh
 
 bold=$(tput bold)$(tput setaf 1)
+yellow=$(tput bold)$(tput setaf 3)
 normal=$(tput sgr0)
 
 ran_test=true
@@ -35,6 +36,10 @@ iterate_files() {
             echo "Cleaning $cwd"
             ./clean.sh >& ./clean.log
             _ret=$?
+           if [ $_ret -eq 215 ] ; then
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             return $_ret
+           fi
            if [ $_ret -ne 0 ] ; then
              echo "Clean ${bold}failed${normal}" >&2
              return $_ret
@@ -44,6 +49,10 @@ iterate_files() {
             echo "Compiling $cwd"
             ./compile.sh >& ./compile.log
             _ret=$?
+           if [ $_ret -eq 215 ] ; then
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             return $_ret
+           fi
            if [ $_ret -ne 0 ] ; then
              echo "Compile ${bold}failed${normal}" >&2
              return $_ret
@@ -53,6 +62,10 @@ iterate_files() {
         echo "Running $cwd"
         ./run.sh >& run.log
         _ret=$?
+           if [ $_ret -eq 215 ] ; then
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             return $_ret
+           fi
            if [ $_ret -ne 0 ] ; then
              echo "Run ${bold}failed${normal}" >&2
              return $_ret

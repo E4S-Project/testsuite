@@ -1,9 +1,12 @@
 #!/bin/bash
-. ../../setup.sh
+. ./setup.sh
+#retVal=$?
+#if [ $retVal -ne 0 ] ; then
+#  exit $retVal
+#fi
 
-spackLoadUnique strumpack
-
-spack load openblas threads=openmp
+#spackLoadUnique strumpack
+#spack load openblas threads=openmp
 #spack load metis
 #spack load parmetis
 #spack load netlib-scalapack

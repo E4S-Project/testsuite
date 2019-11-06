@@ -1,7 +1,10 @@
 #!/bin/bash
-. ../../setup.sh
-spack load mpich
-spack load tau@develop
+. ./setup.sh
+#retVal=$?
+#if [ $retVal -ne 0 ] ; then
+#  exit $retVal
+#fi
+
 mkdir -p bin
 make LU 
 retVal=$?
