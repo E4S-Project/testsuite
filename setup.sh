@@ -28,4 +28,5 @@ spackLoadUnique(){
 spackLoadUniqueNoR(){
 	rArg=""
 	spackLoadUnique $@
+        rArg=" -r "
 }

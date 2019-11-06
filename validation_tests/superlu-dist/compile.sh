@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. ./setup.sh
 cwd=`pwd`
 for i in `cat testdirs.txt`; do
   cd "${cwd}"

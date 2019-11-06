@@ -1,3 +1,3 @@
 #!/bin/bash
-. ../setup.sh
+#. ../setup.sh
 mpirun -np 4 ./Zoltan_hypergraph

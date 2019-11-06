@@ -1,5 +1,5 @@
 #!/bin/bash
 #export TRILINOS=`spack location -i trilinos`
-. ../setup.sh
+#. ../setup.sh
 make clean
 make

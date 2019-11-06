@@ -1,5 +1,6 @@
 . ../../setup.sh
 ONEMFEM=`spackLoadUnique mfem`
+spackLoadUnique mfem
 #spack load $ONEMFEM 
 #spack load /hxeu37v #HDF5
 #spack load /6xsnuqx #Trilinos

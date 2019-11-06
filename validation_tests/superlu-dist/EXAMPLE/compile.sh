@@ -1,7 +1,6 @@
 #!/bin/bash
 
-. ../setup.sh
-
+#. ../setup.sh
 mpicc \
 -I${SUPERLU_DIST_ROOT}/include  \
 -DUSE_VENDOR_BLAS -fopenmp -std=c99 -O3 -DPRNTlevel=1 -DDEBUGlevel=0 -fPIE \

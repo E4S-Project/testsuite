@@ -5,5 +5,10 @@
 #spack load numactl
 #spack load hwloc
 spackLoadUniqueNoR tau@develop
-kokkosHash=spackLoadUnique kokkos+openmp
+#spackLoadUnique kokkos
+kokkosHash=$(spackLoadUnique kokkos) #+openmp
+spackLoadUnique kokkos
+#spack load -r kokkos
+#module list
+
 export KOKKOS=`spack location -i ${kokkosHash}`

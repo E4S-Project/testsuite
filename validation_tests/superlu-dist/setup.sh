@@ -4,7 +4,6 @@
 
 spackLoadUnique superlu-dist
 spackLoadUnique openblas threads=openmp
-
 #spack load openblas threads=openmp
 #spack load parmetis
 #spack load metis

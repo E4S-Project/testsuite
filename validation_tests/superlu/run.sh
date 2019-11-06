@@ -1,5 +1,5 @@
 #!/bin/bash
-. ../../setup.sh
+. ./setup.sh
 #spack load openblas threads=none
 #spack load superlu 
 ./c_sample

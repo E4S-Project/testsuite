@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ../setup.sh
+#. ../setup.sh
 
 mpicc \
 -I${SUPERLU_DIST_ROOT}/include \

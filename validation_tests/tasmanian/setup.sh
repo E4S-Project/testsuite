@@ -1,7 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 
-spackLoadUnique tasmanian@6.0
+spackLoadUnique tasmanian
 spackLoadUnique openblas threads=openmp
 
 #spack load openblas threads=openmp
