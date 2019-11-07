@@ -28,70 +28,65 @@
  * IN WHOLE OR IN PART THE USE, STORAGE OR DISPOSAL OF THE SOFTWARE.
  */
 
-#include "tasgridExternalTests.hpp"
-#include "tasgridUnitTests.hpp"
+#include "tasgridCLICommon.hpp"
+
+#include "tasdreamExternalTests.hpp"
+
+using namespace std;
+
+void printHelp();
 
 int main(int argc, const char ** argv){
 
     //cout << " Phruuuuphrrr " << endl; // this is the sound that the Tasmanian devil makes
 
     std::deque<std::string> args = stringArgs(argc, argv);
+    if (!args.empty() && hasHelp(args.front())){
+        printHelp();
+        return 0;
+    }
 
-    // testing
     bool debug = false;
-    bool debugII = false;
-    bool verbose = false;
-    bool seed_reset = false;
+    TypeDREAMTest test = test_all;
 
-    TestList test = test_all;
-    UnitTests utest = unit_none;
+    DreamExternalTester tester;
 
-    int gpuid = -1;
-    while (!args.empty()){
-        if (args.front() == "debug") debug = true;
-        if (args.front() == "db") debugII = true;
-        if (hasInfo(args.front())) verbose = true;
-        if (hasRandom(args.front())) seed_reset = true;
-        TestList test_maybe = ExternalTester::hasTest(args.front());
-        if (test_maybe != test_none) test = test_maybe;
-        UnitTests utest_maybe = GridUnitTester::hasTest(args.front());
-        if (utest_maybe != unit_none) utest = utest_maybe;
-        if ((args.front() == "-gpuid") || (args.front() == "-gpu")){
-            args.pop_front();
-            if (args.empty()){
-                cerr << "ERROR: -gpuid required a valid number!" << endl;
-                return 1;
-            }
-            gpuid = std::stoi(args.front());
-            if ((gpuid < -1) || (gpuid >= TasmanianSparseGrid::getNumGPUs())){
-                cerr << "ERROR: -gpuid " << gpuid << " is not a valid gpuid!" << endl;
-                cerr << "      see ./tasgrid -v for a list of detected GPUs." << endl;
-                return 1;
-            }
+    while(!args.empty()){
+        if (hasInfo(args.front())){
+            tester.showVerbose();
+            if ((args.front() == "verbose") || (args.front() == "-verbose"))
+                tester.showStatsValues();
+        }else if (hasRandom(args.front())) tester.useRandomRandomSeed();
+        else if (args.front() == "debug") debug = true;
+        else if (args.front() == "analytic") test = test_analytic;
+        else if (args.front() == "posterior") test = test_posterior;
+        else if (args.front() == "all") test = test_all;
+        else{
+            cerr << "ERROR: Unknown option '" << args.front() << "'" << endl;
+            cerr << "   to see list of available options use: ./dreamtest --help" << endl;
+            return 1;
         }
         args.pop_front();
     }
 
-    ExternalTester tester(1000);
-    GridUnitTester utester;
-    tester.setGPUID(gpuid);
-    bool pass = true;
     if (debug){
-        tester.debugTest();
-    }else if (debugII){
-        tester.debugTestII();
-    }else{
-        if (verbose) tester.setVerbose(true);
-        if (verbose) utester.setVerbose(true);
-
-        if (seed_reset) tester.resetRandomSeed();
-
-        if (utest == unit_none){
-            if (test == test_all) pass = pass && utester.Test(unit_all);
-            pass = pass && tester.Test(test);
-        }else{
-            pass = pass && utester.Test(utest);
-        }
+        testDebug();
+        return 0;
     }
-    return (pass) ? 0 : 1;
+
+    return (tester.performTests(test)) ? 0 : 1;
+}
+
+void printHelp(){
+    cout << endl;
+    cout << "Usage: dreamtest <command1> <command2> ...\n\n";
+    cout << "Commands\tAction\n";
+    cout << "all\t\tRun all tests (default if no commands are given)\n";
+    cout << "analytic\tRun the tests associated with analytic probability distributions\n";
+    cout << "posterior\tRun the tests associated with Bayesian inference\n";
+    cout << "-v\t\tShow verbose test information\n";
+    cout << "verbose\t\tIn addition to -v also shows critical test values\n";
+    cout << "random\t\tDo not use the hard-coded random seed, use the time as random seed\n";
+    cout << "debug\t\tRun the code implemented in tasdreamExternalTests.cpp function testDebug()\n";
+    cout << endl;
 }
