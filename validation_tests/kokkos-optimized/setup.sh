@@ -4,7 +4,7 @@
 #spack load libiconv
 #spack load numactl
 #spack load hwloc
-spackLoadUniqueNoR tau@develop
+spackLoadUniqueNoR tau #@develop
 #spackLoadUnique kokkos
 kokkosHash=$(spackLoadUnique kokkos) #+openmp
 spackLoadUnique kokkos

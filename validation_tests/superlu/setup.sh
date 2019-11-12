@@ -1,4 +1,4 @@
 #!/bin/bash
 . ../../setup.sh
 spackLoadUnique superlu
-spackLoadUnique openblas threads=none
+#spackLoadUnique openblas threads=none

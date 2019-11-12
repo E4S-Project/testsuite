@@ -13,4 +13,4 @@ export TRILINOS=`spack location -i $TSPEC`
 #spack load `oneSpackHash matio`
 #spack load $TSPEC
 #spack load `oneSpackHash hypre`
-spackLoadUnique openblas threads=openmp
+#spackLoadUnique openblas threads=openmp

@@ -5,6 +5,6 @@
 
 #spack load openblas threads=none
 spackLoadUnique magma #^cuda@10.0.130 #Install this spec and uncomment for Nvidia drivers < 4.18.39
-spackLoadUnique openblas threads=none
+#spackLoadUnique openblas threads=none
 #spack load cuda  #@10.0.130 #Install this spec and uncomment for Nvidia drivers < 4.18.39
 

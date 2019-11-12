@@ -24,16 +24,17 @@ SHELL = sh
 prefix       = ${SUNDIALS_ROOT} 
 exec_prefix  = ${SUNDIALS_ROOT} 
 includedir   = ${SUNDIALS_ROOT}/include 
-libdir       = ${SUNDIALS_ROOT}/lib64 
+libdir       = ${SUNDIALS_ROOT}/lib 
+libdir64     = ${SUNDIALS_ROOT}/lib64 
 
 CPP         = gcc
 CPPFLAGS    = -O3 -DNDEBUG
 CC          = gcc
 CFLAGS      = -O3 -DNDEBUG
 LDFLAGS     = 
-LIBS        =  -lm /usr/lib64/librt.so
+LIBS        =  -lm #/usr/lib64/librt.so
 
-LINKFLAGS = -Wl,-rpath,${libdir} 
+LINKFLAGS = -Wl,-rpath,${libdir} -Wl,-rpath,${libdir64}
 
 MPICC       = mpicc
 MPI_INC_DIR = .
@@ -63,7 +64,7 @@ OBJECTS_DEPENDENCIES = ${EXAMPLES_DEPENDENCIES:=.o}
 all: ${OBJECTS}
 	@for i in ${EXAMPLES} ; do \
 	  echo "${MPICC} -o $${i} $${i}.o ${OBJECTS_DEPENDENCIES} ${MPI_FLAGS} ${CFLAGS} ${LDFLAGS} ${INCLUDES} -L${libdir} ${LIBRARIES} -L${MPI_LIB_DIR} ${MPI_LIBS} ${LINKFLAGS}" ; \
-	  ${MPICC} -o $${i} $${i}.o ${OBJECTS_DEPENDENCIES} ${MPI_FLAGS} ${CFLAGS} ${LDFLAGS} ${INCLUDES} -L${libdir} ${LIBRARIES} -L${MPI_LIB_DIR} ${MPI_LIBS} ${LINKFLAGS} ; \
+	  ${MPICC} -o $${i} $${i}.o ${OBJECTS_DEPENDENCIES} ${MPI_FLAGS} ${CFLAGS} ${LDFLAGS} ${INCLUDES} -L${libdir} -L${libdir64} ${LIBRARIES} -L${MPI_LIB_DIR} ${MPI_LIBS} ${LINKFLAGS} ; \
 	done
 
 ${OBJECTS}: ${OBJECTS_DEPENDENCIES}
