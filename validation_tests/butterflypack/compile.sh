@@ -1,6 +1,6 @@
 #!/bin/bash
-
-set -e
+. ./setup.sh
+#set -e
 . ../setup.sh
 mpif90 \
 -DHAVE_TASKLOOP \
