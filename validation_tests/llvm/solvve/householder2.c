@@ -78,14 +78,19 @@ int main( int argc, char** argv ){
 
     printf( "Result check: QR = A\n" );
 
-    memset( A, (char)0, M*N*sizeof( double ));
+    //    memset( A, (char)0, M*N*sizeof( double ));
+    for( int i = 0 ; i < M ; i++ ) {
+        for( int j = 0 ; j < N ; j++ ) {
+            A[i][j] = 0.0;
+        }
+    }
     matmul( M, N, N, A, Q, R );
     printMatrix( M, N, A );
 
     printf( "Unitarity check: Q*Q' = Q'*Q = I\n" );
 
     //    memset( R, (char)0, M*N*sizeof( double ));
-    for( int i = 0 ; i < M ; i++ ) {
+    for( int i = 0 ; i < N ; i++ ) {
         for( int j = 0 ; j < N ; j++ ) {
             R[i][j] = 0.0;
         }
@@ -200,7 +205,12 @@ bool checkCorrect( int M, int N, double A[M][N], double Q[M][N], double R[N][N] 
     /* We want QR == A */
 
     double tmp[M][N];
-    memset( tmp, (char)0, M*N*sizeof( double  ) );
+    // memset( tmp, (char)0, M*N*sizeof( double  ) );
+    for( int i = 0 ; i < N ; i++ ) {
+        for( int j = 0 ; j < N ; j++ ) {
+            tmp[i][j] = 0.0;
+        }
+    }
     matmul( M, N, N, tmp, Q, R );
     eq = isEqual( M, N, tmp, A );
 
@@ -216,15 +226,30 @@ bool checkUnitary( int M, int N, double Q[M][N] ) {
 
     initUnit( M, M, I ); 
 
-    memset( res, (char)0, M*N*sizeof( double ) );
-    memcpy( tmp, Q, M*N*sizeof( double ));
+//    memset( res, (char)0, M*N*sizeof( double ) );
+    for( int i = 0 ; i < N ; i++ ) {
+        for( int j = 0 ; j < N ; j++ ) {
+            res[i][j] = 0.0;
+        }
+    }
+//    memcpy( tmp, Q, M*N*sizeof( double ));
+    for( int i = 0 ; i < M ; i++ ) {
+        for( int j = 0 ; j < N ; j++ ) {
+            tmp[i][j] = Q[i][j];
+        }
+    }
     transpose( M, N, tmp );
     matmul( M, N, N, res, Q, tmp );
 
     if( false == isEqual( M, M, I, res ) )
         return false;
 
-    memset( res, (char)0, M*N*sizeof( double ) );
+    // memset( res, (char)0, M*N*sizeof( double ) );
+    for( int i = 0 ; i < N ; i++ ) {
+        for( int j = 0 ; j < N ; j++ ) {
+            res[i][j] = 0.0;
+        }
+    }
     matmul( M, N, N, res, tmp, Q );
 
     if( false == isEqual( M, M, I, res ) )
@@ -305,7 +330,10 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
 
      /* tmpV = w'*R(j:end,:) */
     
-    memset( tmpV, (char) 0, len*sizeof( double ) );
+    //memset( tmpV, (char) 0, len*sizeof( double ) );
+    for( i = 0 ; i < len ; i++ ) {
+        tmpV[i] = 0.0;
+    }
     for( j = 0 ; j < len ; j++ ){
       for( i = start ; i < len ; i++ ) {
 	tmpV[j] += w[i]*R[ i ][ j ];
@@ -376,7 +404,10 @@ void householder( int M, int N, double A[M][N], double Q[M][N], double R[N][N] )
 
     for( i = 0 ; i < M  ; i++ ) {
       
-      memset( w, (char)0, N*sizeof( double ) );
+      // memset( w, (char)0, N*sizeof( double ) );
+        for( j = 0 ; j < N ; j++ ){
+            w[j] = 0.0;
+        }
       
       /* H = I - tau * w * w' */
       
