@@ -4,7 +4,7 @@
 CC=clang
 CCOPT=  -mllvm -polly -mllvm -polly-process-unprofitable -Wall 
 
-all: matmul householder
+all: matmul householder householder2
 
 matmul: matmul.c
 	$(CC) $(CCOPT) -o $@ $< -lm
@@ -12,5 +12,8 @@ matmul: matmul.c
 householder: householder.c
 	$(CC) $(CCOPT) -o $@ $< -lm
 
+householder2: householder2.c
+	$(CC) $(CCOPT) -o $@ $< -lm
+
 clean:
-	rm -f matmul householder *.o
+	rm -f matmul householder householder2 *.o
