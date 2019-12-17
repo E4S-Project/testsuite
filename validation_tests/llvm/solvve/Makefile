@@ -13,4 +13,4 @@ householder: householder.c
 	$(CC) $(CCOPT) -o $@ $< -lm
 
 clean:
-	rm -f matmul houeholder *.o
+	rm -f matmul householder *.o
