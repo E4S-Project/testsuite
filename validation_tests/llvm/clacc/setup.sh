@@ -1,3 +1,3 @@
 #!/bin/bash
 
-# nothing to do yet
+module load llvm/clacc/git
