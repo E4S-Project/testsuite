@@ -8,9 +8,13 @@ LD = $(FC)
 FCFLAGS =
 LDFLAGS =
 
-all: characters characters_wrong
+all: characters characters2 characters_wrong
 
 characters: characters.o
+	$(LD) -o $@ $< $(LDFLAGS)
+	@echo -e "\033[01;32m[$@] compiled\e[0m"
+
+characters2: characters2.o
 	$(LD) -o $@ $< $(LDFLAGS)
 	@echo -e "\033[01;32m[$@] compiled\e[0m"
 
@@ -22,5 +26,5 @@ characters_wrong: characters_wrong.o
 	$(FC) -o $@ -c $< $(FCFLAGS)
 
 clean:
-	rm -f *.o characters characters_wrong
+	rm -f *.o characters characters2 characters_wrong
 
