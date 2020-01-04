@@ -13,3 +13,6 @@ clang++ -fjit -o basic/cct basic/cct.cpp
 clang++ -fjit -o basic/mt1 basic/mt1.cpp
 clang++ -fjit -o basic/mt2 basic/mt2.cpp
 clang++ -fjit -o basic/pack1 basic/pack1.cpp
+clang++ -fjit -o basic/array_size basic/array_size.cpp
+
+clang++ -O3 -fjit -o hh/householder_jit hh/householder_jit.cpp

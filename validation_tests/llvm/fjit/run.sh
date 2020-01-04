@@ -12,3 +12,6 @@
 ./basic/mt1
 ./basic/mt2
 ./basic/pack1
+./basic/array_size 5 6
+
+./hh/householder_jit 512 512
