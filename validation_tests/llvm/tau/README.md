@@ -1,4 +1,4 @@
-== TAU plugin ==
+## TAU plugin 
 
 Some tests for the TAU plugin, in C and C++.
 
