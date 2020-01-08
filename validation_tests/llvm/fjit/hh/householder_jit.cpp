@@ -9,7 +9,7 @@
 #define DEFAULT_M 16
 #define DEFAULT_N 16
 
-#define DEBUG      1
+#define DEBUG      0
 #define SHOWRESULT 0
 #define CHECKPRECI 1e-8
 
