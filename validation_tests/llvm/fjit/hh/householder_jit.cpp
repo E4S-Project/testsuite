@@ -15,6 +15,7 @@
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void printMatrix( T** );
 template <typename T, unsigned int, unsigned int>[[clang::jit]] T** allocateMatrix( void );
+
 template <typename T>[[clang::jit]] T** allocateMatrix( unsigned int, unsigned int );
 template <typename T, unsigned int>[[clang::jit]] T* allocateVector( void );
 template <typename T>[[clang::jit]] T* allocateVector( unsigned int );
@@ -135,7 +136,7 @@ int main( int argc, char** argv ){
             A[i][j] = 0.0;
         }
     }
-    matmul<double, M, N, N>( A, Q, R );
+    matmul<double>( M, N, N, A, Q, R );
     printMatrix<double, M, N>( A );
 
     printf( "Unitarity check: Q*Q' = Q'*Q = I\n" );
@@ -152,14 +153,16 @@ int main( int argc, char** argv ){
             A[i][j] = Q[i][j];
         }
     }
-    transpose<double, M, N>( A );
-    matmul<double, M, N, N>( R, Q, A );
+
+    transpose<double>( M, N, A );
+    matmul<double>( M, N, N, R, Q, A );
     printMatrix<double, M, N>( R );
+
 #endif
     
-    freeMatrix<double, M>( A );
-    freeMatrix<double, M>( Q );
-    freeMatrix<double, N>( R );
+    freeMatrix<double>( A, M );
+    freeMatrix<double>( Q, M );
+    freeMatrix<double>( R, N );
 
     return EXIT_SUCCESS;
 }
