@@ -9,10 +9,9 @@
 #define DEFAULT_M 16
 #define DEFAULT_N 16
 
-#define DEBUG      0
+#define DEBUG      1
 #define SHOWRESULT 0
 #define CHECKPRECI 1e-8
-
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void printMatrix( T** );
 template <typename T, unsigned int, unsigned int>[[clang::jit]] T** allocateMatrix( void );
@@ -25,68 +24,52 @@ template <typename T> [[clang::jit]] void freeVector( T*& );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void initRand( T** );
 template <typename T>[[clang::jit]] void initRand( T**, unsigned int, unsigned int );
-void initRand( unsigned int, unsigned int, double** );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void initZero( T** );
 template <typename T>[[clang::jit]] void initZero( T**, unsigned int, unsigned int );
-void initZero( unsigned int, unsigned int, double** );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void initUnit( T** );
 template <typename T>[[clang::jit]] void initUnit( T**, unsigned int, unsigned int );
-void initUnit( unsigned int, unsigned int, double** );
 
 template <typename T, unsigned int>[[clang::jit]] T getnorm( T* );
 template <typename T> [[clang::jit]] T getnorm( unsigned int, T* );
-double getnorm( unsigned int, double* );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] bool isEqual( T**, T** );
 template <typename T>[[clang::jit]] bool isEqual( unsigned int, unsigned int, T**, T** );
-bool isEqual( unsigned int, unsigned int, double**, double** );
 
 template <typename T>[[clang::jit]] T getsign( T );
-double getsign( double ) ;
 
 template <typename T, unsigned int> [[clang::jit]] void normalize( T, T* );
 template <typename T> [[clang::jit]] void normalize( unsigned int, T, T* );
-void normalize( unsigned int, double, double* );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void printMatrix( T** );
 
 template <typename T> [[clang::jit]] void matmul( unsigned int, unsigned int, unsigned int, T**, T**, T** );
 template <typename T, unsigned int, unsigned int, unsigned int>[[clang::jit]] void matmul( T**, T**, T** );
-void matmul( unsigned int, unsigned int, unsigned int, double**, double**, double** );
 
 template <typename T>[[clang::jit]] bool checkCorrect( unsigned int, unsigned int, T**, T**, T** );
 template <typename T, unsigned int, unsigned int>[[clang::jit]] bool checkCorrect( T**, T**, T** );
-bool checkCorrect( int, int, double**, double**, double** );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] bool checkUnitary( T** );
 template <typename T>[[clang::jit]] bool checkUnitary( T**, unsigned int, unsigned int );
-bool checkUnitary( double**, unsigned int, unsigned int );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] bool check( T**, T**, T** );
 template <typename T>[[clang::jit]] bool check( unsigned int, unsigned int, T**, T**, T** );
-bool check( unsigned int, unsigned int, double**, double**, double** );
 
 template <typename T>[[clang::jit]] void transpose( unsigned int, unsigned int, T** );
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void transpose( T** );
-void transpose( unsigned int, unsigned int, double** );
 
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void copyR( T**, T** );
 template <typename T>[[clang::jit]] void copyR( unsigned int, unsigned int, T**, T** );
-void copyR( unsigned int, unsigned int, double**, double** );
 
 template <typename T> [[clang::jit]] void applyR( unsigned int, T**, T*, T, unsigned int );
 template <typename T, unsigned int> [[clang::jit]] void applyR( T**, T*, T, unsigned int );
-void applyR( unsigned int, double**, double*, double, unsigned int );
 
 template <typename T> [[clang::jit]] void applyQ( unsigned int, T**, T*, T, unsigned int );
 template <typename T, unsigned int> [[clang::jit]] void applyQ( T**, T*, T, unsigned int );
-void applyQ( unsigned int, double**, double*, double, unsigned int );
 
 template <typename T>[[clang::jit]] void householder( unsigned int, unsigned int, T**, T**, T** );
 template <typename T, unsigned int, unsigned int>[[clang::jit]] void householder( T**, T**, T** );
-void householder( int, int, double**, double**, double ** );
 
 unsigned int min( unsigned int, unsigned int );
 double getTime( void );
@@ -127,9 +110,9 @@ int main( int argc, char** argv ){
 
 #if SHOWRESULT  
     printf( "R \n" );
-    printMatrix( N, N, R );
+    printMatrix<double, N, N>( R );
     printf( "Q \n" );
-    printMatrix( M, N, Q );
+    printMatrix<double, M, N>( Q );
 #endif
 
     /* Checks: A ?= QR and orthogonality of Q */
@@ -142,7 +125,7 @@ int main( int argc, char** argv ){
 
 #if DEBUG
     printf( "Initial matrix:\n" );
-    printMatrix( M, N, A );
+    printMatrix<double, M, N>( A );
 
     printf( "Result check: QR = A\n" );
 
@@ -152,8 +135,8 @@ int main( int argc, char** argv ){
             A[i][j] = 0.0;
         }
     }
-    matmul( M, N, N, A, Q, R );
-    printMatrix( M, N, A );
+    matmul<double, M, N, N>( A, Q, R );
+    printMatrix<double, M, N>( A );
 
     printf( "Unitarity check: Q*Q' = Q'*Q = I\n" );
 
@@ -169,9 +152,9 @@ int main( int argc, char** argv ){
             A[i][j] = Q[i][j];
         }
     }
-    transpose( M, N, A );
-    matmul( M, N, N, R, Q, A );
-    printMatrix( M, N, R );
+    transpose<double, M, N>( A );
+    matmul<double, M, N, N>( R, Q, A );
+    printMatrix<double, M, N>( R );
 #endif
     
     freeMatrix<double, M>( A );
@@ -179,15 +162,6 @@ int main( int argc, char** argv ){
     freeMatrix<double, N>( R );
 
     return EXIT_SUCCESS;
-}
-
-void initRand( unsigned int lines, unsigned int col, double** mat ){
-    srand( 0 );
-    for( auto i = 0 ; i < lines ; i++ ) {
-        for( auto j = 0 ; j < col ; j++ ) {
-	  mat[i][j] = (double) rand() / (double) ( (unsigned int)RAND_MAX + 1 );
-        }
-    }
 }
 
 template <typename T, unsigned int lines, unsigned int cols >[[clang::jit]]
@@ -210,14 +184,6 @@ void initRand( T** mat, unsigned int lines, unsigned int cols ){
     }
 }
 
-void initZero( unsigned int lines, unsigned int cols, double** mat ){
-    for( auto i = 0 ; i < lines ; i++ ) {
-        for( auto j = 0 ; j < cols ; j++ ) {
-            mat[i][j] = 0;
-        }
-    }
-}
-
 template <typename T, unsigned int lines, unsigned int cols >[[clang::jit]]
 void initZero( T** mat ){
     for( auto i = 0 ; i < lines ; i++ ) {
@@ -233,13 +199,6 @@ void initZero( unsigned int lines, unsigned int cols, T** mat ){
         for( auto j = 0 ; j < cols ; j++ ) {
             mat[i][j] = 0;
         }
-    }
-}
-
-void initUnit( unsigned int l, unsigned int c,  double** mat ){
-    initZero( l, c, mat );
-    for( auto i = 0 ; i < l && i < c ; i++ ) {
-        mat[i][i] = 1;
     }
 }
 
@@ -269,15 +228,6 @@ void printPerf( int M, int N, double time ) {
     double flops = 2.0 * (double) M * (double) N * (double) N / 3.0;
     time *= 1e-3;
     printf( "%d \t %d \t %.0lf usec \t %.3lf Mflops\n", M, N, time, flops / time );
-}
-
-double getnorm( unsigned int len, double* vec ) {
-    int i;
-    double n = vec[0]*vec[0];
-    for( i = 1 ; i < len ; i++ ) {
-      n += ( vec[i] * vec[i] );
-    }
-    return sqrtl( n );
 }
 
 template <typename T, unsigned int len>
@@ -359,20 +309,6 @@ template <typename T>
   delete[] ptr;
 }
 
-bool isEqual( unsigned int M, unsigned int N, double** A, double** B ) {
-    unsigned int i, j;
-    bool eq = true;
-
-    for( i = 0 ; i < M ; i++ ) {
-        for( j = 0 ; j < N ; j++ ) {
-            if( fabs( B[i][j] - A[i][j] ) > CHECKPRECI ) {
-                eq = false;
-            }
-        }
-    }
-    return eq;
-}
-
 template <typename T, unsigned int M, unsigned int N>
 [[clang::jit]] bool isEqual( T** A, T** B ) {
     int i, j;
@@ -400,29 +336,6 @@ template <typename T>
             }
         }
     }
-    return eq;
-}
-
-bool checkCorrect( int M, int N, double** A, double** Q, double** R ) {
-
-    bool eq = true;
-
-    /* We want QR == A */
-
-   auto tmp = new double*[M];
-   for( auto i = 0 ; i < M ; i++ ) tmp[i] = new double[N];
-
-    // memset( tmp, (char)0, M*N*sizeof( double  ) );
-    for( auto i = 0 ; i < N ; i++ ) {
-        for( auto j = 0 ; j < N ; j++ ) {
-            tmp[i][j] = 0.0;
-        }
-    }
-    matmul( M, N, N, tmp, Q, R );
-    eq = isEqual( M, N, tmp, A );
-    
-    for( auto i = 0 ; i < N ; i++ ) delete[] tmp[i];
-    delete[] tmp;
     return eq;
 }
 
@@ -468,59 +381,6 @@ template <typename T>
     
     freeMatrix<T, M>( tmp );
     return eq;
-}
-
-bool checkUnitary( unsigned int M, unsigned int N, double** Q ) {
-
-  auto tmp = new double*[M];
-  for( auto i = 0 ; i < M ; i++ ) tmp[i] = new double[N];
-  auto res = new double*[N];
-  for( auto i = 0 ; i < N ; i++ ) res[i] = new double[N];
-  auto I = new double*[M];
-  for( auto i = 0 ; i < M ; i++ ) I[i] = new double[M];
-
-  bool ret = true;
-
-    /* We want Q*Q' = Q'*Q = I */
-
-    initUnit( M, M, I ); 
-
-//    memset( res, (char)0, M*N*sizeof( double ) );
-    for( auto i = 0 ; i < N ; i++ ) {
-        for( auto j = 0 ; j < N ; j++ ) {
-            res[i][j] = 0.0;
-        }
-    }
-//    memcpy( tmp, Q, M*N*sizeof( double ));
-    for( auto i = 0 ; i < M ; i++ ) {
-        for( auto j = 0 ; j < N ; j++ ) {
-            tmp[i][j] = Q[i][j];
-        }
-    }
-    transpose( M, N, tmp );
-    matmul( M, N, N, res, Q, tmp );
-
-    if( false == isEqual( M, M, I, res ) )
-        return false;
-
-    // memset( res, (char)0, M*N*sizeof( double ) );
-    for( auto i = 0 ; i < N ; i++ ) {
-        for( auto j = 0 ; j < N ; j++ ) {
-            res[i][j] = 0.0;
-        }
-    }
-    matmul( M, N, N, res, tmp, Q );
-
-    ret = isEqual( M, M, I, res );
-    
-    for( auto i = 0 ; i < M ; i++ ) delete[] tmp[i];
-    delete[] tmp;
-    for( auto i = 0 ; i < N ; i++ ) delete[] res[i];
-    delete[] res;
-    for( auto i = 0 ; i < M ; i++ ) delete[] I[i];
-    delete[] I;
-
-    return ret;
 }
 
 template <typename T>
@@ -619,19 +479,6 @@ template <typename T, unsigned int M, unsigned int N>
     return ret;
 }
 
-bool check( unsigned int  M, unsigned int N, double** A, double** Q, double** R ) {
-    if( false == checkCorrect( M, N, A, Q, R ) ) {
-        printf( "Incorrect result: A != QR (precision requested: %e)\n", CHECKPRECI );
-        return false;
-    }
-    if( false == checkUnitary( M, N, Q ) ) {
-        printf( "Incorrect result: Q is not unitary (precision requested: %e)\n", CHECKPRECI );
-        return false;
-    }
-
-    return true;
-}
-
 template <typename T>
 [[clang::jit]] bool check( unsigned int  M, unsigned int N, T** A, T** Q, T** R ) {
   if( false == checkCorrect<T>( M, N, A, Q, R ) ) {
@@ -660,18 +507,6 @@ template <typename T, unsigned int M, unsigned int N>
     return true;
 }
 
-void transpose( unsigned int M, unsigned int N, double** A ) {
-    double tmp;
-
-    for( auto i = 0 ; i < M ; i++ ) {
-        for( auto j = i ; j < N ; j++ ) {
-            tmp = A[ i ][ j ];
-            A[ i ][ j ] = A[ j ][ i ];
-            A[ j ][ i ] = tmp;
-        }
-    }
-}
-
 template <typename T>
 [[clang::jit]] void transpose( unsigned int M, unsigned int N, T** A ) {
   T tmp;
@@ -698,19 +533,9 @@ template <typename T, unsigned int M, unsigned int N>
     }
 }
 
-double getsign( double d ) {
-    return ( d > 0 ) ? 1.0 : -1.0;       
-}
-
 template <typename T>
 [[clang::jit]] T getsign( T d ) {
     return ( d > 0 ) ? 1.0 : -1.0;       
-}
-
-void normalize( unsigned int len, double div, double* vec ) {
-    for( auto i = 0 ; i < len ; i++ ) {
-        vec[i] /= div;
-    }
 }
 
 template <typename T>
@@ -731,14 +556,6 @@ unsigned int min( unsigned int a, unsigned int b ){
     return ( (a < b) ? a : b );
 }
 
-void copyR( unsigned int M, unsigned int N, double** dst, double **orig ){
-    for( auto i = 0 ; i < min( M, N ) ; i++ ) {
-        for( auto j = 0 ; j < min( M, N ) ; j++ ) {
-            dst[i][j] = orig[i][j];
-        }
-    }
-}
-
 template <typename T, unsigned int M, unsigned int N>
 [[clang::jit]] void copyR( T** dst, T** orig ){
     for( auto i = 0 ; i < min( M, N ) ; i++ ) {
@@ -753,16 +570,6 @@ template <typename T>
     for( auto i = 0 ; i < min( M, N ) ; i++ ) {
         for( auto j = 0 ; j < min( M, N ) ; j++ ) {
             dst[i][j] = orig[i][j];
-        }
-    }
-}
-
-void matmul( unsigned int M, unsigned int K, unsigned int N, double** out, double** A, double** B ){
-    for( auto i = 0 ; i < M ; i++ ){ 
-        for( auto j = 0 ; j < N ; j++ ){
-            for( auto k = 0 ; k < K ; k++ ){
-                out[ i ][ j ] += A[ i ][ k ] * B[ k ][ j ];
-            }
         }
     }
 }
@@ -787,47 +594,6 @@ template <typename T, unsigned int M, unsigned int N, unsigned int K>
             }
         }
     }
-}
-
-void applyR( unsigned int len, double** R, double* w, double tau, unsigned int start ){
-    unsigned int i, j;
-    auto tmpM = new double*[len];
-    for( i = 0 ; i < len ; i++ ) tmpM[i] = new double[len];
-    auto  tmpV = new double[len];
-
-    /* R(j:end,:) = R(j:end,:)-(tau*w)*(w’*R(j:end,:)); */
-
-     /* tmpV = w'*R(j:end,:) */
-    
-    //memset( tmpV, (char) 0, len*sizeof( double ) );
-    for( i = 0 ; i < len ; i++ ) {
-        tmpV[i] = 0.0;
-    }
-    for( j = 0 ; j < len ; j++ ){
-      for( i = start ; i < len ; i++ ) {
-	tmpV[j] += w[i]*R[ i ][ j ];
-      }
-    }
-
-    /* tmpM = tau * w * tmpV */
-
-    for( i = 0 ; i < len ; i++ ){
-      for( j = start ; j < len ; j++ ){
-	  tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
-	}
-    }
-
-    /* R = R - tmpM */
-
-    for( i = start ; i < len ; i++ ){
-        for( j = 0 ; j < len ; j++ ){
-            R[ i ][ j] -= tmpM[ i ][ j ];
-        }
-    }
-
-    delete[] tmpV;
-    for( i = 0 ; i < len ; i++ ) delete[] tmpM[i];
-    delete[] tmpM;
 }
 
 template <typename T>
@@ -910,44 +676,6 @@ template <typename T, unsigned int len>
     freeVector<T>( tmpV );
 }
 
-void applyQ( unsigned int len, double** Q, double* w, double tau, unsigned int start ){
-    unsigned int i, j;
-    auto tmpM = new double*[len];
-    for( i = 0 ; i < len ; i++ ) tmpM[i] = new double[len];
-    auto tmpV = new double[len];
-
-    /* Q(:,j:end) = Q(:,j:end)-(Q(:,j:end)*w)*(tau*w)’; */
-
-    /* tmpV = (Q(:,j:end)*w) */
-
-    for( j = 0 ; j < len ; j++ ) {
-      tmpV[j] = 0.0;
-      for( i = start ; i < len ; i++ ) {
-	tmpV[j] += Q[ j ][i ] * w[i];
-      }      
-    }
-
-    /* tmpM = tmpV * (tau*w)’; */
-
-    for( j = 0 ; j < len ; j++ ) {
-      for( i = start  ; i < len ; i++ ) {
-	tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
-      }      
-    }
-
-    /* Q(:,j:end) -= tmpM */
-
-    for( j = 0 ; j < len ; j++ ) {
-      for( i = start ; i < len ; i++ ) {
-	Q[ j ][ i ] -= tmpM[ j ][ i ];
-      }
-    }
-
-    for( i = 0 ; i < len ; i++ ) delete[] tmpM[i];
-    delete[] tmpM;
-    delete[] tmpV;
-}
-
 template <typename T>
 [[clang::jit]] void applyQ( unsigned int len, T** Q, T* w, T tau, unsigned int start ){
     unsigned int i, j;
@@ -1022,46 +750,6 @@ template <typename T, unsigned int len>
     freeVector<T>( tmpV );
 }
 
-void householder( unsigned int M, unsigned int N, double** A, double** Q, double** R ){
-
-    unsigned int i, j; 
-    double u1, tau, sign, norm;
-    double* w = new double[N]();
-
-    //memcpy( R, A, ( ( M > N ) ? N : M ) * N * sizeof( double ) );
-    copyR( M, N, R, A );
-    initUnit( M, N, Q );
-
-    for( i = 0 ; i < M  ; i++ ) {
-      
-      // memset( w, (char)0, N*sizeof( double ) );
-        for( j = 0 ; j < N ; j++ ){
-            w[j] = 0.0;
-        }
-      
-      /* H = I - tau * w * w' */
-      
-      for( j = i ; j < N ; j++ ) {
-	w[j] = R[ j ][ i ];
-      }
-      norm = getnorm( N-i, w+i );
-      sign = -1 * getsign( R[ i ][ i ] );
-      u1 = R[ i ][ i ] - sign * norm;
-      
-      normalize( N-i-1, u1, w+i+1 ); // w = R(j:end,j)/u1;
-      w[ i ] = 1;
-      tau = -1 * sign * u1 / norm;
-      
-        /* R = HR; Q = QH */
-
-     if( i < N ) {
-	applyR( N, R, w, tau, i );
-      }
-      applyQ( N, Q, w, tau, i );
-    }
-    delete[] w;
-}
-
 template <typename T, unsigned int M, unsigned int N>
 [[clang::jit]] void householder( T** A, T** Q, T** R ){
 
@@ -1106,6 +794,7 @@ template <typename T, unsigned int M, unsigned int N>
     }
     freeVector<T>( w );
 }
+
 template <typename T>
 [[clang::jit]] void householder( unsigned int M, unsigned int N, T** A, T** Q, T** R ){
 
