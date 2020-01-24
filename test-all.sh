@@ -1,11 +1,13 @@
 #!/bin/bash 
 
 . ./setup.sh
-
+if [ -n "$TERM" ];
+then
 bold=$(tput bold)$(tput setaf 1)
+green=$(tput bold)$(tput setaf 2)
 yellow=$(tput bold)$(tput setaf 3)
-normal=$(tput sgr0)
-
+normal=$(tput sgr0);
+fi
 ran_test=true
 
 #  If $1 is a directory, run tests or recurse into it.
@@ -70,6 +72,7 @@ iterate_files() {
              echo "Run ${bold}failed${normal}" >&2
              return $_ret
            fi
+	   echo "${green}Success${normal}" >&2
 
     else
         ran_test=false
