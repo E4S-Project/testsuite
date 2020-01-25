@@ -172,7 +172,8 @@ void printMatrixOctave( double* mat, int M, int N ){
 bool isEqual( double* A, double* B, int M ) {
     int i;
     bool eq = true;
-#pragma acc parallel loop copyin( A, B )
+//#pragma acc parallel loop copyin( A, B )
+#pragma acc parallel loop 
     for( i = 0 ; i < M ; i++ ) {
         if( ( B[i] - A[i] ) > CHECKPRECI ) {
             eq = false;
