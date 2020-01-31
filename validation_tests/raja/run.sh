@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 #. ../../setup.sh
 . ./setup.sh
 ./ex1_vector-addition_solution 

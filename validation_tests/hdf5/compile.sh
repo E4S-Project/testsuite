@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 . ./setup.sh
 #spack load \trrej6a
 #spack load mpich

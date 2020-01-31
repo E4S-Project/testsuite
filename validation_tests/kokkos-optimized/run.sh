@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 . ./setup.sh
 #ldd ./lulesh.host
 #ulimit -c unlimited

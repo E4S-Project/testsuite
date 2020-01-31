@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 . ./setup.sh
 #retVal=$?
 #if [ $retVal -ne 0 ] ; then

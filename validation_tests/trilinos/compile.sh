@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 . ./setup.sh
 cwd=`pwd`
 for i in `cat testdirs.txt`; do

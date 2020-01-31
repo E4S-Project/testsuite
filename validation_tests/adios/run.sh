@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 . ./setup.sh
 
 echo "Arrays Write Example"
