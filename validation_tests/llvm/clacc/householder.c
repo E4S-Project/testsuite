@@ -18,7 +18,7 @@ void initUnit( double*, int, int );
 void transpose( double*, int, int );
 void printMatrix( double*, int, int );
 void printMatrixOctave( double*, int, int );
-inline void matmul( double*, double*, double*, int, int, int );
+void matmul( double*, double*, double*, int, int, int );
 bool check( double*, double*, double*, int, int );
 double getTime( void );
 void printPerf( int, int, double );
@@ -133,7 +133,7 @@ void printPerf( int M, int N, double time ) {
     printf( "%d \t %d \t %.0lf usec \t %.3lf Mflops\n", M, N, time, flops / time );
 }
 
-inline double getnorm( double* vec, int len ) {
+double getnorm( double* vec, int len ) {
     int i;
     double n = vec[0]*vec[0];
     for( i = 1 ; i < len ; i++ ) {
@@ -256,25 +256,25 @@ void transpose( double* A, int M, int N ) {
     }
 }
 
-inline double getsign( double d ) {
+double getsign( double d ) {
     return ( d > 0 ) ? 1.0 : -1.0;       
 }
 
-inline void normalize( double* vec, double len, double div ) {
+void normalize( double* vec, double len, double div ) {
     int i;
     for( i = 0 ; i < len ; i++ ) {
         vec[i] /= div;
     }
 }
 
-inline void normalize2( double* in, double* out, double len, double div ) {
+void normalize2( double* in, double* out, double len, double div ) {
     int i;
     for( i = 0 ; i < len ; i++ ) {
         out[i] = in[i] / div;
     }
 }
 
-inline void matmul( double* out, double* A, double* B, int M, int K, int N ){
+void matmul( double* out, double* A, double* B, int M, int K, int N ){
     int i, j, k;
 #pragma acc parallel loop collapse( 2 )
     for( i = 0 ; i < M ; i++ ){ 
