@@ -12,7 +12,7 @@ void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
   reg(acc_ev_compute_construct_end, prof_inc, acc_reg);
 }
 int main() {
-  #pragma acc parallel
-    ;
+  #pragma acc parallel num_gangs( 4 )
+    printf( "toto\n" );
   return 0;
 }
