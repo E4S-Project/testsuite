@@ -2,4 +2,6 @@
 
 make clean
 
+rm gang parallel inout
+
 
