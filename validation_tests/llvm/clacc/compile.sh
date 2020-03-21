@@ -57,3 +57,10 @@ fi
 clang -fopenacc -o parallel parallel.c
 clang -fopenacc -o gang gang.c
 
+for TARGET in host x86_64  nvptx64 ; do
+    clang -O3 -fopenacc -fopenmp-targets=$TARGET -o jacobi_$TARGET jacobi.c
+done
+
+# Small tests
+
+clang -fopenacc -Wall -o inout inout.c 
