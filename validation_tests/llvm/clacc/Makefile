@@ -11,5 +11,5 @@ householder2: householder2.c
 	$(CC) $(CCOPT) $(ACC) -o $@ $< -lm
 
 clean:
-	rm -f householder *.o
+	rm -f householder householder2 *.o
 
