@@ -137,9 +137,9 @@ void initUnit( int l, int c,  double mat[ l ][ c ] ){
 }
 
 double getTime(){
-    struct timespec tv;
-    clock_gettime( CLOCK_REALTIME, &tv );
-    return ( tv.tv_nsec + tv.tv_sec*1e9 );
+  struct timespec tv;
+  clock_gettime( CLOCK_MONOTONIC, &tv );
+  return ( tv.tv_nsec + tv.tv_sec*1e9 );
 }
 
 void printPerf( int M, int N, double time ) {

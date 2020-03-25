@@ -1,8 +1,8 @@
 CC=clang
-CCOPT= -g -O3 
+CCOPT= -g -O3 -std=gnu11
 ACC=-fopenacc
 
-all: householder
+all: householder2
 
 householder: householder.c
 	$(CC) $(CCOPT) $(ACC) -o $@ $< -lm
