@@ -1,12 +1,11 @@
 #!/bin/bash
 
-make
-
 # Compilation flags tests
 
 clang -fopenacc -o parallel parallel.c
+RET=$?
 echo -n "Simple compilation  " 
-if [ $? == 0 ] ; then
+if [ $RET == 0 ] ; then
     echo "[PASS]"
 else
     echo "[FAIL]"
@@ -16,8 +15,9 @@ OUTFILE=toto
 ERRFILE=titi
 for FLAG in "-fopenacc-print=acc" "-fopenacc-print=omp " "-fopenacc-print=acc-omp " "-fopenacc-print=omp-acc" ; do
     clang $FLAG -o parallel parallel.c > $OUTFILE
+    RET=$?
     echo -n $FLAG "  "
-    if [ $? == 0 ] ; then
+    if [ $RET == 0 ] ; then
 	echo "[PASS]"
     else
 	echo "[FAIL]"
@@ -25,8 +25,9 @@ for FLAG in "-fopenacc-print=acc" "-fopenacc-print=omp " "-fopenacc-print=acc-om
 done
 
 clang -Wsource-uses-openacc -o parallel parallel.c > $OUTFILE 2> $ERRFILE
+RET=$?
 echo -n "-Wsource-uses-openacc  " 
-if [ $? == 0 ] ; then
+if [ $RET == 0 ] ; then
     if [ `grep warning $ERRFILE | wc -l` -gt 0 ] ; then
 	echo "[PASS]"
     else
@@ -36,8 +37,9 @@ else
     echo "[FAIL]"
 fi
 clang -Wopenacc-ignored-clause -o kernel kernel.c > $OUTFILE 2> $ERRFILE
+RET=$?
 echo -n "-Wopenacc-ignored-clause  " 
-if [ $? == 0 ] ; then
+if [ $RET == 0 ] ; then
     if [ `grep warning $ERRFILE | wc -l` -gt 0 ] ; then
 	echo "[PASS]"
     else
@@ -50,7 +52,16 @@ fi
 
 #-fopenmp-targets=<triples> for traditional compilation mode
 
-
+for TARGET in host x86_64  nvptx64 ; do
+    clang -O3 -fopenacc -fopenmp-targets=$TARGET -o jacobi_$TARGET jacobi.c
+    RET=$?
+    echo -n "Compile with target " $TARGET
+    if [ $RET == 0 ] ; then
+	echo " [PASS]"
+    else
+	echo " [FAIL]"
+    fi
+done
 
 # Compile things we are going to run
 
@@ -64,3 +75,5 @@ done
 # Small tests
 
 clang -fopenacc -Wall -o inout inout.c 
+
+make
