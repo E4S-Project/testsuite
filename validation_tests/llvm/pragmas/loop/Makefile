@@ -1,8 +1,8 @@
 CC=clang
-CCOPT=  -mllvm -polly -mllvm -polly-process-unprofitable -Wall 
+CCOPT= -O3 -mllvm -polly -mllvm -polly-process-unprofitable -Wall 
 
 #all: matmul householder householder2
-all: matmul_paper
+all: crout haar
 
 matmul_paper: matmul_paper.c
 	$(CC) $(CCOPT) -o $@ $< -lm
@@ -13,5 +13,11 @@ householder: householder.c
 householder2: householder2.c
 	$(CC) $(CCOPT) -o $@ $< -lm
 
+crout: crout.c
+	$(CC) $(CCOPT) -o $@ $< -lm
+
+haar: haar.c
+	$(CC) $(CCOPT) -o $@ $< -lm
+
 clean:
-	rm -f matmul_paper householder householder2 *.o
+	rm -f matmul_paper householder householder2 crout haar *.o
