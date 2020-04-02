@@ -63,6 +63,7 @@ int main(int argc, char** argv)
     {
         error = 0.0;
 
+#pragma acc data copyout( error )
 #pragma acc parallel loop
         for( int j = 1; j < n-1; j++)
         {

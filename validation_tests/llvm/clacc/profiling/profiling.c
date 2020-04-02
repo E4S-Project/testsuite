@@ -4,8 +4,6 @@
 /*
  clang -fPIC -shared -fopenacc -o profiling.so profiling.c
  LD_PRELOAD=./profiling.so ./test_clacc
- *
- more info: clacc/openmp/runtime/test
  */
 
 unsigned int cnt = 0;
@@ -42,12 +40,13 @@ my_event_t eventmap[] = {
 
   //  { acc_ev_done, "acc_ev_done" },
 
+  { acc_ev_none, "acc_ev_none" },
   {-1, ""},
 };
 
-/* Highly suboptimal, have C++ maps would help there */
 char* eventToName( int eventtype ){
   int i = 0;
+  /* Highly suboptimal, having C++ maps would help there */
   while( eventmap[i].event != -1 ) {
     if( eventmap[i].event == eventtype ) return eventmap[i].name;
     i++;
@@ -56,7 +55,10 @@ char* eventToName( int eventtype ){
 }
 
 void prof_inc( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  printf( "Event type %d (%s) file %s line %d func name %s acc version %d\n", prof_info->event_type, eventToName( prof_info->event_type), prof_info->src_file, prof_info->line_no, prof_info->func_name, prof_info->version );
+  printf( "Event type %d (%s) file %s line %d func name %s acc version %d\n", 
+	  prof_info->event_type, eventToName( prof_info->event_type), 
+	  prof_info->src_file, prof_info->line_no, prof_info->func_name, 
+	  prof_info->version );
 }
 
 void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
@@ -86,11 +88,4 @@ void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
 
 }
 
-  /* Unimplemented:
-     
-     acc_ev_wait_start
-     acc_ev_wait_end
-     acc_ev_update_start
-     acc_ev_update_end
-  */  
 
