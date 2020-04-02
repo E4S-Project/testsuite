@@ -75,5 +75,9 @@ done
 # Small tests
 
 clang -fopenacc -Wall -o inout inout.c 
+clang -fopenacc -Wall -o inout_data inout_data.c 
+
+clang -fopenacc -Wall -o jacobi jacobi.c 
+clang -fopenacc -Wall -o jacobi_data jacobi_data.c 
 
 make
