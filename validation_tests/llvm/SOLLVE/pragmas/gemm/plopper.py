@@ -68,19 +68,19 @@ class Plopper:
         # Get the TAU-related environment variables
         tau = os.environ.get('TAU')
         if None == tau:
-            printf( "The TAU environment variable must be defined" )
+            print( "The TAU environment variable must be defined" )
             return -1
         llvm = os.environ.get( 'LLVM_DIR' )
         if None == llvm:
-            printf( "The LLVM_DIR environment variable must be defined" )
+            print( "The LLVM_DIR environment variable must be defined" )
             return -1
         tau_makefile = os.environ.get( 'TAU_MAKEFILE' )
         if None == tau_makefile:
-            printf( "The TAU_MAKEIFLE environment variable must be defined" )
+            print( "The TAU_MAKEIFLE environment variable must be defined" )
             return -1
         function_file = os.environ.get( 'TAU_FUNCTIONS' )
         if None == function_file:
-            printf( "The TAU_FUNCTIONS environment variable must be defined" )
+            print( "The TAU_FUNCTIONS environment variable must be defined" )
             return -1
 
         taucmd = "-fplugin=" + llvm + "/lib/TAU_Profiling.so -mllvm " \
