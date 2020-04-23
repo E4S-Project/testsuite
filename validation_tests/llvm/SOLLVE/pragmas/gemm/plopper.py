@@ -89,9 +89,8 @@ class Plopper:
                  + "-Wl,-rpath," + tau + "/lib/"+ tau_makefile
         
         cmd1 = "clang " + taucmd + " "  + interimfile +" "  \
-                "-fno-caret-diagnostics -std=c99 -fno-unroll-loops -mllvm -polly -mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
-#                "-std=c99 -fno-unroll-loops -O3 -ffast-math -march=native  -o "+ tmpbinary
-        print( cmd1 )
+                "-O3 -fno-caret-diagnostics -std=c99 -fno-unroll-loops -mllvm -polly -mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
+#        print( cmd1 )
 
         #Find the compilation status using subprocess
         compilation_status = subprocess.run(cmd1, shell=True) #, stderr=subprocess.PIPE)
