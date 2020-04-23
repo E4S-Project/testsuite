@@ -89,8 +89,8 @@ class Plopper:
                  + "-Wl,-rpath," + tau + "/lib/"+ tau_makefile
         
         cmd1 = "clang " + taucmd + " "  + interimfile +" "  \
-                "-std=c99 -fno-unroll-loops -O3 -ffast-math -march=native  -o "+ tmpbinary
-#                "-std=c99 -fno-unroll-loops -O3 -mllvm -polly -mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
+                "-fno-caret-diagnostics -std=c99 -fno-unroll-loops -mllvm -polly -mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
+#                "-std=c99 -fno-unroll-loops -O3 -ffast-math -march=native  -o "+ tmpbinary
         print( cmd1 )
 
         #Find the compilation status using subprocess
@@ -100,6 +100,7 @@ class Plopper:
         if compilation_status.returncode == 0 :
             # Execute N times, exclude min and max, take the mean
             cmd2 = "tau_exec -T serial,clang " +  tmpbinary
+#            cmd2 = tmpbinary
             #print( cmd2 )
             exec_times = []
             for n in range( NBEXEC ):
