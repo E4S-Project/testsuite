@@ -98,8 +98,8 @@ class Plopper:
         #Find the execution time only when the compilation return code is zero, else return infinity
         if compilation_status.returncode == 0 :
             # Execute N times, exclude min and max, take the mean
-            cmd2 = "tau_exec -T serial,clang " +  tmpbinary
-#            cmd2 = tmpbinary
+#            cmd2 = "tau_exec -T serial,clang " +  tmpbinary
+            cmd2 = tmpbinary
             #print( cmd2 )
             exec_times = []
             for n in range( NBEXEC ):
