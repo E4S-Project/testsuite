@@ -13,7 +13,7 @@ import ConfigSpace.hyperparameters as CSH
 from skopt.space import Real, Integer, Categorical
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(1, os.path.dirname(HERE)+ '/plopper')
+sys.path.insert(1, os.path.dirname(HERE)+ '/tools')
 from plopper import Plopper
 nparams = 6
 
