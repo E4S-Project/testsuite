@@ -12,8 +12,8 @@ def getFunction( fn ):
 
 def getTime( fun, pd ):
     profile = TauProfileParser.parse( pd )
-    df = profile.interval_data().loc[0,0,0,fun]
-    time = df[ 'Inclusive' ]
+    df = profile.interval_data().loc[0,0,1:,fun] # remove the header
+    time = df[ 'Inclusive' ].max() # This should be fine
     return time
 
 def getData( ff, pd ):

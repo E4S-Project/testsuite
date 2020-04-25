@@ -106,7 +106,7 @@ class Plopper:
                 execution_status = subprocess.run(cmd2, shell=True, stderr=subprocess.PIPE )
                 if execution_status.returncode == 0:
                     exetime = read_tau_data.getData( function_file, "." )  # /!\ careful: concurrency here
-                    #print( "time: ", exetime )
+                    print( "time: ", exetime )
                     exec_times.append( exetime )
                 else:
                     print( execution_status.stderr )
