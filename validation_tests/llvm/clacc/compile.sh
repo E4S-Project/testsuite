@@ -51,8 +51,18 @@ fi
 
 
 #-fopenmp-targets=<triples> for traditional compilation mode
+# nvptx64-nvidia-cuda
+# powerpc64le-unknown-linux-gnu
+# x86_64-unknown-linux-gnu
 
-for TARGET in host x86_64  nvptx64 ; do
+if [ `arch` == "ppc64le" ]; then
+    ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)
+fi
+if [ `arch` == "x86_64" ]; then
+    ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
+fi
+
+for TARGET in ${ARCHITECTURES[@]} ; do
     clang -O3 -fopenacc -fopenmp-targets=$TARGET -o jacobi_$TARGET jacobi.c
     RET=$?
     echo -n "Compile with target " $TARGET
@@ -67,10 +77,6 @@ done
 
 clang -fopenacc -o parallel parallel.c
 clang -fopenacc -o gang gang.c
-
-for TARGET in host x86_64  nvptx64 ; do
-    clang -O3 -fopenacc -fopenmp-targets=$TARGET -o jacobi_$TARGET jacobi.c
-done
 
 # Small tests
 
