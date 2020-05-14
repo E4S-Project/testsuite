@@ -45,3 +45,13 @@ else
 fi
 rm tmp tmp2
 cd ..
+
+# When we try to load a file that does not exist, CHiLL segfaults
+chill nofile.py &> /dev/null
+RET=$?
+echo -n "Segmentation fault when trying to load a non-existent file:   "
+if [ $RET == 139 ] ; then
+    echo "[PASS]"
+else
+    echo "[FAIL]"
+fi
