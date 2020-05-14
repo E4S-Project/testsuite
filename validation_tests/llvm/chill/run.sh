@@ -40,7 +40,7 @@ function run_example(){
     
     chill $CHILLSCRIPT &> /dev/null
     RET=$?
-    echo -n "Simple test :           "
+    echo -n "test :           "
     if [ $RET == 0 ] ; then
 	echo "[PASS]"
     else
@@ -72,5 +72,15 @@ function run_example(){
 
 start_chill
 load_nonexistent
+echo -n "Simple "
 run_example simple.py singleloop single_main
+echo -n "Nested loops "
 run_example nested.py nestedloops nested_main
+echo -n "Reorder loops "
+run_example nested_swap.py nestedloops nested_main
+echo -n "Tile loops "
+run_example nested_tiling.py nestedloops nested_main
+echo -n "Reverse loops "
+run_example reverse1.script.py mm mm_main
+echo -n "Peel loops "
+run_example nested_peel.py mm mm_main
