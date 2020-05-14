@@ -28,9 +28,15 @@ double Anew[NN][NM];
 /* Assume we are on x86_64 */
 
 static __inline__ unsigned long long rdtsc(void){
+#ifdef __x86_64
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+#else
+#if __powerpc64__
+  return __builtin_readcyclecounter();
+#endif // __powerpc64__
+#endif
 }
 
 
