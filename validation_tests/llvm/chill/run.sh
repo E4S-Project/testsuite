@@ -32,9 +32,13 @@ function load_nonexistent(){
 
 function run_example(){
 
-# Run a simple example
+    # Run a simple example
+
+    CHILLSCRIPT=$1
+    INPUTFILE=$2
+    TESTMAIN=$3
     
-    chill simple.py &> /dev/null
+    chill $CHILLSCRIPT &> /dev/null
     RET=$?
     echo -n "Simple test :           "
     if [ $RET == 0 ] ; then
@@ -44,7 +48,7 @@ function run_example(){
     fi
     # It must have produced an output file
     echo -n "Output file present:    "
-    if test -f "src/singleloop_modified.c"; then   
+    if test -f "src/${INPUTFILE}_modified.c"; then   
 	echo "[PASS]"
     else
 	echo "[FAIL]"
@@ -52,10 +56,10 @@ function run_example(){
     # Does it give the same result
     cd testfiles
     echo -n "Produced code gives the same result:   "
-    gcc -o single_main single_main.c ../src/singleloop_modified.c
-    ./single_main > tmp2
-    gcc -o single_main single_main.c ../src/singleloop.c
-    ./single_main > tmp
+    gcc -o $TESTMAIN ${TESTMAIN}.c ../src/${INPUTFILE}_modified.c
+    ./$TESTMAIN > tmp2
+    gcc -o $TESTMAIN ${TESTMAIN}.c ../src/${INPUTFILE}.c
+    ./$TESTMAIN > tmp
     TOTO=`diff tmp tmp2`
     if [ -z $TOTO ]; then
 	echo "[PASS]"
@@ -68,4 +72,5 @@ function run_example(){
 
 start_chill
 load_nonexistent
-run_example
+run_example simple.py singleloop single_main
+run_example nested.py nestedloops nested_main
