@@ -1,7 +1,7 @@
 #!/bin/bash
 
-./callfunctions_c > tmpc
-./callfunctions_f > tmpf
+LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./callfunctions_c > tmpc
+LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./callfunctions_f > tmpf
 
 TOTO=`diff tmpc tmpf`
 if [ -z $TOTO ]; then
