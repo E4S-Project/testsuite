@@ -14,6 +14,7 @@ $MYFC $MYOPT -shared -o libaddf2.so libaddf.f90
 
 # Link against the dynamic libraries
 
+$MYFC $MYOPTF -o f_and_f f_and_f.f90 -L. -laddf
 $MYCC $MYOPT -o callfunctions_c callfunctions.c -L. -laddc -laddf
 $MYFC $MYOPTF -o callfunctions_f callfunctions.f90 -L. -laddc -laddf
 $MYCC $MYOPT -o callfunctions2_c callfunctions2.c -L. -laddc -laddf2
@@ -30,7 +31,8 @@ ar cr libaddf2.a libaddf2.o
 
 # Use them
 
-$MYCC $MYOPT -o callfunctions_c_static callfunctions.c libaddf.a libaddc.a
+$MYFC $MYOPTF -o f_and_f f_and_f.f90 libaddf.a 
+$MYCC $MYOPT  -o callfunctions_c_static callfunctions.c libaddf.a libaddc.a
 $MYFC $MYOPTF -o callfunctions_f_static callfunctions.f90 libaddf.a libaddc.a
-$MYCC $MYOPT -o callfunctions2_c_static callfunctions2.c libaddf2.a libaddc.a
+$MYCC $MYOPT  -o callfunctions2_c_static callfunctions2.c libaddf2.a libaddc.a
 
