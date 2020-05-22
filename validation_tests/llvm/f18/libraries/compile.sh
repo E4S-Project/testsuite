@@ -1,7 +1,8 @@
 #!/bin/bash
 
 MYCC=clang
-MYFC=flang
+#MYFC=flang
+MYFC=./wlang
 
 MYOPT="-g -Wall "
 MYOPTF="-fno-underscoring -g -Wall "
