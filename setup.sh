@@ -1,7 +1,7 @@
 #This is necessary in every sub-script that loads spack packages.
 command -v spack >/dev/null 2>&1 || { source /spack/share/spack/setup-env.sh; }
 command -v spack >/dev/null 2>&1 || { echo "Failure: Spack not found. Exiting"; exit 1; }
-source /spack/share/spack/setup-env.sh
+source ${SPACK_ROOT}/share/spack/setup-env.sh
 rArg=" -r "
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
@@ -11,9 +11,19 @@ oneSpackHash(){
         fi
 	echo "/`echo "${findOut}" | tail -n1 | awk '{print $1;}'`" ;  
 }
+
+
+spackSetPackageRoot(){
+	#echo ${1}
+	SPAC_LOC=`spack location -i ${1}`
+        SPAC_NAM=`spack find --format={name} ${1}`
+        SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
+        export ${SPAC_NAM^^}_ROOT=${SPAC_LOC}
+}
+
 spackLoadUnique(){ 
 
-#        rArg=" -r "
+        rArg=" -r "
 #	if [ ! -z "$2" ] && [ $2 = "nor" ]; then
 #		rArg=""
 #	fi
@@ -24,6 +34,12 @@ spackLoadUnique(){
         fi
 	spack load ${rArg} ${spackHash} || { echo "Package/Spec $@ or dependency not found." >&2 ; exit 215; } ;
 	echo ${spackHash}
+	HASHES=`spack find --loaded --format={hash}`
+	for HASH in $HASHES
+	do
+		#echo $HASH
+		spackSetPackageRoot /$HASH
+	done
 }
 
 spackLoadUniqueNoR(){

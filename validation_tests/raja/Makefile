@@ -4,7 +4,7 @@ CXX=g++
 CXXFLAGS= -fopenmp -O3 -g -I$(RAJA_ROOT)/include -L$(RAJA_ROOT)/lib
 
 $(objects): %: %.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) -o $@ $< -lRAJA
 
 clean:
 	rm -f *.o $(objects)
