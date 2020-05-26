@@ -12,10 +12,10 @@ def compileWithStaticLib():
     command = flang + " -v " + " ".join( sys.argv[1:] )
     status, output = commands.getstatusoutput( command )
 
-    # Find the static libraries
+    # Find the libraries
     staticlibs = []
     for a in sys.argv[1:]:
-        if a.endswith( '.a' ):
+        if a.endswith( '.a' ) or a.startswith( "-l" ):
             staticlibs.append( a )
 
     # Find the link edition command
@@ -48,7 +48,7 @@ def main():
     # Is there a static lib somewhere in the command line?
     staticlib = False
     for a in sys.argv[1:]:
-        if a.endswith( '.a' ):
+        if a.endswith( '.a' ) or a.startswith( "-l" ):
             staticlib = True
 
     if not staticlib:
