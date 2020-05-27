@@ -7,7 +7,7 @@
 spackLoadUniqueNoR tau #@develop
 #spackLoadUnique kokkos
 kokkosHash=$(spackLoadUnique kokkos) #+openmp
-spackLoadUnique kokkos
+spackLoadUniqueNoR kokkos
 #spack load -r kokkos
 #module list
 
