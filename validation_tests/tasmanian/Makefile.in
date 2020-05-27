@@ -1,7 +1,7 @@
 # disable openmp on non-Linux platforms
 UNAME = $(shell uname)
 ifeq ($(UNAME), Linux)
-COMPILE_OPTIONS = -fopenmp
+COMPILE_OPTIONS = -fopenmp -no-pie
 else
 COMPILE_OPTIONS = -Wno-unknown-pragmas
 endif
