@@ -67,7 +67,7 @@ void kernel_jacobi_2d_imper(int tsteps,
 	  B[i][j] = 0.2 * (A[i][j] + A[i][j-1] + A[i][1+j] + A[1+i][j] + A[i-1][j]);
 #P2
 #P3
-#pragma clang loop(i2,j2) tile sizes(#P6,#P7) floor_ids(ii2,ji2) tile_ids(ik2,jk2)
+#pragma clang loop(i2,j2) tile sizes(#P6,#P7) floor_ids(ii2,ji2) tile_ids(im2,jm2)
 #pragma clang loop id(i2)
       for (i = 1; i < n - 1; i++)
 #pragma clang loop id(j2)
