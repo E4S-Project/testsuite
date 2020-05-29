@@ -48,13 +48,13 @@ x1=['p0','p1','p2','p3','p4','p5']
 
 def myobj(point: dict):
 
-  def plopper_func(x):
+  def plopper_func( x ):
     x = np.asarray_chkfinite(x)  # ValueError if any NaN or Inf
-    value = [point[x1[0]],point[x1[1]],point[x1[2]],point[x1[3]],point[x1[4]],point[x1[5]]]
-    print('VALUES:',point[x1[0]])
+    values = [ point[k] for k in x1 ]
+    print('VALUES:', values )
     params = ["P0","P1","P2","P3","P4","P5"]
 
-    result = obj.findRuntime(value, params)
+    result = obj.findRuntime( values, params )
     print( "RESULT: ", result )
     return result
 
