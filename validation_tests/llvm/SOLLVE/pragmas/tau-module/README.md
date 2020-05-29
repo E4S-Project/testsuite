@@ -5,3 +5,13 @@
 * `TAU_FUNCTIONS`: path to the file containing the name of the function we are profiling. See `functions_C.txt` in the durrect directory.
 * `LLVM_DIR`: path to the LLVM installation
 
+## Benchmarks
+
+"Working" means that the code runs. Some more optimization might be useful.
+* Working: gemm  jacobi-1d-imper  jacobi-2d-imper 2mm
+* In progress: adi floyd-warshall
+
+## TODO
+
+* More benchmarks
+* Refactor findMin.py
