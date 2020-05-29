@@ -46,11 +46,13 @@ class Plopper:
 
 
     # Function to find the execution time of the interim file, and return the execution time as cost to the search module
-    def findRuntime(self, x, params):
+    # the last (optional) argument gives the possibility to pass additional compilation parameters
+    def findRuntime(self, x, params, compil=""):
         interimfile = ""
         exetime = float('inf')
         #exetime = sys.maxsize
-        exetime = 1
+        #exetime = 1
+
         counter = random.randint(1, 10001) # To reduce collision increasing the sampling intervals
 
         interimfile = self.outputdir+"/"+str(counter)+".c"
@@ -65,7 +67,7 @@ class Plopper:
         kernel_idx = self.sourcefile.rfind('/')
         kernel_dir = self.sourcefile[:kernel_idx]
 
-        # Get the TAU-related environment variables
+         # Get the TAU-related environment variables
         tau = os.environ.get('TAU')
         if None == tau:
             print( "The TAU environment variable must be defined" )
@@ -82,14 +84,20 @@ class Plopper:
         if None == function_file:
             print( "The TAU_FUNCTIONS environment variable must be defined" )
             return -1
-
+ 
         taucmd = "-fplugin=" + llvm + "/lib/TAU_Profiling.so -mllvm " \
                  + "-tau-input-file=" + function_file + " -ldl " \
                  + "-L" + tau + "/lib/" + tau_makefile + " -lTAU " \
                  + "-Wl,-rpath," + tau + "/lib/"+ tau_makefile
         
-        cmd1 = "clang " + taucmd + " "  + interimfile +" "  \
-                "-O3 -fno-caret-diagnostics -std=c99 -fno-unroll-loops -mllvm -polly -mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
+#        print( taucmd )
+
+        cmd1 = "clang " + taucmd + " "  + interimfile +" "  + compil + " " \
+                "-O3 -fno-caret-diagnostics -std=c99 -fno-unroll-loops -mllvm -polly "\
+                + "-mllvm -polly-position=early " \
+                + "-mllvm -polly-process-unprofitable -mllvm -polly-use-llvm-names -ffast-math -march=native -o "+tmpbinary
+
+
 #        print( cmd1 )
 
         #Find the compilation status using subprocess
@@ -99,11 +107,11 @@ class Plopper:
         if compilation_status.returncode == 0 :
             # Execute N times, exclude min and max, take the mean
 #            cmd2 = "tau_exec -T serial,clang " +  tmpbinary
-            cmd2 = tmpbinary
+            cmd2 = tmpbinary  + " > /dev/null 2> /dev/null"
             #print( cmd2 )
             exec_times = []
             for n in range( NBEXEC ):
-                execution_status = subprocess.run(cmd2, shell=True, stderr=subprocess.PIPE )
+                execution_status = subprocess.run(cmd2, shell=True )#, stderr=subprocess.PIPE )
                 if execution_status.returncode == 0:
                     exetime = read_tau_data.getData( function_file, "." )  # /!\ careful: concurrency here
                     exec_times.append( exetime )
@@ -116,5 +124,6 @@ class Plopper:
         else:
             print(compilation_status.stderr)
             print("compile failed")
+
         return exetime #return execution time as cost
 
