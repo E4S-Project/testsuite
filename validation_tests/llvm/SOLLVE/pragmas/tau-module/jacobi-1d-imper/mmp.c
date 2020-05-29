@@ -52,22 +52,67 @@ static void kernel_jacobi_1d_imper(int tsteps,
 			    DATA_TYPE A[n], DATA_TYPE B[n] ){
   int t, i, j;
 
-  //#pragma scop
+#pragma scop
 
+#define _DIRECT2_ 0
+#define _DIRECT_ 0
+#define _PEELING_ 0
 #P0
-#P1
+
+#if _DIRECT_
+#pragma clang loop id( t )
+  for (t = 0; t < tsteps; t++) {
+#pragma clang loop id( i )
+    for (i = 1; i < n - 1; i++)
+      B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
+#pragma clang loop id( j )
+    for (j = 1; j < n - 1; j++)
+      A[j] = B[j];
+  }
+#else // _DIRECT_
+ 
+#if _DIRECT2_
+#pragma clang loop id( t )
+  for (t = 0; t < tsteps; t++) {
+#pragma clang loop id( i )
+    for (i = 1; i < n - 1; i++)
+      B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
+#pragma clang loop id( j )
+    for (j = 2; j < n ; j++)
+      A[j-1] = B[j-1];
+  }
+#else // _DIRECT2_
+#if _PEELING_
 
 #pragma clang loop id( t )
-  for (t = 0; t < tsteps; t++)
-    {
+  for (t = 0; t < tsteps; t++) {
+    B[1] = 0.33333 * (A[0] + A[1] + A[2]);
 #pragma clang loop id( i )
-      for (i = 1; i < n - 1; i++)
-	B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
-#pragma clang loop id( j )
-      for (j = 1; j < n - 1; j++)
-	A[j] = B[j];
+    for (i = 2; i < n - 1; i++){
+      B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
+      A[i-1] = B[i-1];
     }
-  //#pragma endscop
+    A[n-2] = B[n-2];
+  }
+#else // _PEELING_
+
+#pragma clang loop id( t )
+  for (t = 0; t < tsteps; t++) {
+#pragma clang loop id( i )
+    for (i = 1; i < n - 1; i++){
+      B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
+      if( i > 1 )
+	A[i-1] = B[i-1];
+      if( i == n - 2 )
+	A[i] = B[i];
+    }
+  }
+
+#endif // _PEELING_
+#endif // _DIRECT2_
+#endif // _DIRECT_
+  
+#pragma endscop
 
 }
 
