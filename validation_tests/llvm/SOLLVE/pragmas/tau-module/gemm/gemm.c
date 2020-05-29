@@ -79,9 +79,9 @@ void kernel_gemm(int ni, int nj, int nk,
 #pragma clang loop id(i)
   for (i = 0; i < ni; i++) {
     #pragma clang loop id(j)
-    for (j = 0; j < nk; j++){
+    for (j = 0; j < nj; j++){
     #pragma clang loop id(k)
-     for (k = 0; k < nj; k++) {
+     for (k = 0; k < nk; k++) {
        C[i][k] += alpha * A[i][j] * B[j][k];
     }
    }
