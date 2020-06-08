@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+//#include <math.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -11,6 +11,10 @@
 #define DEBUG      0
 #define SHOWRESULT 0
 #define CHECKPRECI 1e-8
+
+// now this is necessary
+long double sqrtl( long double );
+long double fabsl( long double );
 
 void initRand( int, int, double[][*] );
 void initZero( int, int, double[][*] );
@@ -151,7 +155,7 @@ void printPerf( int M, int N, double time ) {
 double getnorm( int len, double vec[len] ) {
     int i;
     double n = vec[0]*vec[0];
-#pragma acc parallel loop copyin( vec ) copyout( n )
+#pragma acc parallel loop copyin( vec[:len] ) copyout( n )
     for( i = 1 ; i < len ; i++ ) {
       n += ( vec[i] * vec[i] );
     }
@@ -189,10 +193,10 @@ bool isEqual( int M, int N, double A[M][N], double B[M][N] ) {
     int i, j;
     bool eq = true;
 
-#pragma acc parallel loop copyin( A, B ) copyout( eq )
+#pragma acc parallel loop copyin( A[:M][:N], B[:M][:N] ) copyout( eq )
     for( i = 0 ; i < M ; i++ ) {
         for( j = 0 ; j < N ; j++ ) {
-            if( fabs( B[i][j] - A[i][j] ) > CHECKPRECI ) {
+            if( fabsl( B[i][j] - A[i][j] ) > CHECKPRECI ) {
                 eq = false;
             }
         }
@@ -235,7 +239,7 @@ bool checkUnitary( int M, int N, double Q[M][N] ) {
         }
     }
 //    memcpy( tmp, Q, M*N*sizeof( double ));
-#pragma acc parallel loop copyin( Q ) copyout( tmp )
+#pragma acc parallel loop copyin( Q[:M][:N] ) copyout( tmp[:M][:N] )
     for( int i = 0 ; i < M ; i++ ) {
         for( int j = 0 ; j < N ; j++ ) {
             tmp[i][j] = Q[i][j];
@@ -278,7 +282,7 @@ void transpose( int M, int N, double A[M][N] ) {
     int i, j;
     double tmp;
 
-#pragma acc parallel loop copy( A )
+#pragma acc parallel loop copy( A[:M][:N] )
     for( i = 0 ; i < M ; i++ ) {
         for( j = i ; j < N ; j++ ) {
             tmp = A[ i ][ j ];
@@ -305,7 +309,7 @@ unsigned int min( unsigned int a, unsigned int b ){
 }
 
 void copyR( int M, int N, double dst[N][N], double orig[M][N] ){
-#pragma acc parallel loop copyin( orig ) copyout( dst )
+#pragma acc parallel loop copyin( orig[:M][:N] ) copyout( dst[:M][:N] )
     for( int i = 0 ; i < min( M, N ) ; i++ ) {
         for( int j = 0 ; j < min( M, N ) ; j++ ) {
             dst[i][j] = orig[i][j];
@@ -314,8 +318,7 @@ void copyR( int M, int N, double dst[N][N], double orig[M][N] ){
 }
 
 void matmul(  int M, int K, int N, double out[M][N], double A[M][K], double B[K][N] ){
-
-#pragma acc parallel loop copyin( A, B ) copyout( out )
+#pragma acc parallel loop copyin( A[:M][:N], B[:M][:N] ) copyout( out[:M][:N] )
     for( int i = 0 ; i < M ; i++ ){ 
         for( int j = 0 ; j < N ; j++ ){
 	  //            out[ i * N + j ] = 0.0;
@@ -340,7 +343,7 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
         tmpV[i] = 0.0;
     }
 
-#pragma acc parallel loop copyin( w, R ) copyout( tmpV )
+#pragma acc parallel loop copyin( w[:len], R[:len][:len] ) copyout( tmpV[:len] )
     for( j = 0 ; j < len ; j++ ){
       for( i = start ; i < len ; i++ ) {
 	tmpV[j] += w[i]*R[ i ][ j ];
@@ -348,8 +351,8 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
     }
 
     /* tmpM = tau * w * tmpV */
-
-#pragma acc parallel loop copyin( tau, w, tmpV ) copyout( tmpM )
+    
+#pragma acc parallel loop copyin( tau, w[:len], tmpV[:len] ) copyout( tmpM[:len][:len] )
     for( i = 0 ; i < len ; i++ ){
       for( j = start ; j < len ; j++ ){
 	  tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
@@ -358,7 +361,7 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
 
     /* R = R - tmpM */
 
-#pragma acc parallel loop copyin( tmpM ) copyout( R )
+#pragma acc parallel loop copyin( tmpM[:len][:len] ) copyout( R[:len][:len] )
     for( i = start ; i < len ; i++ ){
         for( j = 0 ; j < len ; j++ ){
             R[ i ][ j] -= tmpM[ i ][ j ];
@@ -376,7 +379,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* tmpV = (Q(:,j:end)*w) */
 
-#pragma acc parallel loop copyin( Q, w ) copyout( tmpV )
+#pragma acc parallel loop copyin( Q[:len][start:len], w[start:len] ) copyout( tmpV[start:len] )
     for( j = 0 ; j < len ; j++ ) {
       tmpV[j] = 0.0;
       for( i = start ; i < len ; i++ ) {
@@ -386,7 +389,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* tmpM = tmpV * (tau*w) */
 
-#pragma acc parallel loop copyin( tmpV, w ) copyout( tmpM )
+#pragma acc parallel loop copyin( tmpV[:len], w[start:len] ) copyout( tmpM[:len][start:len] )
     for( j = 0 ; j < len ; j++ ) {
       for( i = start  ; i < len ; i++ ) {
 	tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
@@ -395,7 +398,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* Q(:,j:end) -= tmpM */
 
-#pragma acc parallel loop copyin( tmpM ) copyout( Q )
+#pragma acc parallel loop copyin( tmpM[:len][start:len] ) copyout( Q[:len][start:len] )
     for( j = 0 ; j < len ; j++ ) {
       for( i = start ; i < len ; i++ ) {
 	Q[ j ][ i ] -= tmpM[ j ][ i ];
@@ -423,7 +426,7 @@ void householder( int M, int N, double A[M][N], double Q[M][N], double R[N][N] )
       
       /* H = I - tau * w * w' */
       
-	///#pragma acc parallel loop copyin( R ) copyout( w )
+#pragma acc parallel loop copyin( R ) copyout( w )
       for( j = i ; j < N ; j++ ) {
 	w[j] = R[ j ][ i ];
       }

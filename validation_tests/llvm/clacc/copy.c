@@ -4,7 +4,7 @@
 #define DEFAULTM 32
 #define DEFAULTN 32
 
-#define FUNCALL 0
+#define FUNCALL 1
 
 #if FUNCALL
 void toto( int, int, double*, double*, double* );
@@ -44,7 +44,7 @@ int main( int argc, char** argv ) {
    * First step: we are doing the loop in the main function
    *********************************************************************************/
   
-#pragma acc parallel loop copyin( w, R ) copyout( V )
+#pragma acc parallel loop copyin( w[0:N], R[0:M*N] ) copyout( V[0:M] )
   for( int j = 0 ; j < N ; j++ ){
     for( int i = 0 ; i < M ; i++ ) {
       V[j] += w[i]*R[ i*N + j ];
@@ -71,7 +71,7 @@ int main( int argc, char** argv ) {
 
 #if FUNCALL
 void toto( int M, int N, double* V, double* w, double* R ) {
-#pragma acc parallel loop copyin( w[:N], R[:M*N] ) copyout( V[:M] )
+#pragma acc parallel loop copyin( w[0:N], R[0:M*N] ) copyout( V[0:M] )
   for( int j = 0 ; j < N ; j++ ){
     for( int i = 0 ; i < M ; i++ ) {
       V[j] += w[i]*R[ i*N + j ];
