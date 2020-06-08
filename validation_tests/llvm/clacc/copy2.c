@@ -7,7 +7,7 @@
 #define FUNCALL 1
 
 #if FUNCALL
-void toto( int, int, double[*], double[*], double[*] );
+void toto( int, int, double[], double[], double[] );
 #endif
 
 int main( int argc, char** argv ) {
@@ -64,8 +64,8 @@ int main( int argc, char** argv ) {
 }
 
 #if FUNCALL
-void toto( int M, int N, double V[N], double w[M], double R[M*N] ) {
-#pragma acc parallel loop copyin( w, R ) copyout( V )
+void toto( int M, int N, double V[], double w[], double R[] ) {
+#pragma acc parallel loop copyin( w[:M], R[:M*N] ) copyout( V[:N] )
   for( int j = 0 ; j < N ; j++ ){
     for( int i = 0 ; i < M ; i++ ) {
       V[j] += w[i]*R[ i*N + j ];
