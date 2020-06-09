@@ -55,22 +55,24 @@ fi
 # powerpc64le-unknown-linux-gnu
 # x86_64-unknown-linux-gnu
 
-if [ `arch` == "ppc64le" ]; then
-    ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)
-fi
-if [ `arch` == "x86_64" ]; then
-    ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
-fi
-
-for TARGET in ${ARCHITECTURES[@]} ; do
-    clang -O3 -fopenacc -fopenmp-targets=$TARGET -o jacobi_$TARGET jacobi.c
-    RET=$?
-    echo -n "Compile with target " $TARGET
-    if [ $RET == 0 ] ; then
-	echo " [PASS]"
-    else
-	echo " [FAIL]"
+for SOURCE in "jacobi" "data" ; do
+    if [ `arch` == "ppc64le" ]; then
+	ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)
     fi
+    if [ `arch` == "x86_64" ]; then
+	ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
+    fi
+    
+    for TARGET in ${ARCHITECTURES[@]} ; do
+	clang -O3 -fopenacc -fopenmp-targets=$TARGET -o ${SOURCE}_$TARGET ${SOURCE}.c
+	RET=$?
+	echo -n "Compile with target " $TARGET
+	if [ $RET == 0 ] ; then
+	    echo " [PASS]"
+	else
+	    echo " [FAIL]"
+	fi
+    done
 done
 
 # Compile things we are going to run

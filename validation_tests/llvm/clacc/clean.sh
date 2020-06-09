@@ -11,6 +11,9 @@ if [ `arch` == "x86_64" ]; then
     ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
 fi
 
-for TARGET in ${ARCHITECTURES[@]} ; do
-    rm -Rf jacobi_$TARGET 
+
+for SOURCE in "jacobi" "data" ; do
+    for TARGET in ${ARCHITECTURES[@]} ; do
+	rm -Rf ${SOURCE}_$TARGET 
+    done
 done
