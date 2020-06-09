@@ -70,7 +70,7 @@ int main( int argc, char** argv ) {
     }
   }
   printf( "copyin and copyout (loop): %s\n", eq?"[PASS]":"[FAILED]" );
-  failsomewhere |= eq;
+  failsomewhere |= !eq;
 
   /* Data directive */
 
@@ -94,7 +94,7 @@ int main( int argc, char** argv ) {
     }
   }
   printf( "copyin and copyout (data): %s\n", eq?"[PASS]":"[FAILED]" );
-  failsomewhere |= eq;
+  failsomewhere |= !eq;
 
   /*********************************************************************************
    * Create: allocate some space, leave it there, retrieve it later
@@ -132,7 +132,7 @@ int main( int argc, char** argv ) {
     }
   }
   printf( "create (data):             %s\n", eq?"[PASS]":"[FAILED]" );
-  failsomewhere |= eq;
+  failsomewhere |= !eq;
 
   /*********************************************************************************
    * Present: S is already on the device
