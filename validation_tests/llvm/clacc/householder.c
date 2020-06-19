@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+//#include <math.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -11,6 +11,11 @@
 #define DEBUG      0
 #define SHOWRESULT 0
 #define CHECKPRECI 1e-8
+
+// now this is necessary
+long double sqrtl( long double );
+long double fabsl( long double );
+inline double min( double a, double b ) { return (( a < b ) ? a : b); }
 
 void initRand( double*, int );
 void initZero( double*, int );
@@ -22,6 +27,7 @@ void matmul( double*, double*, double*, int, int, int );
 bool check( double*, double*, double*, int, int );
 double getTime( void );
 void printPerf( int, int, double );
+void copyR( double*, double*, int, int );
 
 void householder( double*, double*, double*, int, int );
 
@@ -56,7 +62,7 @@ int main( int argc, char** argv ){
     time_end   = getTime();
 
     printPerf( M, N, (time_end - time_start ) );
-
+    return EXIT_SUCCESS;
     /* Checks */
 
 #if SHOWRESULT  
@@ -172,8 +178,7 @@ void printMatrixOctave( double* mat, int M, int N ){
 bool isEqual( double* A, double* B, int M ) {
     int i;
     bool eq = true;
-//#pragma acc parallel loop copyin( A, B )
-#pragma acc parallel loop 
+#pragma acc parallel loop copyin( A[:M], B[:M] ) copyout( eq )
     for( i = 0 ; i < M ; i++ ) {
         if( ( B[i] - A[i] ) > CHECKPRECI ) {
             eq = false;
@@ -246,7 +251,7 @@ bool check( double* A, double* Q, double* R, int M, int N ) {
 void transpose( double* A, int M, int N ) {
     int i, j;
     double tmp;
-#pragma acc parallel loop
+#pragma acc parallel loop copy( A[:M*N] )
     for( i = 0 ; i < M ; i++ ) {
         for( j = i ; j < N ; j++ ) {
             tmp = A[ i * N + j ];
@@ -262,6 +267,7 @@ double getsign( double d ) {
 
 void normalize( double* vec, double len, double div ) {
     int i;
+#pragma acc parallel loop copy( vec ) copyin( div )
     for( i = 0 ; i < len ; i++ ) {
         vec[i] /= div;
     }
@@ -274,9 +280,20 @@ void normalize2( double* in, double* out, double len, double div ) {
     }
 }
 
+void copyR( double *dst, double* orig, int M, int N ){
+  int K = min( M, N );
+#pragma acc parallel loop copyin( orig[:M*N] ) copyout( dst[:M*N] )
+  for( int i = 0 ; i < K ; i++ ) {
+    for( int j = 0 ; j < K ; j++ ) {
+      dst[i*K + j] = orig[i*N+j];
+    }
+  }
+}
+
 void matmul( double* out, double* A, double* B, int M, int K, int N ){
     int i, j, k;
-#pragma acc parallel loop collapse( 2 )
+#pragma acc parallel loop copyin( A[:M*N], B[:M*N] ) copyout( out[:M*N] )
+    //#pragma acc parallel loop collapse( 2 )
     for( i = 0 ; i < M ; i++ ){ 
         for( j = 0 ; j < N ; j++ ){
 	  //            out[ i * N + j ] = 0.0;
@@ -294,13 +311,13 @@ void applyR( double* R, double* w, double tau, int len, int start ){
 
     tmpM = (double*) malloc( len * len * sizeof( double ) );
     tmpV = (double*) malloc( len * sizeof( double ) );
+    for( i = 0 ; i < len ; i++ ) tmpV[i] = 0;
 
-    /* R(j:end,:) = R(j:end,:)-(tau*w)*(w’*R(j:end,:)); */
+    /* R(j:end,:) = R(j:end,:)-(tau*w)*(w'*R(j:end,:)); */
 
      /* tmpV = w'*R(j:end,:) */
     
-    memset( tmpV, (char) 0, len*sizeof( double ) );
-#pragma acc parallel loop copyin( w, R ) copyout( tmpV )
+#pragma acc parallel loop copyin( w[:len], R[:len*len] ) copyout( tmpV[:len] )
     for( j = 0 ; j < len ; j++ ){
       for( i = start ; i < len ; i++ ) {
 	tmpV[j] += w[i]*R[ i*len + j ];
@@ -309,20 +326,20 @@ void applyR( double* R, double* w, double tau, int len, int start ){
 
     /* tmpM = tau * w * tmpV */
 
-#pragma acc parallel loop copyin( w, tmpV ) copyout( tmpM )
+#pragma acc parallel loop copyin( tau, w[:len], tmpV[:len] ) copyout( tmpM[:len*len] )
     for( i = 0 ; i < len ; i++ ){
       for( j = start ; j < len ; j++ ){
-	  tmpM[ j * len + i ] = tau * w[ j ] * tmpV[ i ];
+	tmpM[ j * len + i ] = tau * w[ j ] * tmpV[ i ];
 	}
     }
 
     /* R = R - tmpM */
 
-#pragma acc parallel 
-{
-#pragma acc loop independent  
-    for( i = start ; i < len ; i++ ){
-#pragma acc loop 
+#pragma acc parallel loop copyin( tmpM[:len*len] ) copyout( R[:len*len] )
+    {
+      //#pragma acc loop independent  
+      for( i = start ; i < len ; i++ ){
+  //#pragma acc loop 
         for( j = 0 ; j < len ; j++ ){
             R[ i * len + j] -= tmpM[ i * len + j ];
         }
@@ -342,11 +359,12 @@ void applyQ( double* Q, double* w, double tau, int len, int start ){
     tmpV = (double*) malloc( len * sizeof( double ) );
     memset( tmpM, (char)0, len * len * sizeof( double ) );
 
-    /* Q(:,j:end) = Q(:,j:end)-(Q(:,j:end)*w)*(tau*w)’; */
+    /* Q(:,j:end) = Q(:,j:end)-(Q(:,j:end)*w)*(tau*w)' */
 
     /* tmpV = (Q(:,j:end)*w) */
 
-#pragma acc parallel loop copyin( w, Q ) copyout( tmpV )
+    //    #pragma acc parallel loop copyin( Q[:len*len], w[start:len] ) copyout( tmpV[start:len] )
+#pragma acc parallel loop copyin( Q[:len*len], w[:len] ) copyout( tmpV[:len] )
     for( j = 0 ; j < len ; j++ ) {
       tmpV[j] = 0.0;
       for( i = start ; i < len ; i++ ) {
@@ -354,9 +372,9 @@ void applyQ( double* Q, double* w, double tau, int len, int start ){
       }      
     }
 
-    /* tmpM = tmpV * (tau*w)’; */
+    /* tmpM = tmpV * (tau*w)' */
 
-#pragma acc parallel loop copyin( w, tmpV ) copyout( tmpM )
+#pragma acc parallel loop copyin( tmpV[:len], w[start:len] ) copyout( tmpM[:len*len] )
     for( j = 0 ; j < len ; j++ ) {
       for( i = start  ; i < len ; i++ ) {
 	tmpM[ j*len + i ] = tmpV[j] * w[i] * tau;
@@ -365,11 +383,11 @@ void applyQ( double* Q, double* w, double tau, int len, int start ){
 
     /* Q(:,j:end) -= tmpM */
 
-#pragma acc parallel
+    #pragma acc parallel loop copyin( tmpM[:len*len] ) copyout( Q[:len*len] )
 {
-#pragma acc loop independent
+  //#pragma acc loop independent
     for( j = 0 ; j < len ; j++ ) {
-#pragma acc loop
+      //#pragma acc loop
       for( i = start ; i < len ; i++ ) {
 	Q[ j * len + i ] -= tmpM[ j* len + i ];
       }
@@ -387,7 +405,8 @@ void householder( double* A, double* Q, double* R, int M, int N ){
     double* w;
     
     w = (double*) malloc( N* sizeof( double ) );
-    memcpy( R, A, ( ( M > N ) ? N : M ) * N * sizeof( double ) );
+    //    memcpy( R, A, ( ( M > N ) ? N : M ) * N * sizeof( double ) );
+    copyR( R, A, M, N );
     initUnit( Q, M, N );
 
     for( i = 0 ; i < M  ; i++ ) {
@@ -396,6 +415,7 @@ void householder( double* A, double* Q, double* R, int M, int N ){
       
       /* H = I - tau * w * w' */
       
+      //#pragma acc parallel loop copyin( R ) copyout( w )
       for( j = i ; j < N ; j++ ) {
 	w[j] = R[ j * N + i ];
       }
