@@ -24,12 +24,12 @@ runtests (){
     for INFILE in hello.f95 helloworld3.f  ; do
 	f18 $F18OPT -o hello $INFILE $LIBS
 	RET=$?
-	echo -n $INFILE " compilation: "
+	echo -n $INFILE " compilation:       "
 	if [ $RET == 0 ] ; then
 	    echo -e "\033[01;32m[PASS]\e[0m"
 	    ./hello > /dev/null
 	    RET=$?
-	    echo -n $INFILE "  execution:  "
+	    echo -n $INFILE "  execution:        "
 	    if [ $RET == 0 ] ; then
 		echo -e "\033[01;32m[PASS]\e[0m"
 	    else
@@ -126,6 +126,26 @@ runtests (){
 runtests "gfortran" 
 runtests "clang" 
 
+echo -e "\033[01;34m[Support of the REAL( KIND = ... ) syntax]\e[0m"
+export F18_FC=`which gfortran`
+
+f18 -o kind kind.f90
+RET=$?
+echo -n "Kind 4, 8, 16:  "
+if [ $RET == 0 ] ; then
+    echo -e "\033[01;32m[PASS]\e[0m"
+else
+    echo -e "\033[01;31m[FAIL]\e[0m"
+fi
+
+f18 -o kind2 kind2.f90
+RET=$?
+echo -n "Kind 16, 32 (expected to fail for the moment):  "
+if [ $RET == 0 ] ; then
+    echo -e "\033[01;32m[PASS]\e[0m"
+else
+    echo -e "\033[01;31m[FAIL]\e[0m"
+fi
 
 
 #test_dot.f90; do
