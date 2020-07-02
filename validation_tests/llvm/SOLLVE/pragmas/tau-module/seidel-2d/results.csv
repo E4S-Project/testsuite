@@ -1,0 +1,21 @@
+p0,p1,p2,p3,p4,p5,p6,p7,objective,elapsed_sec
+#pragma clang loop(ik2) pack array(B) allocate(malloc), ,#pragma clang loop(im2) pack array(B) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),96,100,20,64,nan,8.560374736785889
+#pragma clang loop(ik2) pack array(B) allocate(malloc), ,#pragma clang loop(im2) pack array(B) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),128,50,16,8,nan,12.260820865631104
+#pragma clang loop(ik2) pack array(A) allocate(malloc), ,#pragma clang loop(im2) pack array(A) allocate(malloc), ,96,4,20,64,nan,16.26073670387268
+#pragma clang loop(ik2) pack array(B) allocate(malloc), ,#pragma clang loop(im2) pack array(A) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),96,80,80,50,nan,20.26071071624756
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(B) allocate(malloc),#pragma clang loop(im2) pack array(A) allocate(malloc),#pragma clang loop(jm2) pack array(A) allocate(malloc),50,32,32,4,nan,24.260766744613647
+ ,#pragma clang loop(jk2) pack array(B) allocate(malloc),#pragma clang loop(im2) pack array(B) allocate(malloc), ,32,4,64,8,nan,28.261812686920166
+ ,#pragma clang loop(jk2) pack array(B) allocate(malloc), ,#pragma clang loop(jm2) pack array(A) allocate(malloc),20,64,64,4,nan,32.26037859916687
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(B) allocate(malloc), ,#pragma clang loop(jm2) pack array(B) allocate(malloc),50,8,16,50,nan,36.25966453552246
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(A) allocate(malloc), ,#pragma clang loop(jm2) pack array(A) allocate(malloc),64,32,50,64,nan,40.26049613952637
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(B) allocate(malloc),#pragma clang loop(im2) pack array(A) allocate(malloc), ,32,96,100,100,nan,44.260021448135376
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(B) allocate(malloc), ,#pragma clang loop(jm2) pack array(A) allocate(malloc),80,100,100,4,nan,48.260982275009155
+ ,#pragma clang loop(jk2) pack array(A) allocate(malloc),#pragma clang loop(im2) pack array(B) allocate(malloc),#pragma clang loop(jm2) pack array(A) allocate(malloc),100,4,128,20,nan,52.26078486442566
+#pragma clang loop(ik2) pack array(A) allocate(malloc),#pragma clang loop(jk2) pack array(A) allocate(malloc),#pragma clang loop(im2) pack array(B) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),64,20,32,20,nan,56.260300397872925
+#pragma clang loop(ik2) pack array(A) allocate(malloc), , , ,128,80,32,80,nan,60.26098084449768
+ ,#pragma clang loop(jk2) pack array(B) allocate(malloc),#pragma clang loop(im2) pack array(A) allocate(malloc), ,4,4,50,80,nan,64.2607262134552
+ ,#pragma clang loop(jk2) pack array(B) allocate(malloc),#pragma clang loop(im2) pack array(A) allocate(malloc), ,4,4,50,20,nan,68.26023697853088
+#pragma clang loop(ik2) pack array(B) allocate(malloc),#pragma clang loop(jk2) pack array(A) allocate(malloc), ,#pragma clang loop(jm2) pack array(A) allocate(malloc),32,64,80,8,nan,72.26087784767151
+ , ,#pragma clang loop(im2) pack array(A) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),4,100,100,100,nan,76.26003360748291
+ ,#pragma clang loop(jk2) pack array(B) allocate(malloc), , ,16,100,80,8,nan,80.26037764549255
+#pragma clang loop(ik2) pack array(A) allocate(malloc),#pragma clang loop(jk2) pack array(A) allocate(malloc),#pragma clang loop(im2) pack array(B) allocate(malloc),#pragma clang loop(jm2) pack array(B) allocate(malloc),20,100,100,16,nan,84.26027345657349

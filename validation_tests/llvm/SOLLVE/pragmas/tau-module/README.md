@@ -8,7 +8,7 @@
 ## Benchmarks
 
 "Working" means that the code runs. Some more optimization might be useful.
-* Working: gemm  jacobi-1d-imper  jacobi-2d-imper 2mm adi floyd-warshall
+* Working: gemm  jacobi-1d-imper  jacobi-2d-imper 2mm adi floyd-warshall seidel-2d.py
 * In progress: 
 
 ## TODO
