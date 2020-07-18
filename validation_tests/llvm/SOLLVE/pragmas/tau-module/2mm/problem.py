@@ -15,19 +15,29 @@ from skopt.space import Real, Integer, Categorical
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(1, os.path.dirname(HERE)+ '/tools')
 from plopper import Plopper
-params = 3
 
 cs = CS.ConfigurationSpace(seed=1234)
+
+p0= CSH.CategoricalHyperparameter(name='p0', choices=["it1,jt1,kt1", "jt1,kt1,it1", "kt1,it1,jt1", "kt1,jt1,it1", "it1,kt1,jt1", "jt1,it1,kt1"], default_value="it1,jt1,kt1")
+p1= CSH.CategoricalHyperparameter(name='p1', choices=["it2,jt2,kt2", "jt2,kt2,it2", "kt2,it2,jt2", "kt2,jt2,it2", "it2,kt2,jt2", "jt2,it2,kt2"], default_value="it2,jt2,kt2")
+
+seq = ['4','8','16','20','32','50','64','80','96','100','128','192','256', '384','512','768','1024','1536','2048']
+
+p2 = CSH.OrdinalHyperparameter(name='p2', sequence=seq, default_value='96')
+p3 = CSH.OrdinalHyperparameter(name='p3', sequence=seq, default_value='96')
+p4 = CSH.OrdinalHyperparameter(name='p4', sequence=seq, default_value='96')
+
+p5 = CSH.OrdinalHyperparameter(name='p5', sequence=seq, default_value='96')
+p6 = CSH.OrdinalHyperparameter(name='p6', sequence=seq, default_value='96')
+p7 = CSH.OrdinalHyperparameter(name='p7', sequence=seq, default_value='96')
+
+
 
 #p0= CSH.CategoricalHyperparameter(name='p0', choices=["//#pragma clang loop(jl2) pack array(A) allocate(malloc)", " "], default_value=' ')
 #p1= CSH.CategoricalHyperparameter(name='p1', choices=["//#pragma clang loop(il2) pack array(A) allocate(malloc)", " "], default_value=' ')
 
-p0= CSH.OrdinalHyperparameter(name='p0', sequence=['4','8','16','20','32','50','64','80','96','100','128'], default_value='96')
-p1= CSH.OrdinalHyperparameter(name='p1', sequence=['4','8','16','20','32','50','64','80','100','128','2048'], default_value='2048')
-p2= CSH.OrdinalHyperparameter(name='p2', sequence=['4','8','16','20','32','50','64','80','100','128','256'], default_value='256')
-
 #cs.add_hyperparameters([p0, p1, p2, p3, p4])
-cs.add_hyperparameters([p0, p1, p2])
+cs.add_hyperparameters([p0, p1, p2, p3, p4, p5, p6, p7])
 
 # problem space
 task_space = None
@@ -43,8 +53,8 @@ kernel_idx = dir_path.rfind('/')
 kernel = dir_path[kernel_idx+1:]
 obj = Plopper(dir_path+'/mmp.c',dir_path)
 
-#x1=['p0','p1', 'p2', 'p3', 'p4']
-x1=['p0','p1', 'p2']
+x1=['p0','p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']
+params = len( x1 )
 
 
 def myobj(point: dict):
@@ -53,8 +63,7 @@ def myobj(point: dict):
     x = np.asarray_chkfinite(x)  # ValueError if any NaN or Inf
     values = [ point[k] for k in x1 ]
     print('VALUES:',point)
-#    params = ["P0","P1","P6","P7","P8"]
-    params = ["P6","P7","P8"]
+    params = ["P00","P01", "P2", "P3", "P4", "P5", "P6", "P7"]
 
     result = obj.findRuntime(values, params)
     print( 'RESULT:', result )

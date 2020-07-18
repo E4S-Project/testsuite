@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 
 dataframe = pandas.read_csv("results.csv")
 array = dataframe.values
-x = array[:,6]
+x = array[:,-1]
 
 print("Performance summary based on", len(array), "evaluations:")
 print("Min: ", str( x.min() ), "s")

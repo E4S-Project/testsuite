@@ -95,31 +95,32 @@ void kernel_2mm(int ni, int nj, int nk, int nl,
     }
   }
 
-  //#P0
-  //#P1
-  /*#P2*/
-  //#pragma clang loop(il,jl,kl) tile sizes(#P6,#P7,#P8) floor_ids(il1,jl1,kl1) tile_ids(il2,jl2,kl2)
-#pragma clang loop id(il)
-  for (i = 0; i < ni; i++)
-#pragma clang loop id(jl)
-    for (j = 0; j < nj; j++)	//	tmp[i][j] = 0;
-#pragma clang loop id(kl)
-	for (k = 0; k < nk; ++k)
-	  tmp[i][j] += A[i][k] * B[k][j];
-    
-#if 0  
   /*#P3
 #P4
 #P5*/
-  //#pragma clang loop(im,jm,km) tile sizes(#P9,#P10,#P11) floor_ids(im1,jm1,km1) tile_ids(im2,jm2,km2)
-#pragma clang loop id(im)
+
+#pragma clang loop(it1,jt1,kt1) interchange permutation(#P00)
+#pragma clang loop(it2,jt2,kt2) interchange permutation(#P01)
+      
+#pragma clang loop(i1,j1,k1) tile sizes(#P2, #P3,#P4) /*pit_ids(ip1,jp1,kp1)*/ floor_ids(if1,jf1,kf1)  tile_ids(it1,jt1,kt1)
+#pragma clang loop(i2,j2,k2) tile sizes(#P5, #P6,#P7) /*pit_ids(ip2,jp2,kp2)*/ floor_ids(if2,jf2,kf2)  tile_ids(it2,jt2,kt2)
+
+#pragma clang loop id(i1)
   for (i = 0; i < ni; i++)
-#pragma clang loop id(jm)
+#pragma clang loop id(j1)
+    for (j = 0; j < nj; j++)	//	tmp[i][j] = 0;
+#pragma clang loop id(k1)
+	for (k = 0; k < nk; ++k)
+	  tmp[i][j] += A[i][k] * B[k][j];
+    
+#pragma clang loop id(i2)
+  for (i = 0; i < ni; i++)
+#pragma clang loop id(j2)
     for (j = 0; j < nl; j++)	//	D[i][j] *= beta;
-#pragma clang loop id(km)
+#pragma clang loop id(k2)
 	for (k = 0; k < nj; ++k)
 	  D[i][j] += tmp[i][k] * C[k][j];
-#endif 
+  
 #pragma endscop
 
 }
