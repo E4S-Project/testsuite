@@ -7,5 +7,4 @@ export TAU_FUNCTIONS=$PWD/functions_C.txt
 
 
 python3 -m ytopt.search.ambs --evaluator ray --problem problem.Problem --max-evals=20 --learner RF  
-python3 findMin.py
-
+python3 ../tools/findMin.py $PWD/results.csv
