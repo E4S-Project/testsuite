@@ -19,9 +19,9 @@ int main(){
     tab2 = (double*) malloc( nt * sizeof( double ));
     k = 0;
 
-    double* ptab = &tab2[0];
-
-#pragma acc parallel loop private( tid ) reduction( max: ptab ) reduction( +: k )
+    double* ptab2 = &tab2[0];
+    
+#pragma acc parallel loop private( tid ) reduction( max: ptab2 ) reduction( +: k )
     for( i = 0 ; i < TABSIZE ; i++ ) {
         tab[i] *= 2;
         tid = omp_get_thread_num();
@@ -29,12 +29,12 @@ int main(){
         k += tab[i];
     }
 
-#pragma acc parallel loop private( tid ) reduction( +: ptab )
+    /*#pragma acc parallel loop private( tid ) reduction( +: ptab2 )
     for( i = 0 ; i < TABSIZE ; i++ ) {
         tab[i] *= 2;
         tid = omp_get_thread_num();
-        tab2[tid] += tab[i];
-        }
+        ptab2[tid] += tab[i];
+        }*/
 
     printf( "%lf %lf\n", k, tab2[0] );
 
