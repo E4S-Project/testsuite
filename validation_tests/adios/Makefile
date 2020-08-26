@@ -1,4 +1,4 @@
-CC=mpicc
+CC ?=mpicc
 CFLAGS=-g -O3
 
 

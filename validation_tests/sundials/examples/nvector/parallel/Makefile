@@ -27,16 +27,17 @@ includedir   = ${SUNDIALS_ROOT}/include
 libdir       = ${SUNDIALS_ROOT}/lib 
 libdir64     = ${SUNDIALS_ROOT}/lib64 
 
-CPP         = gcc
+CPP         ?=gcc
 CPPFLAGS    = -O3 -DNDEBUG
-CC          = gcc
+CC          ?=gcc
 CFLAGS      = -O3 -DNDEBUG
 LDFLAGS     = 
 LIBS        =  -lm #/usr/lib64/librt.so
 
 LINKFLAGS = -Wl,-rpath,${libdir} -Wl,-rpath,${libdir64}
 
-MPICC       = mpicc
+MPICC       =${CC}
+MPICC	    ?=mpicc
 MPI_INC_DIR = .
 MPI_LIB_DIR = .
 MPI_LIBS    = 
