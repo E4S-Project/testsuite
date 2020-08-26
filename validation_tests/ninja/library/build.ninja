@@ -1,0 +1,24 @@
+cc      = clang
+cflags  = -Weverything
+cflibs  = -Wl,-soname, -fPIC
+ldflags = 
+
+rule compile
+  command = $cc $cflags -c $in -o $out
+  description = Compiling the object file $out
+
+rule link
+  command = $cc $ldflags -o $out $in $libs
+  description = Linking the executable $out
+
+rule sharedlib
+  command = $cc $cflags $cflib -shared $in -o $out
+  description = Compiling shared library $out 
+
+build prog.o: compile prog.c
+build libadd.so: sharedlib libadd.c
+build prog: link prog.o libadd.so
+  libs = -L. -ladd
+
+default prog
+
