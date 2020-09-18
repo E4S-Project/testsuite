@@ -1,0 +1,14 @@
+
+
+struct Pocket_fb {
+  is_left:bool;
+  is_front:bool;
+}
+
+table FancyPants_fb {
+  name:string;
+  color:string;
+  pockets:[Pocket_fb];
+}
+
+root_type FancyPants_fb;

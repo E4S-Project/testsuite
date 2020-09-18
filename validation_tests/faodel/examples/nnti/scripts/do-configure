@@ -1,0 +1,11 @@
+rm -r CMake*
+
+export BOOST_ROOT=${HOME}/local
+
+cmake \
+-DCMAKE_BUILD_TYPE=DEBUG \
+-DCMAKE_INSTALL_PREFIX=${HOME}/projects/atdm/install \
+-DSBL_INCLUDE_DIRS=${HOME}/projects/atdm/install/include \
+-DSBL_LIBRARIES=${HOME}/projects/atdm/install/lib/libsbl.a \
+..
+
