@@ -6,3 +6,6 @@ superlu-dist
 superlu
 qthreads
 tasmanian
+faodel
+ninja
+
