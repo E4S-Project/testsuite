@@ -24,12 +24,12 @@ int main( int argc, char** argv ){
   MPI_Win_allocate( sizeof( int ), sizeof( int ),
 		    MPI_INFO_NULL, MPI_COMM_WORLD, &token, &win );
 
+  MPI_Win_fence( 0, win );
   if( 0 == rank ){
     value = VALUE;
     MPI_Put( &value, 1, MPI_INT, 1, 0, 1, MPI_INT, win );
   }
-  MPI_Win_flush_all( win );
-  MPI_Win_sync( win );
+  MPI_Win_fence( 0, win );
   
   if( 1 == rank ){
     if( *token == VALUE ){
