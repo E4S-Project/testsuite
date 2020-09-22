@@ -1,3 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spack load  papyrus
+spackLoadUnique  papyrus
