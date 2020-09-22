@@ -9,4 +9,4 @@ tasmanian
 faodel
 ninja
 openmpi
-
+mpich
