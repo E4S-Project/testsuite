@@ -8,4 +8,5 @@ qthreads
 tasmanian
 faodel
 ninja
+openmpi
 
