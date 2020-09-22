@@ -11,3 +11,4 @@ ninja
 openmpi
 mpich
 gasnet
+adios2
