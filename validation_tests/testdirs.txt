@@ -10,3 +10,4 @@ faodel
 ninja
 openmpi
 mpich
+gasnet
