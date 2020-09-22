@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
         else printf("[%s:%d] GET:rank[%d] peer[%d] key[%s] value[%s] vallen[%lu]\n", __FILE__, __LINE__, rank, peer, k[peer], val, vallen);
     }
 
-    if (val) ret = papyruskv_free(val);
+    if (val) ret = papyruskv_free(&val);
     if (ret != PAPYRUSKV_OK) printf("[%s:%d] ERROR:ret[%d] val[%p]\n", __FILE__, __LINE__, ret, val);
 
     ret = papyruskv_close(db);
