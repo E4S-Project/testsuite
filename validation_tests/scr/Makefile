@@ -1,0 +1,38 @@
+MPICC     ?= mpicc
+MPICXX    ?= mpicxx
+MPIF90    ?= mpif90
+OPT       ?= -g -O3
+#LIBDIR     = -L/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/lib64 -Wl,-rpath,/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/lib64 -lscr 
+#INCLUDES   = -I/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/include -I/usr/include -I.
+LIBDIR     = -L$(SCR_ROOT)/lib64 -Wl,-rpath,$(SCR_ROOT)/lib64 -lscr
+INCLUDES   = -I$(SCR_ROOT)/include -I/usr/include -I.
+
+all: test_api test_api_multiple test_interpose test_interpose_multiple test_ckpt_C test_ckpt_F
+
+clean:
+	rm -rf *.o test_api test_api_multiple test_interpose test_interpose_multiple test_ckpt_C test_ckpt_F *.ckpt ckpt.*
+
+test_api: test_common.o test_common.h test_api.c
+	$(MPICC) $(OPT) $(CFLAGS) $(INCLUDES) -o test_api test_common.o test_api.c \
+	  $(LDFLAGS) $(LIBDIR)
+
+test_api_multiple: test_common.o test_common.h test_api_multiple.c
+	$(MPICC) $(OPT) $(CFLAGS) $(INCLUDES) -o test_api_multiple test_common.o test_api_multiple.c \
+	  $(LDFLAGS) $(LIBDIR)
+
+test_interpose: test_interpose.c
+	$(MPICC) $(OPT) $(CFLAGS) -o test_interpose test_interpose.c $(LDFLAGS)
+
+test_interpose_multiple: test_common.o test_common.h test_interpose_multiple.c
+	$(MPICC) $(OPT) $(CFLAGS) -o test_interpose_multiple test_common.o test_interpose_multiple.c $(LDFLAGS)
+
+test_common.o: test_common.c test_common.h
+	$(MPICC) $(OPT) $(CFLAGS) $(INCLUDES) -c -o test_common.o test_common.c
+
+test_ckpt_C: test_ckpt.C
+	$(MPICXX) $(OPT) $(CXXFLAGS) $(INCLUDES) -o test_ckpt_C test_ckpt.C \
+	  $(LDFLAGS) $(LIBDIR)
+
+test_ckpt_F: test_ckpt.F
+	$(MPIF90) $(OPT) $(F90FLAGS) $(INCLUDES) -o test_ckpt_F test_ckpt.F \
+	  $(LDFLAGS) -lscrf $(LIBDIR)
