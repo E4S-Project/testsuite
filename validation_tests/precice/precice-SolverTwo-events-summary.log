@@ -1,0 +1,61 @@
+Run finished at Fri Sep 25 20:02:07 2020
+Global runtime       = 132ms / 0.132s
+Number of processors = 1
+# Rank: 0
+
+                                                                    Event |      Count |  Total[ms] |    Max[ms] |    Min[ms] |    Avg[ms] | Time Ratio |
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                  _GLOBAL |          1 |        132 |        132 |        132 |        132 |          1 |
+                                                                  advance |          4 |         41 |         41 |          0 |         10 |      0.311 |
+                                                  advance/m2n.receiveData |          3 |         41 |         40 |          0 |         13 |      0.311 |
+                                                     advance/m2n.sendData |          4 |          0 |          0 |          0 |          0 |          0 |
+                       advance/map.nn.computeMapping.FromMeshTwoToMeshOne |          1 |          0 |          0 |          0 |          0 |          0 |
+    advance/map.nn.computeMapping.FromMeshTwoToMeshOne.getIndexOnVertices |          1 |          0 |          0 |          0 |          0 |          0 |
+                              advance/map.nn.mapData.FromMeshOneToMeshTwo |          3 |          0 |          0 |          0 |          0 |          0 |
+                              advance/map.nn.mapData.FromMeshTwoToMeshOne |          4 |          0 |          0 |          0 |          0 |          0 |
+                                                                configure |          1 |          0 |          0 |          0 |          0 |          0 |
+                                                                 finalize |          1 |          0 |          0 |          0 |          0 |          0 |
+                                                               initialize |          1 |         90 |         90 |         90 |         90 |      0.682 |
+                                    initialize/m2n.acceptMasterConnection |          1 |          2 |          2 |          2 |          2 |     0.0152 |
+                                    initialize/m2n.acceptSlavesConnection |          1 |         45 |         45 |         45 |         45 |      0.341 |
+                              initialize/m2n.broadcastVertexDistributions |          1 |          0 |          0 |          0 |          0 |          0 |
+                                     initialize/m2n.buildCommunicationMap |          1 |          0 |          0 |          0 |          0 |          0 |
+                                      initialize/m2n.createCommunications |          1 |          2 |          2 |          2 |          2 |     0.0152 |
+                                initialize/m2n.exchangeVertexDistribution |          1 |         43 |         43 |         43 |         43 |      0.326 |
+                                               initialize/m2n.receiveData |          1 |          0 |          0 |          0 |          0 |          0 |
+                    initialize/map.nn.computeMapping.FromMeshOneToMeshTwo |          1 |          0 |          0 |          0 |          0 |          0 |
+ initialize/map.nn.computeMapping.FromMeshOneToMeshTwo.getIndexOnVertices |          1 |          0 |          0 |          0 |          0 |          0 |
+                           initialize/map.nn.mapData.FromMeshOneToMeshTwo |          1 |          0 |          0 |          0 |          0 |          0 |
+                                 initialize/partition.prepareMesh.MeshTwo |          1 |          0 |          0 |          0 |          0 |          0 |
+                           initialize/partition.receiveGlobalMesh.MeshOne |          1 |         41 |         41 |         41 |         41 |      0.311 |
+                                                           solver.advance |          4 |          0 |          0 |          0 |          0 |          0 |
+                                                        solver.initialize |          1 |          0 |          0 |          0 |          0 |          0 |
+
+
+                                                                     Name |        Max |  MaxOnRank |        Min |  MinOnRank |    Min/Max |
+--------------------------------------------------------------------------------------------------------------------------------------------
+                                                                  _GLOBAL |        132 |          0 |        132 |          0 |          1 |
+                                                                  advance |         41 |          0 |          0 |          0 |          0 |
+                                                  advance/m2n.receiveData |         40 |          0 |          0 |          0 |          0 |
+                                                     advance/m2n.sendData |          0 |          0 |          0 |          0 |          0 |
+                       advance/map.nn.computeMapping.FromMeshTwoToMeshOne |          0 |          0 |          0 |          0 |          0 |
+    advance/map.nn.computeMapping.FromMeshTwoToMeshOne.getIndexOnVertices |          0 |          0 |          0 |          0 |          0 |
+                              advance/map.nn.mapData.FromMeshOneToMeshTwo |          0 |          0 |          0 |          0 |          0 |
+                              advance/map.nn.mapData.FromMeshTwoToMeshOne |          0 |          0 |          0 |          0 |          0 |
+                                                                configure |          0 |          0 |          0 |          0 |          0 |
+                                                                 finalize |          0 |          0 |          0 |          0 |          0 |
+                                                               initialize |         90 |          0 |         90 |          0 |          1 |
+                                    initialize/m2n.acceptMasterConnection |          2 |          0 |          2 |          0 |          1 |
+                                    initialize/m2n.acceptSlavesConnection |         45 |          0 |         45 |          0 |          1 |
+                              initialize/m2n.broadcastVertexDistributions |          0 |          0 |          0 |          0 |          0 |
+                                     initialize/m2n.buildCommunicationMap |          0 |          0 |          0 |          0 |          0 |
+                                      initialize/m2n.createCommunications |          2 |          0 |          2 |          0 |          1 |
+                                initialize/m2n.exchangeVertexDistribution |         43 |          0 |         43 |          0 |          1 |
+                                               initialize/m2n.receiveData |          0 |          0 |          0 |          0 |          0 |
+                    initialize/map.nn.computeMapping.FromMeshOneToMeshTwo |          0 |          0 |          0 |          0 |          0 |
+ initialize/map.nn.computeMapping.FromMeshOneToMeshTwo.getIndexOnVertices |          0 |          0 |          0 |          0 |          0 |
+                           initialize/map.nn.mapData.FromMeshOneToMeshTwo |          0 |          0 |          0 |          0 |          0 |
+                                 initialize/partition.prepareMesh.MeshTwo |          0 |          0 |          0 |          0 |          0 |
+                           initialize/partition.receiveGlobalMesh.MeshOne |         41 |          0 |         41 |          0 |          1 |
+                                                           solver.advance |          0 |          0 |          0 |          0 |          0 |
+                                                        solver.initialize |          0 |          0 |          0 |          0 |          0 |
