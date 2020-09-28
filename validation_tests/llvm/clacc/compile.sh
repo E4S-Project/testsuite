@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./setup.sh
+
 # Compilation flags tests
 
 clang -fopenacc -o parallel parallel.c

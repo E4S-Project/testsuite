@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./setup.sh
+
 function start_chill(){
     
     # Verification: can we start CHiLL
