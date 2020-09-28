@@ -21,10 +21,9 @@ NC='\033[0m'
 CURRENTDIR=`pwd`
 
 for d in `cat testdirs.txt` ; do
-    echo -e "${BLUE}   Compiling ${d} ${NC}    "
+    echo -e "${BLUE}   Running ${d} ${NC}    "
     cd $d
-#    ./clean.sh
-    ./compile.sh
+    ./run.sh
     cd $CURRENTDIR
 done
 

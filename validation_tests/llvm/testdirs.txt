@@ -1,8 +1,2 @@
 SOLLVE
-chill
-clacc
 f18
-fjit
-kitsune
-pragmas
-tau
