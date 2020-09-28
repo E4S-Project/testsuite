@@ -20,7 +20,7 @@ CFLAGS = -O3
 #  should not compile LAPACK with flags such as -ffpe-trap=overflow.
 #
 FC =  f18
-FFLAGS = -O2 -frecursive -g 
+FFLAGS = -O2 -g 
 FFLAGS_DRV = $(FFLAGS)
 FFLAGS_NOOPT = -O0 -frecursive
 

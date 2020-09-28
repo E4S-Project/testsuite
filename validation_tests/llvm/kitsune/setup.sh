@@ -1,3 +1,3 @@
 #!/bin/bash
 
-module load llvm/kitsune/9.0
+module load llvm/kitsune/8.0

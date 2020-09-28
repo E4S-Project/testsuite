@@ -206,7 +206,7 @@ bool checkCorrect( int M, int N, double A[M][N], double Q[M][N], double R[N][N] 
 
     double tmp[M][N];
     // memset( tmp, (char)0, M*N*sizeof( double  ) );
-    for( int i = 0 ; i < N ; i++ ) {
+    for( int i = 0 ; i < M ; i++ ) {
         for( int j = 0 ; j < N ; j++ ) {
             tmp[i][j] = 0.0;
         }

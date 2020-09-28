@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module unload chill/git
+#module unload chill/git
 
 rm -f src/*modified.c
 
