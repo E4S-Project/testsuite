@@ -13,18 +13,9 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 echo -e "${BBLUE}Module${NC}"
-f18 -module-suffix .f18.mod -c mod1.f90
+./use-mod1 
 RC=$?
-echo -n "Compile the module"
-if [ $RC != 0 ]; then
-    echo -e "                    ${BRED}[FAILED]${NC}"
-else
-    echo -e "                    ${BGREEN}[PASSED]${NC}"
-fi
-
-f18 -module-suffix .f18.mod -o use-mod1 use-mod1.f90
-RC=$?
-echo -n "Use the module"
+echo -n "Run the module"
 if [ $RC != 0 ]; then
     echo -e "                        ${BRED}[FAILED]${NC}"
 else
