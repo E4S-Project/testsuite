@@ -5,7 +5,7 @@
 mpif90 \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
--DHAVE_ARPACK \
+-DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
 -fopenmp \
 -ffree-line-length-none \
 -ffixed-line-length-none \
@@ -16,7 +16,7 @@ mpif90 \
 mpif90 \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
--DHAVE_ARPACK \
+-DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
 -fopenmp \
 -ffree-line-length-none \
 -ffixed-line-length-none \
@@ -28,7 +28,7 @@ mpif90 \
 mpif90 \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
--DHAVE_ARPACK \
+-DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
 -fopenmp \
 -ffree-line-length-none \
 -ffixed-line-length-none \
@@ -37,11 +37,10 @@ mpif90 \
 -cpp  -O3 -DNDEBUG -O3 \
 EMCURV_Driver.f90.o EMCURV_Module.f90.o \
 -o ie2d \
--Wl,-rpath,${OPENBLAS_ROOT}/lib:${NETLIB_LAPACK_ROOT}/lib64:${NETLIB_SCALAPACK_LIB}/lib:${ARPACK_NG_ROOT}/lib64:${BUTTERFLYPACK_ROOT}/lib \
+-Wl,-rpath,${OPENBLAS_ROOT}/lib:${NETLIB_LAPACK_ROOT}/lib64:${NETLIB_SCALAPACK_LIB}/lib:${ARPACK_NG_ROOT}/lib:${BUTTERFLYPACK_ROOT}/lib \
 ${BUTTERFLYPACK_ROOT}/lib/libzbutterflypack.so \
 ${OPENBLAS_ROOT}/lib/libopenblas.so \
-${NETLIB_LAPACK_ROOT}/lib64/liblapack.so \
 ${NETLIB_SCALAPACK_ROOT}/lib/libscalapack.so \
-${ARPACK_NG_ROOT}/lib64/libarpack.so \
-${ARPACK_NG_ROOT}/lib64/libparpack.so \
+${ARPACK_NG_ROOT}/lib/libarpack.so \
+${ARPACK_NG_ROOT}/lib/libparpack.so \
 -lm
