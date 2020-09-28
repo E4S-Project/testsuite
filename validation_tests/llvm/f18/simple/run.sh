@@ -26,17 +26,17 @@ runtests (){
 	RET=$?
 	echo -n $INFILE " compilation:       "
 	if [ $RET == 0 ] ; then
-	    echo -e "\033[01;32m[PASS]\e[0m"
+	    echo -e "\033[01;32m[PASSED]\e[0m"
 	    ./hello > /dev/null
 	    RET=$?
 	    echo -n $INFILE "  execution:        "
 	    if [ $RET == 0 ] ; then
-		echo -e "\033[01;32m[PASS]\e[0m"
+		echo -e "\033[01;32m[PASSED]\e[0m"
 	    else
-		echo -e "\033[01;31m[FAIL]\e[0m"
+		echo -e "\033[01;31m[FAILED]\e[0m"
 	    fi
 	else
-	    echo -e "\033[01;31m[FAIL]\e[0m"
+	    echo -e "\033[01;31m[FAILED]\e[0m"
 	fi
 	rm hello
     done
@@ -46,17 +46,17 @@ runtests (){
     RET=$?
     echo -n $INFILE " compilation: "
     if [ $RET == 0 ] ; then
-	echo -e "\033[01;32m[PASS]\e[0m"
+	echo -e "\033[01;32m[PASSED]\e[0m"
 	echo "120" | ./hello > /dev/null
 	RET=$?
 	echo -n $INFILE "  execution:  "
 	if [ $RET == 0 ] ; then
-	    echo -e "\033[01;32m[PASS]\e[0m"
+	    echo -e "\033[01;32m[PASSED]\e[0m"
 	else
-	    echo -e "\033[01;31m[FAIL]\e[0m"
+	    echo -e "\033[01;31m[FAILED]\e[0m"
 	fi
     else
-	echo -e "\033[01;31m[FAIL]\e[0m"
+	echo -e "\033[01;31m[FAILED]\e[0m"
     fi
     rm hello
 
@@ -67,17 +67,17 @@ runtests (){
     RET=$?
     echo -n "Function compilation: "
     if [ $RET == 0 ] ; then
-	echo -e "\033[01;32m[PASS]\e[0m"
+	echo -e "\033[01;32m[PASSED]\e[0m"
 	echo "120" | ./hello > /dev/null
 	RET=$?
 	echo -n "Function execution:  "
 	if [ $RET == 0 ] ; then
-	    echo -e "\033[01;32m[PASS]\e[0m"
+	    echo -e "\033[01;32m[PASSED]\e[0m"
 	else
-	    echo -e "\033[01;31m[FAIL]\e[0m"
+	    echo -e "\033[01;31m[FAILED]\e[0m"
 	fi
     else
-	echo -e "\033[01;31m[FAIL]\e[0m"
+	echo -e "\033[01;31m[FAILED]\e[0m"
     fi
     rm hello
 
@@ -86,17 +86,17 @@ runtests (){
     RET=$?
     echo -n "Subroutine compilation: "
     if [ $RET == 0 ] ; then
-	echo -e "\033[01;32m[PASS]\e[0m"
+	echo -e "\033[01;32m[PASSED]\e[0m"
 	echo "120" | ./hello > /dev/null
 	RET=$?
 	echo -n "Function execution:  "
 	if [ $RET == 0 ] ; then
-	    echo -e "\033[01;32m[PASS]\e[0m"
+	    echo -e "\033[01;32m[PASSED]\e[0m"
 	else
-	    echo -e "\033[01;31m[FAIL]\e[0m"
+	    echo -e "\033[01;31m[FAILED]\e[0m"
 	fi
     else
-	echo -e "\033[01;31m[FAIL]\e[0m"
+	echo -e "\033[01;31m[FAILED]\e[0m"
     fi
     rm hello
 
@@ -105,17 +105,17 @@ runtests (){
     RET=$?
     echo -n "Recursive function compilation: "
     if [ $RET == 0 ] ; then
-	echo -e "\033[01;32m[PASS]\e[0m"
+	echo -e "\033[01;32m[PASSED]\e[0m"
 	echo "120" | ./hello > /dev/null
 	RET=$?
 	echo -n "Function execution:  "
 	if [ $RET == 0 ] ; then
-	    echo -e "\033[01;32m[PASS]\e[0m"
+	    echo -e "\033[01;32m[PASSED]\e[0m"
 	else
-	    echo -e "\033[01;31m[FAIL]\e[0m"
+	    echo -e "\033[01;31m[FAILED]\e[0m"
 	fi
     else
-	echo -e "\033[01;31m[FAIL]\e[0m"
+	echo -e "\033[01;31m[FAILED]\e[0m"
     fi
     rm hello
 
@@ -133,18 +133,18 @@ f18 -o kind kind.f90
 RET=$?
 echo -n "Kind 4, 8, 16:  "
 if [ $RET == 0 ] ; then
-    echo -e "\033[01;32m[PASS]\e[0m"
+    echo -e "\033[01;32m[PASSED]\e[0m"
 else
-    echo -e "\033[01;31m[FAIL]\e[0m"
+    echo -e "\033[01;31m[FAILED]\e[0m"
 fi
 
 f18 -o kind2 kind2.f90
 RET=$?
 echo -n "Kind 16, 32 (expected to fail for the moment):  "
 if [ $RET == 0 ] ; then
-    echo -e "\033[01;32m[PASS]\e[0m"
+    echo -e "\033[01;32m[PASSED]\e[0m"
 else
-    echo -e "\033[01;31m[FAIL]\e[0m"
+    echo -e "\033[01;31m[FAILED]\e[0m"
 fi
 
 

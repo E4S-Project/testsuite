@@ -8,6 +8,8 @@ LD = $(FC)
 FCFLAGS =
 LDFLAGS =
 
+# TODO move this into the .sh script
+
 all: characters characters2 characters_wrong
 
 characters: characters.o
