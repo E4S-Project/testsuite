@@ -4,3 +4,4 @@ f18
 tau
 clacc
 kitsune
+fjit

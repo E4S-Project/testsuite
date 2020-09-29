@@ -13,19 +13,20 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 #export TAU_MAKEFILE=shared-clang-acc-pdt
-export TAU_MAKEFILE=shared-clang-acc-cupti
 
 export TAU_OPTIONS='-optCompInst -optVerbose'
 
-#which clang
-CLANGPATH=`which clang` 
-NAME=${CLANGPATH%/*}       # remove 'clang'
-LLVM_DIR=${NAME%/*}   # remove 'bin'
-echo $LLVM_DIR
+if [ `arch` == "ppc64le" ]; then
+    export TARGET=" -fopenmp-targets=powerpc64le-unknown-linux-gnu"
+    export TAU_MAKEFILE=shared-clang-acc-cupti
+fi
+if [ `arch` == "x86_64" ]; then
+    export TAU_MAKEFILE=shared-clang-acc
+fi
 
 #clang -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_hh.txt -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE householder.c -o householder -lm
 
-clang -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_hh.txt -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE  -O3 -g  -fopenacc -fopenmp-targets=powerpc64le-unknown-linux-gnu ../householder3.c -o householder3 -lm
+clang -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_hh.txt -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE  -O3 -g  -fopenacc $TARGET ../householder3.c -o householder3 -lm 
 RC=$?
 echo -n "Instrumentation"
 if [ $RC != 0 ]; then

@@ -140,7 +140,7 @@ fi
 
 f18 -o kind2 kind2.f90
 RET=$?
-echo -n "Kind 16, 32 (expected to fail for the moment):  "
+echo -n "Kind 32, 64 (expected to fail for the moment):  "
 if [ $RET == 0 ] ; then
     echo -e "\033[01;32m[PASSED]\e[0m"
 else

@@ -13,7 +13,8 @@ if [ `arch` == "ppc64le" ]; then
     ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)
 fi
 if [ `arch` == "x86_64" ]; then
-    ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
+#    ARCHITECTURES=(nvptx64-nvidia-cuda x86_64-unknown-linux-gnu)
+    ARCHITECTURES=(x86_64-unknown-linux-gnu)
 fi
 for TARGET in ${ARCHITECTURES[@]} ; do
     LD_PRELOAD=./profiling.so ./jacobi_off_$TARGET &> /dev/null
