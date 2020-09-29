@@ -1,8 +1,8 @@
 #!/bin/bash
 
-make clean
+#make clean
 
-rm -f gang kernel parallel inout jacobi inout_data jacobi_data
+rm -f gang kernel parallel inout jacobi inout_data jacobi_data householder3
 
 if [ `arch` == "ppc64le" ]; then
     ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)
@@ -17,3 +17,11 @@ for SOURCE in "jacobi" "data" ; do
 	rm -Rf ${SOURCE}_$TARGET 
     done
 done
+
+cd profiling
+./clean.sh
+cd ..
+
+cd tau
+./clean.sh
+cd ..

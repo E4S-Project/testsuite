@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <math.h>
+#include <math.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -12,9 +12,6 @@
 #define SHOWRESULT 0
 #define CHECKPRECI 1e-8
 
-// now this is necessary
-long double sqrtl( long double );
-//long double fabs( long double );
 
 void initRand( int, int, double[][*] );
 void initZero( int, int, double[][*] );
@@ -71,11 +68,11 @@ int main( int argc, char** argv ){
     /* Checks: A ?= QR and orthogonality of Q */
 
     if( true == check( M, N, A, Q, R ) ){
-        printf( "[PASS]\n" );
+      printf( "[PASS]\n" );
     } else {
-        printf( "[FAIL]\n" );
+      printf( "[FAIL]\n" );
     }
-
+    
 #if DEBUG
     printf( "Initial matrix:\n" );
     printMatrix( M, N, A );
@@ -155,7 +152,7 @@ void printPerf( int M, int N, double time ) {
 double getnorm( int len, double vec[len] ) {
     int i;
     double n = vec[0]*vec[0];
-    //#pragma acc parallel loop copyin( vec[:len] ) copyout( n )
+#pragma acc parallel loop copyin( vec[:len] ) copy( n )
     for( i = 1 ; i < len ; i++ ) {
       n += ( vec[i] * vec[i] );
     }
@@ -193,11 +190,7 @@ bool isEqual( int M, int N, double A[M][N], double B[M][N] ) {
     int i, j;
     bool eq = true;
 
-    double *Alin, *Blin;
-    Alin = &(A[0][0]);
-    Blin = &(B[0][0]);
-
-    //#pragma acc parallel loop copyin( Alin[:M*N], Blin[:M*N] ) copyout( eq )
+#pragma acc parallel loop copyin( A[:M][:N], B[:M][:N] ) copy( eq )
     for( i = 0 ; i < M ; i++ ) {
         for( j = 0 ; j < N ; j++ ) {
             if( fabs( B[i][j] - A[i][j] ) > CHECKPRECI ) {
@@ -231,8 +224,6 @@ bool checkUnitary( int M, int N, double Q[M][N] ) {
     double tmp[M][N];
     double res[M][M];
     double I[M][M];
-    double *Qlin;
-    double *tmplin;
 
     /* We want Q*Q' = Q'*Q = I */
 
@@ -245,9 +236,7 @@ bool checkUnitary( int M, int N, double Q[M][N] ) {
         }
     }
 //    memcpy( tmp, Q, M*N*sizeof( double ));
-    Qlin = &(Q[0][0]);
-    tmplin = &(tmp[0][0]);
-    //#pragma acc parallel loop copyin( Qlin[:M*N] ) copyout( tmplin[:M*N] )
+#pragma acc parallel loop copyin( Q[:M][:N] ) copyout( tmp[:M][:N] )
     for( int i = 0 ; i < M ; i++ ) {
         for( int j = 0 ; j < N ; j++ ) {
             tmp[i][j] = Q[i][j];
@@ -289,10 +278,8 @@ bool check( int  M, int N, double A[M][N], double Q[M][N], double R[N][N] ) {
 void transpose( int M, int N, double A[M][N] ) {
     int i, j;
     double tmp;
-    double* Alin;
-    Alin = &(A[0][0]);
 
-    //#pragma acc parallel loop copy( Alin[:M*N] )
+#pragma acc parallel loop copy( A[:M][:N] )
     for( i = 0 ; i < M ; i++ ) {
         for( j = i ; j < N ; j++ ) {
             tmp = A[ i ][ j ];
@@ -308,7 +295,7 @@ double getsign( double d ) {
 
 void normalize( int len, double div, double vec[len] ) {
     int i;
-    //#pragma acc parallel loop copy( vec[:len] ) copyin( div )
+#pragma acc parallel loop copy( vec[:len] ) copyin( div )
     for( i = 0 ; i < len ; i++ ) {
         vec[i] /= div;
     }
@@ -319,7 +306,7 @@ unsigned int min( unsigned int a, unsigned int b ){
 }
 
 void copyR( int M, int N, double dst[N][N], double orig[M][N] ){
-  double *origlin, *dstlin;
+#pragma acc parallel loop copyin( orig[:M][:N] ) copyout( dst[:M][:N] )
     for( int i = 0 ; i < min( M, N ) ; i++ ) {
         for( int j = 0 ; j < min( M, N ) ; j++ ) {
             dst[i][j] = orig[i][j];
@@ -328,32 +315,15 @@ void copyR( int M, int N, double dst[N][N], double orig[M][N] ){
 }
 
 void matmul(  int M, int K, int N, double out[M][N], double A[M][K], double B[K][N] ){
-#ifdef _GPU_OFFLOAD_
-  double *outlin, *Alin, *Blin;
-  outlin = &(out[0][0]);
-  Alin = &(A[0][0]);
-  Blin = &(B[0][0]);
-
-#pragma acc parallel loop copyin( Alin[:M*N], Blin[:M*N] ) copyout( outlin[:M*N] )
-  for( int i = 0 ; i < M ; i++ ){ 
-    for( int j = 0 ; j < N ; j++ ){
-      //            out[ i * N + j ] = 0.0;
-      for( int k = 0 ; k < K ; k++ ){
-	outlin[ i*N + j ] += Alin[ i*N + k ] * Blin[ k*N+ j ];
-      }
-    }
-  }
-#else
 #pragma acc parallel loop copyin( A[:M][:N], B[:M][:N] ) copyout( out[:M][:N] )
-  for( int i = 0 ; i < M ; i++ ){ 
-    for( int j = 0 ; j < N ; j++ ){
-      //            out[ i * N + j ] = 0.0;
-      for( int k = 0 ; k < K ; k++ ){
-	out[ i ][ j ] += A[ i ][ k ] * B[ k ][ j ];
-      }
+    for( int i = 0 ; i < M ; i++ ){ 
+        for( int j = 0 ; j < N ; j++ ){
+	  //            out[ i * N + j ] = 0.0;
+            for( int k = 0 ; k < K ; k++ ){
+                out[ i ][ j ] += A[ i ][ k ] * B[ k ][ j ];
+            }
+        }
     }
-  }
-#endif
 }
 
 void applyR( int len, double R[len][len], double w[len], double tau, int start ){
@@ -363,98 +333,38 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
 
     /* R(j:end,:) = R(j:end,:)-(tau*w)*(w’*R(j:end,:)); */
 
-  double *Rlin;
-  Rlin = &(R[0][0]);
-  double* tmpMlin;
-  tmpMlin = &(tmpM[0][0]);
-  //#pragma acc data create( tmpV[:len],  tmpMlin[:len*len] ) copyin( w[:len], tau ) copy( Rlin [:len*len] )
-#pragma acc data create( tmpV[:len],  tmpM[:len][:len] ) copyin( w[:len], tau ) copy( R[:len][:len] )
-  //    #pragma acc data create( tmpV[:len],  tmpM[:len*len] ) copyin( w[:len], tau ) copy( R[:len*len] )
-  {
-    
-    /* tmpV = w'*R(j:end,:) */
+     /* tmpV = w'*R(j:end,:) */
     
     //memset( tmpV, (char) 0, len*sizeof( double ) );
     for( i = 0 ; i < len ; i++ ) {
-      tmpV[i] = 0.0;
+        tmpV[i] = 0.0;
     }
-    
-    // TODO here it kills the performance
-#pragma acc parallel loop 
-    for( j = 0 ; j < 1 ; j++ ){
-      for( i = start ; i < len ; i++ ) {
-	//tmpV[j] += w[i]*R[ i ][ j ];
-	tmpV[j] += w[i]*Rlin[ i * len + j ];
 
+#pragma acc parallel loop copyin( w[:len], R[:len][:len] ) copyout( tmpV[:len] )
+    for( j = 0 ; j < len ; j++ ){
+      for( i = start ; i < len ; i++ ) {
+	tmpV[j] += w[i]*R[ i ][ j ];
       }
     }
-    
-  }
-  
-
-#if 0
-#ifdef _GPU_OFFLOAD_
-  double *Rlin;
-  Rlin = &(R[0][0]);
-  double* tmpMlin;
-  tmpMlin = &(tmpM[0][0]);
-  //#pragma acc data create( tmpV[:len],  tmpMlin[:len*len] ) copyin( w[:len], tau ) copy( Rlin [:len*len] )
-#pragma acc data create( tmpV[:len],  tmpM[:len][:len] ) copyin( w[:len], tau ) copy( R[:len][:len] )
-#else
-#pragma acc data create( tmpV[:len],  tmpM[:len][:len] ) copyin( w[:len], tau ) copy( R [:len][:len] )
-#endif
-  {
-    
-    /* tmpV = w'*R(j:end,:) */
-    
-    //memset( tmpV, (char) 0, len*sizeof( double ) );
-    for( i = 0 ; i < len ; i++ ) {
-      tmpV[i] = 0.0;
-    }
-    
-    // TODO here it kills the performance
-#pragma acc parallel loop 
-    for( j = 0 ; j < len ; j++ ){
-  for( i = start ; i < len ; i++ ) {
-#ifdef _GPU_OFFLOAD_
-  //#if 0
-  tmpV[j] += w[i]*Rlin[ i * len + j ];
-#else
-  tmpV[j] += w[i]*R[ i ][ j ];
-#endif
-}
-  }
-
-
 
     /* tmpM = tau * w * tmpV */
     
-#pragma acc parallel loop 
+#pragma acc parallel loop copyin( tau, w[:len], tmpV[:len] ) copyout( tmpM[:len][:len] )
     for( i = 0 ; i < len ; i++ ){
       for( j = start ; j < len ; j++ ){
-#ifdef _GPU_OFFLOAD_
-	tmpMlin[ j*len + i ] = tau * w[ j ] * tmpV[ i ];
-#else
-	tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
-#endif
-      }
+	  tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
+	}
     }
-    
+
     /* R = R - tmpM */
-    
-#pragma acc parallel loop
+
+#pragma acc parallel loop copyin( tmpM[:len][:len] ) copyout( R[:len][:len] )
     for( i = start ; i < len ; i++ ){
-      for( j = 0 ; j < len ; j++ ){
-#ifdef _GPU_OFFLOAD_
-	Rlin[ i*len + j] -= tmpMlin[ i *len + j ];
-#else
-	R[ i ][ j] -= tmpM[ i ][ j ];
-#endif
-      }
+        for( j = 0 ; j < len ; j++ ){
+            R[ i ][ j] -= tmpM[ i ][ j ];
+        }
     }
-    
-  } // end data
-#endif
+
 }
 
 void applyQ( int len, double Q[len][len], double w[len], double tau, int start ){
@@ -466,7 +376,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* tmpV = (Q(:,j:end)*w) */
 
-    //#pragma acc parallel loop copyin( Q[:len][start:len], w[start:len] ) copyout( tmpV[start:len] )
+#pragma acc parallel loop copyin( Q[:len][start:len], w[/*start*/:len] ) copyout( tmpV[:len] )
     for( j = 0 ; j < len ; j++ ) {
       tmpV[j] = 0.0;
       for( i = start ; i < len ; i++ ) {
@@ -476,7 +386,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* tmpM = tmpV * (tau*w) */
 
-//#pragma acc parallel loop copyin( tmpV[:len], w[start:len] ) copyout( tmpM[:len][start:len] )
+#pragma acc parallel loop copyin( tmpV[:len], w[start:len] ) copyout( tmpM[:len][start:len] )
     for( j = 0 ; j < len ; j++ ) {
       for( i = start  ; i < len ; i++ ) {
 	tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
@@ -485,7 +395,7 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
 
     /* Q(:,j:end) -= tmpM */
 
-    //#pragma acc parallel loop copyin( tmpM[:len][start:len] ) copyout( Q[:len][start:len] )
+#pragma acc parallel loop copyin( tmpM[:len][start:len] ) copy( Q[:len][start:len] )
     for( j = 0 ; j < len ; j++ ) {
       for( i = start ; i < len ; i++ ) {
 	Q[ j ][ i ] -= tmpM[ j ][ i ];
@@ -500,8 +410,8 @@ void householder( int M, int N, double A[M][N], double Q[M][N], double R[N][N] )
     double u1, tau, sign, norm;
     double w[N];
 
-    //memcpy( R, A, ( ( M > N ) ? N : M ) * N * sizeof( double ) );
-    copyR( M, N, R, A );
+    memcpy( R, A, ( ( M > N ) ? N : M ) * N * sizeof( double ) );
+    //copyR( M, N, R, A );
     initUnit( M, N, Q );
 
     for( i = 0 ; i < M  ; i++ ) {
@@ -513,7 +423,7 @@ void householder( int M, int N, double A[M][N], double Q[M][N], double R[N][N] )
       
       /* H = I - tau * w * w' */
       
-	//#pragma acc parallel loop copyin( R ) copyout( w )
+#pragma acc parallel loop copyin( R[:N][:N] ) copyout( w[:N] )
       for( j = i ; j < N ; j++ ) {
 	w[j] = R[ j ][ i ];
       }
@@ -527,7 +437,7 @@ void householder( int M, int N, double A[M][N], double Q[M][N], double R[N][N] )
       
       /* R = HR; Q = QH */
 
-     if( i < N ) {
+      if( i < N ) {
 	applyR( N, R, w, tau, i );
       }
       applyQ( N, Q, w, tau, i );

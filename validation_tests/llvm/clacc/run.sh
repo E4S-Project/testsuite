@@ -1,33 +1,77 @@
 #!/bin/bash
 
 . ./setup.sh
-#./householder 1024 1024
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+
+BRED='\033[1;31m'
+BGREEN='\033[1;32m'
+BBLUE='\033[1;34m'
+
+NC='\033[0m'
+
+echo -e "${BBLUE}Execution of OpenACC programs${NC}"
 
 ./parallel
+RC=$?
+echo -n "Parallel"
+if [ $RC != 0 ]; then
+    echo -e "                                 ${BRED}[FAILED]${NC}"
+else
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
+fi
 ./jacobi
+RC=$?
+echo -n "Jacobi"
+if [ $RC != 0 ]; then
+    echo -e "                                 ${BRED}[FAILED]${NC}"
+else
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
+fi
 ./jacobi_data
+RC=$?
+echo -n "Jacobi data"
+if [ $RC != 0 ]; then
+    echo -e "                           ${BRED}[FAILED]${NC}"
+else
+    echo -e "                           ${BGREEN}[PASSED]${NC}"
+fi
+./householder3 256 256
+RC=$?
+echo -n "Householder"
+if [ $RC != 0 ]; then
+    echo -e "                                 ${BRED}[FAILED]${NC}"
+else
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
+fi
 
 NB=4
 STARTED=`./gang $NB | grep "toto" | wc -l`
+echo -n "Gang:"
 if [ $NB == $STARTED ]; then
-    echo "Gang: [PASS]"
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
 else
-    echo "Gang:[FAIL] launched", $STARTED, " instead of ", $NB, "requested"
+    echo -e "                                 ${BRED}[FAILED]${NC}", $STARTED, " instead of ", $NB, "requested"
 fi
 
 
 ./inout
-if [ $? == 0 ] ; then
-    echo "Data in/out: [PASS]"
+RC=$?
+echo -n "Data in/out:"
+if [ $RC == 0 ] ; then
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
 else
-    echo "Data in/out: [FAIL]"
+    echo -e "                                 ${BRED}[FAILED]${NC}"
 fi
 
 ./inout_data
+RC=$?
+echo -n "Data in/out (2):"
 if [ $? == 0 ] ; then
-    echo "Data in/out (2): [PASS]"
+    echo -e "                                 ${BGREEN}[PASSED]${NC}"
 else
-    echo "Data in/out (2): [FAIL]"
+    echo -e "                                 ${BRED}[FAILED]${NC}"
 fi
 
 # Offloading stuff
@@ -45,10 +89,19 @@ for SOURCE in "jacobi" "data" ; do
 	RET=$?
 	echo -n "Running " $SOURCE " with offloading on " $TARGET
 	if [ $RET == 0 ] ; then
-	    echo " [PASS]"
+	    echo -e "                                 ${BGREEN}[PASSED]${NC}"
 	else
-	    echo " [FAIL]"
+	    echo -e "                                 ${BRED}[FAILED]${NC}"
 	fi
     done
 done
 
+echo -e "${BBLUE}Profiling interface${NC}"
+cd profiling
+./run.sh
+cd ..
+
+echo -e "${BBLUE}TAU selective instrumentation plugin${NC}"
+cd tau
+./run.sh
+cd ..
