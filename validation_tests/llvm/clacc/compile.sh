@@ -44,12 +44,12 @@ if [ $RET == 0 ] ; then
     if [ `grep warning $ERRFILE | wc -l` -gt 0 ] ; then
 	echo -e "                              ${BGREEN}[PASSED]${NC}"
     else
-	echo -e "                                 ${BRED}[FAILED]${NC} compiled but no warning generated"
+	echo -e "                              ${BRED}[FAILED]${NC} compiled but no warning generated"
     fi
 else
     echo -e "                                 ${BRED}[FAILED]${NC}"
 fi
-clang -Wopenacc-ignored-clause -o kernel kernel.c > $OUTFILE 2> $ERRFILE
+clang -fopenacc -Wopenacc-ignored-clause -o ignore ignore.c > $OUTFILE 2> $ERRFILE
 RET=$?
 echo -n "-Wopenacc-ignored-clause  " 
 if [ $RET == 0 ] ; then
