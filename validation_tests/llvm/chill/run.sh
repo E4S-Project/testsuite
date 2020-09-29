@@ -2,6 +2,16 @@
 
 . ./setup.sh
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+
+BRED='\033[1;31m'
+BGREEN='\033[1;32m'
+BBLUE='\033[1;34m'
+
+NC='\033[0m'
+
 function start_chill(){
     
     # Verification: can we start CHiLL
@@ -11,9 +21,9 @@ function start_chill(){
 	RET=$?
 	echo -n "Start :" $EXEC "     "
 	if [ $RET == 0 ] ; then
-	    echo "[PASS]"
+	    echo -e "                  ${BGREEN}[PASSED]${NC}"
 	else
-	    echo "[FAIL]"
+	    echo -e "                  ${BRED}[FAILED]${NC}"
 	fi
     done    
 }
@@ -26,9 +36,9 @@ function load_nonexistent(){
     RET=$?
     echo -n "Segmentation fault when trying to load a non-existent file:   "
     if [ $RET == 139 ] ; then
-	echo "[PASS]"
+	echo -e "                  ${BGREEN}[PASSED]${NC}"
     else
-	echo "[FAIL]"
+	echo -e "                  ${BRED}[FAILED]${NC}"
     fi
 }
 
@@ -44,16 +54,16 @@ function run_example(){
     RET=$?
     echo -n "test :           "
     if [ $RET == 0 ] ; then
-	echo "[PASS]"
+	echo -e "                  ${BGREEN}[PASSED]${NC}"
     else
-	echo "[FAIL]"
+	echo -e "                  ${BRED}[FAILED]${NC}"
     fi
     # It must have produced an output file
     echo -n "Output file present:    "
     if test -f "src/${INPUTFILE}_modified.c"; then   
-	echo "[PASS]"
+	echo -e "                  ${BGREEN}[PASSED]${NC}"
     else
-	echo "[FAIL]"
+	echo -e "                  ${BRED}[FAILED]${NC}"
     fi
     # Does it give the same result
     cd testfiles
@@ -64,29 +74,34 @@ function run_example(){
     ./$TESTMAIN > tmp
     TOTO=`diff tmp tmp2`
     if [ -z $TOTO ]; then
-	echo "[PASS]"
+	echo -e "                  ${BGREEN}[PASSED]${NC}"
     else
-    echo "[FAIL]"    
+	echo -e "                  ${BRED}[FAILED]${NC}"
     fi
     rm tmp tmp2
     cd ..
 }
 
-#start_chill
-#load_nonexistent
-#echo -n "Simple "
-#run_example simple.py singleloop single_main
-#echo -n "Nested loops "
-#run_example nested.py nestedloops nested_main
-#echo -n "Reorder loops "
-#run_example nested_swap.py nestedloops nested_main
-#echo -n "Tile loops "
-#run_example nested_tiling.py nestedloops nested_main
-#echo -n "Reverse loops "
-#run_example reverse1.script.py mm mm_main
-#echo -n "Peel loops "
-#run_example nested_peel.py mm mm_main
+echo -e "${BBLUE}Sanity check${NC}"
+start_chill
+load_nonexistent
+echo -n "Simple "
+run_example simple.py singleloop single_main
+echo -e "${BBLUE}Loop modifications${NC}"
+echo -n "Nested loops "
+run_example nested.py nestedloops nested_main
+echo -n "Reorder loops "
+run_example nested_swap.py nestedloops nested_main
+echo -n "Tile loops "
+run_example nested_tiling.py nestedloops nested_main
+echo -n "Reverse loops "
+run_example reverse1.script.py mm mm_main
+echo -n "Peel loops "
+run_example nested_peel.py mm mm_main
 
 
 # gcc -g -Wall -o hh_main hh_main.c ../src/householder2.c -lm
 
+cd hh
+./run.sh
+cd ..

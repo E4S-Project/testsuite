@@ -9,7 +9,7 @@
 #define DEFAULT_N 16
 
 #define DEBUG      0
-#define SHOWRESULT 0
+#define SHOWRESULT 1
 #define CHECKPRECI 1e-8
 
 void initRand( int, int, double[][*] );
