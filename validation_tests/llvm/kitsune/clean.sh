@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm basic basic2
+rm -f basic basic2
 
 module unload llvm/kitsune/9.0
