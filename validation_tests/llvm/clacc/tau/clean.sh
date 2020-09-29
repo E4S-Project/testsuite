@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm -f householder profile.*
+rm -f householder3 profile.*
