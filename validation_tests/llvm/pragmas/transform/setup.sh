@@ -1,5 +1,4 @@
 #!/bin/bash
 
-module load llvm/pragma/transform/git
-
+module load llvm/pragmas/transform
 

@@ -5,3 +5,4 @@ tau
 clacc
 kitsune
 fjit
+pragmas
