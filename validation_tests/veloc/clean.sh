@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm -f heatdis_mem
+rm -rf heatdis_mem /tmp/scratch /tmp/persistent
