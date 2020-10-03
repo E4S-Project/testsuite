@@ -1,3 +1,3 @@
 #!/bin/bash -ex
 . ./setup.sh
-make
+make CC=mpicc

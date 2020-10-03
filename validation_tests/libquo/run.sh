@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./setup.sh
+
 CPROG="dist-work.c  quo-time.c rebind.c trivial.c"
 FPROG="quofort.f90"
 

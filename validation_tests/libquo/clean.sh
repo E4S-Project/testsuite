@@ -12,5 +12,5 @@ for c in $FPROG; do
     n=`echo $c | sed "s/.f90$//"`
     rm -f $n
 done
-rm *.o
+rm -f *.o
 
