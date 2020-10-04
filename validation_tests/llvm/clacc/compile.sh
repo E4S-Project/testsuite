@@ -12,6 +12,32 @@ BBLUE='\033[1;34m'
 
 NC='\033[0m'
 
+OUTFILE=toto
+ERRFILE=titi
+
+# Basic sanity checks
+echo -e "${BBLUE}Sanity checks${NC}"
+which clang &> $OUTFILE
+RET=$?
+echo -n "Clang present in the path  " 
+if [ $RET == 0 ] ; then
+    echo -e "                          ${BGREEN}[PASSED]${NC}"
+else
+    echo -e "                          ${BRED}[FAILED]${NC}"
+    exit -1
+fi
+
+clang -v &> $OUTFILE
+# grepping "clang" would be useless
+echo -n "clang -v returns something expected  " 
+RET=`grep "clang version" $OUTFILE | wc -l`
+if [ $RET == 0 ] ; then
+    echo -e "                ${BRED}[FAILED]${NC}"
+    exit -1
+else
+    echo -e "                ${BGREEN}[PASSED]${NC}"
+fi
+
 # Compilation flags tests
 echo -e "${BBLUE}Compilation flags${NC}"
 
@@ -24,8 +50,6 @@ else
     echo -e "                                 ${BRED}[FAILED]${NC}"
 fi
 clang -fno-openacc -o parallel parallel.c
-OUTFILE=toto
-ERRFILE=titi
 for FLAG in "-fopenacc-print=acc" "-fopenacc-print=omp " "-fopenacc-print=acc-omp " "-fopenacc-print=omp-acc" ; do
     clang $FLAG -o parallel parallel.c > $OUTFILE
     RET=$?
