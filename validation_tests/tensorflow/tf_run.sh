@@ -1,12 +1,17 @@
 #!/bin/bash
 
-if [ nvidia-smi ]; then
-        HARD=GPU
-    else
-        HARD=CPU
+if [ $(nvidia-smi >& /dev/null; echo $?) == 0 ]; then
+    HARD=GPU
+    BRAND=NVIDIA
+elif [ $(rocminfo >& /dev/null; echo $?) == 0 ]; then
+    HARD=GPU
+    BRAND=AMD
+else    
+    HARD=CPU
+    BRAND=NA
 fi
 
 VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '^[^.]')
 
-python tf.py $HARD $VERSION
+python tf.py $HARD $BRAND $VERSION
 
