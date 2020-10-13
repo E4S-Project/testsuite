@@ -1,4 +1,6 @@
 #!/bin/bash
+. ./setup.sh
+
 
 if [ $(nvidia-smi >& /dev/null; echo $?) == 0 ]; then
     HARD=GPU

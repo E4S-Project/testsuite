@@ -27,8 +27,8 @@ else:
 import tensorflow as tf
 import os
 
-#if sys.argv[2]=='NVIDIA':
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+if sys.argv[1]=='CPU':
+    os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 if sys.argv[3]=='1':
 
