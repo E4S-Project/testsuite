@@ -38,9 +38,9 @@ if sys.argv[3]=='1':
     mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
     # Parameters
-    learning_rate = 0.1
-    num_steps = 500
-    batch_size = 128
+    learning_rate = 0.05
+    num_steps = 1000
+    batch_size = 256
     display_step = 100
 
     # Network Parameters
@@ -93,7 +93,6 @@ if sys.argv[3]=='1':
     # Initialize the variables (i.e. assign their default value)
     init = tf.global_variables_initializer()
 
-    # Start training
 if sys.argv[3]=='2':
 
     mnist = tf.keras.datasets.mnist
@@ -122,7 +121,7 @@ if sys.argv[3]=='2':
 
     model.fit(x_train, y_train, epochs=1)
 
-    result = model.evaluate(x_test,  y_test, verbose=2)
+    result = model.evaluate(x_test,  y_test, verbose=0)
 
 
 #Results
@@ -149,10 +148,19 @@ if sys.argv[3]=='1':
         print("Optimization Finished!")
 
         # Calculate accuracy for MNIST test images
-        print("Testing Accuracy:", \
-            sess.run(accuracy, feed_dict={X: mnist.test.images,
-                                          Y: mnist.test.labels}))
+        result = sess.run(accuracy, feed_dict={X: mnist.test.images,
+                                          Y: mnist.test.labels})
+        print("Testing Accuracy:", result)
+        if result >=0.85:
+            print("PASSED")
+        else:
+            print("FAILED")
+
      
 elif sys.argv[3]=='2':
-    print(result)
+    print("Testing Accuracy:", result[1])
+    if result[1] >=0.85:
+        print("PASSED")
+    else:
+        print("FAILED")
 
