@@ -13,5 +13,6 @@ fi
 
 VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '^[^.]')
 
+echo "Running: python tf.py $HARD $BRAND $VERSION"
 python tf.py $HARD $BRAND $VERSION
 
