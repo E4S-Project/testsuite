@@ -1,3 +1,4 @@
 #!/bin/bash
 #. ../setup.sh
-mpirun -np 4 ./SelfSmoother
+#mpirun -np 4
+${TEST_RUN} ./SelfSmoother

@@ -2,22 +2,26 @@
 
 #. ../setup.sh
 
-mpicc \
+#mpicc 
+${TEST_CC}\
 -I${SUPERLU_DIST_ROOT}/include \
 -DUSE_VENDOR_BLAS -fopenmp -std=c99 -O3 -DPRNTlevel=1 -DDEBUGlevel=0 -fPIE \
 -o pdcompute_resid.c.o -c pdcompute_resid.c
 
-mpicc \
+#mpicc 
+${TEST_CC}\
 -I${SUPERLU_DIST_ROOT}/include \
 -DUSE_VENDOR_BLAS -fopenmp  -std=c99 -O3 -DPRNTlevel=1 -DDEBUGlevel=0 -fPIE \
 -o dcreate_matrix.c.o -c dcreate_matrix.c
 
-mpicc \
+#mpicc 
+${TEST_CC}\
 -I${SUPERLU_DIST_ROOT}/include \
 -DUSE_VENDOR_BLAS -fopenmp -std=c99 -O3 -DPRNTlevel=1 -DDEBUGlevel=0 -fPIE \
 -o pdtest.c.o -c pdtest.c
 
-mpicxx \
+#mpicxx 
+${TEST_CXX}\
 -fopenmp -std=c++11 -rdynamic -O3 \
 pdtest.c.o dcreate_matrix.c.o pdcompute_resid.c.o -o pdtest \
 -Wl,-rpath,${OPENBLAS_ROOT}/lib:${PARMETIS_ROOT}/lib:${METIS_ROOT}/lib \

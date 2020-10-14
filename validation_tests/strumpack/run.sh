@@ -19,7 +19,8 @@
 #	rm cbuckle.tar.gz
 #fi
 
-mpirun -np 4 ./a.out m ./cbuckle/cbuckle.mtx
+#mpirun -np 4 
+eval $TEST_RUN ./a.out m ./cbuckle/cbuckle.mtx
 
 
 

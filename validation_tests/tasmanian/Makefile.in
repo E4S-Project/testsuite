@@ -12,12 +12,12 @@ NVCC =
 NVCC_OPT =
 
 # Default C++ compiler
-CC = g++
+CC = $(TEST_CC) #g++
 OPTC = -O3 -std=c++11 $(COMPILE_OPTIONS) -fPIC -Wstrict-aliasing
 OPTL = $(OPTC)
 
 # Default Fortran compiler
-FF = gfortran
+FF = $(TEST_FTN) #gfortran
 OPTF = -O3 -fno-f2c -mtune=native $(COMPILE_OPTIONS) -fPIC
 OPTLFF = $(OPTF)
 

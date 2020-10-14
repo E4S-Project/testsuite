@@ -1,2 +1,3 @@
 #!/bin/bash
-mpirun -np 4 ./MultiLevelPreconditioner_Restart
+#mpirun -np 4
+${TEST_RUN} ./MultiLevelPreconditioner_Restart

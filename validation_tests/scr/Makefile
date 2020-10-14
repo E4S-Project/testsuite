@@ -1,7 +1,7 @@
-MPICC     ?= mpicc
-MPICXX    ?= mpicxx
-MPIF90    ?= mpif90
-OPT       ?= -g -O3
+MPICC     = $(TEST_CC_MPI) #mpicc
+MPICXX    = $(TEST_CXX_MPI) #mpicxx
+MPIF90    = $(TEST_FTN_MPI) #mpif90
+OPT       = -g -O3
 #LIBDIR     = -L/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/lib64 -Wl,-rpath,/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/lib64 -lscr 
 #INCLUDES   = -I/opt/spack/opt/spack/linux-rhel7-x86_64/gcc-8.1.0/scr-2.0.0-ib2rgmc7ymeibkzvffipqyy3xxacl7sx/include -I/usr/include -I.
 LIBDIR     = -L$(SCR_ROOT)/lib64 -Wl,-rpath,$(SCR_ROOT)/lib64 -lscr

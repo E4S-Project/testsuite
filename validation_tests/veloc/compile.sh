@@ -1,4 +1,5 @@
 #!/bin/bash
 
 . ./setup.sh
-mpicc -o heatdis_mem heatdis_mem.c -lveloc-client -lm
+#mpicc
+${TEST_CC_MPI} -o heatdis_mem heatdis_mem.c -lveloc-client -lm
