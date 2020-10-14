@@ -1,5 +1,5 @@
-CC = $(TEST_CC) #mpicc
-CXX = $(TEST_CXX) #mpic++
+CC = $(TEST_CC_MPI) #mpicc
+CXX = $(TEST_CXX_MPI) #mpic++
 CFLAGS = -I$ADIOS2_ROOT/include -Wall
 CXXFLAGS = -I$ADIOS2_ROOT/include -Wall
 LD = $(TEST_CXX) #mpic++

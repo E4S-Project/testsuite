@@ -32,7 +32,7 @@
 #---------------------------------------------------------------------------
 MPIF77 = tau_f90.sh
 #MPIF77 = mpif90
-#MPIF77 = $(TEST_FTN)
+#MPIF77 = $(TEST_FTN_MPI)
 # This links MPI fortran programs; usually the same as ${MPIF77}
 FLINK	= $(MPIF77)
 
@@ -81,7 +81,7 @@ FLINKFLAGS =
 #---------------------------------------------------------------------------
 MPICC = tau_cc.sh
 #MPICC = mpicc
-#MPICC = $(TEST_CC)
+#MPICC = $(TEST_CC_MPI)
 # This links MPI C programs; usually the same as ${MPICC}
 CLINK	= $(MPICC) 
 

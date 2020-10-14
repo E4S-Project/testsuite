@@ -1,5 +1,5 @@
-CC=mpicc
-LD=mpicc
+CC=$(TEST_CC_MPI) #mpicc
+LD=$(TEST_CC_MPI) #mpicc
 CFLAGS = `pkg-config --cflags gasnet-mpi-par` -I.
 LDFLAGS = `pkg-config --libs gasnet-mpi-par`
 

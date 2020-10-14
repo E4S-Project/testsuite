@@ -16,7 +16,8 @@ OUTFILE="/dev/null"
 
 for PROGNAME in testbarrier testhello  testsmall  testthreads  testqueue; do
     echo -n $PROGNAME
-    mpiexec -n $NP ./${PROGNAME}  2>&1 > $OUTFILE
+    #mpiexec -n 
+    eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}  2>&1 > $OUTFILE
     RC=$?
     if [ $? != 0 ]; then
 	echo -e "                                 ${BRED}[FAILED]${NC}"

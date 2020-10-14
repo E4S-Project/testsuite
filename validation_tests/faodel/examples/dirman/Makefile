@@ -1,5 +1,5 @@
-CXX = $(TEST_CXX) #mpic++
-LD = $(TEST_CXX) #mpic++
+CXX = $(TEST_CXX_MPI) #mpic++
+LD = $(TEST_CXX_MPI) #mpic++
 
 CXXFLAGS = `pkg-config --cflags faodel`
 LDFLAGS = `pkg-config --libs faodel`

@@ -11,7 +11,7 @@ default: build
 
 CXXFLAGS = -g -O3 -DRAJA_USE_GETTIME -I./includes -I./
 
-CXX = mpicxx
+CXX = $(TEST_CXX) #mpicxx
 CXXFLAGS += -DUSE_MPI=1
 
 LINK = ${CXX}
