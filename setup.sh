@@ -2,6 +2,11 @@
 command -v spack >/dev/null 2>&1 || { source /spack/share/spack/setup-env.sh; }
 command -v spack >/dev/null 2>&1 || { echo "Failure: Spack not found. Exiting"; exit 1; }
 source ${SPACK_ROOT}/share/spack/setup-env.sh
+#source ./settings.sh
+#echo $BASH_SOURCE
+#echo dirname $BASH_SOURCE
+source `dirname $BASH_SOURCE`/settings.sh
+#alias test_run='$TEST_RUN'
 rArg=" -r "
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
