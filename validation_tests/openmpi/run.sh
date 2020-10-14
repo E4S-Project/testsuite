@@ -14,7 +14,8 @@ NC='\033[0m'
 
 for PROG in initfinalize sendrecv broadcast onesided ; do
     echo -e "Running ${BBLUE}${PROG}${NC}"
-    mpiexec --allow-run-as-root -n 4 ./${PROG}
+    #mpiexec --allow-run-as-root -n 4 
+    eval $TEST_RUN --allow-run-as-root ./${PROG}
     RC=$?
     if [ $? != 0 ]; then
 	echo -e "                                 ${BRED}[FAILED]${NC}"

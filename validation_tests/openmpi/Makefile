@@ -1,6 +1,6 @@
-CC = mpicc
+CC = $(TEST_CC_MPI) #mpicc
 CFLAGS = -Wall -g
-LD = mpicc
+LD = $(TEST_CC_MPI) #mpicc
 LDFLAGS = 
 
 all: initfinalize sendrecv broadcast onesided

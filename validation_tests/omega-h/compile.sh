@@ -1,3 +1,4 @@
 #!/bin/bash
 . ./setup.sh
-mpicxx -o castle main.cpp -lomega_h
+#mpicxx 
+eval $TEST_CXX -o castle main.cpp -lomega_h

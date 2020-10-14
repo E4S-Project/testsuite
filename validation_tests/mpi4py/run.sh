@@ -12,4 +12,5 @@ spack activate $PYNUMPY
 #spack load mpich
 #spack load python@3:
 
-mpirun -np 4 python3 ./cpi.py
+#mpirun -np 4 
+eval $TEST_RUN python3 ./cpi.py

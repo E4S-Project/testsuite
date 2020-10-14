@@ -8,6 +8,7 @@ TESTLIST="01_open_close  02_put_get  03_barrier  04_delete  05_fence  06_signal 
 
 for d in $TESTLIST; do 
     cd $d
-    mpicxx -I${PAPYRUS_ROOT}/include -g -o test${d} test${d}.c $LIBPAPYRUS -lpthread -lm
+    #mpicxx 
+    eval $TEST_CXX_MPI -I${PAPYRUS_ROOT}/include -g -o test${d} test${d}.c $LIBPAPYRUS -lpthread -lm
     cd ..
 done

@@ -9,9 +9,9 @@
 MAGMADIR     ?= "${MAGMA_ROOT}"
 CUDADIR      ?= "${CUDA_ROOT}"
 OPENBLASDIR  ?= "${OPENBLAS_ROOT}"
-CC            = gcc
-FORT          = gfortran
-LD            = gcc
+CC            = $(TEST_CC) #gcc
+FORT          = $(TEST_FTN) #gfortran
+LD            = $(TEST_CC) #gcc
 CFLAGS        = -Wall
 # needs -fopenmp if MAGMA was compiled with OpenMP
 LDFLAGS       = -Wall #-fopenmp

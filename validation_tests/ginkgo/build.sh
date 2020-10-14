@@ -1,5 +1,5 @@
 #!/bin/bash
-CXX=$(TEST_CXX) #c++
+CXX=$TEST_CXX #c++
 # set up script
 #if [ $# -ne 1 ]; then
 #    echo -e "Usage: $0 GINKGO_BUILD_DIRECTORY"
