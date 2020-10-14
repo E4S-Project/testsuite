@@ -2,4 +2,5 @@
 
 . ./setup.sh
 
-mpiexec -n 4 ./hello-world
+#mpiexec -n 4 
+eval $TEST_RUN ./hello-world

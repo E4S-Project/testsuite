@@ -5,10 +5,10 @@
 SZPATH		= $(SZ_ROOT)
 #GSLPATH = /usr/local/Cellar/gsl/2.4
 ##   COMPILERS
-CC		= gcc
-FT		= gfortran
-MPICC 		= mpicc
-MPIRUN 		= mpirun
+CC		= $(TEST_CC) #gcc
+FT		= $(TEST_FTN) #gfortran
+MPICC 		= $(TEST_CC_MPI) #mpicc
+MPIRUN 		= $(TEST_RUN_CMD) #mpirun
 HDF5CC		= h5cc
 
 ##   FLAGS

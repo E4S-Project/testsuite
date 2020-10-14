@@ -1,4 +1,4 @@
-CC ?=mpicc
+CC=$(TEST_CC_MPI)
 CFLAGS=-g -O3
 
 

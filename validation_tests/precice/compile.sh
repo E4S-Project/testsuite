@@ -1,3 +1,4 @@
 #!/bin/bash
 . ./setup.sh
-gcc -o solverdummy solverdummy.c -lprecice
+#gcc 
+eval $TEST_CC -o solverdummy solverdummy.c -lprecice

@@ -4,6 +4,7 @@
 #spack load mpich
 #spack load hdf5+fortran
 
-mpirun -np 8 ./ph5example # -v
+#mpirun -np 8 
+eval $TEST_RUN ./ph5example # -v
 
 

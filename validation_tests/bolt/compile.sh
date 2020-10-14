@@ -1,3 +1,3 @@
 #!/bin/bash
 . ./setup.sh
-gcc sample_nested.c -lomp
+eval $TEST_CC sample_nested.c -lomp

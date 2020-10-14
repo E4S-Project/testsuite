@@ -7,7 +7,8 @@ NP=4
 for d in $TESTLIST; do 
     cd $d
     echo -n "Papyrus test $d:   "
-    mpiexec -n $NP ./test${d} 2>&1 > toto
+    #mpiexec -n 
+    eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./test${d} 2>&1 > toto
     # test completion and success
     ERROR=`grep "\[E\] " toto`
     if [[ ! -z $ERROR ]] ; then

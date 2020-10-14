@@ -1,5 +1,5 @@
-CXX = g++
-LD = g++
+CXX = $(TEST_CXX) #g++
+LD = $(TEST_CXX) #g++
 
 CXXFLAGS = `pkg-config --cflags faodel`
 LDFLAGS = `pkg-config --libs faodel`

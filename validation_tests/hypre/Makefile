@@ -1,10 +1,10 @@
 ########################################################################
 # Compiler and external dependences
 ########################################################################
-CC        =mpicc
-F77       =mpif77
-CXX       =mpicxx
-F90       =mpif90
+CC        =$(TEST_CC_MPI) #mpicc
+F77       =$(TEST_FTN_MPI) #mpif77
+CXX       =$(TEST_CXX_MPI) #mpicxx
+F90       =$(TEST_FTN_MPI) #mpif90
 HYPRE_DIR = "${HYPRE_ROOT}"
 
 ########################################################################
