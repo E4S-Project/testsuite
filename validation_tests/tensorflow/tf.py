@@ -3,8 +3,11 @@ import sys
 #Call Check
 #========================================
 
+ArgError = "This script requires specific arguments, run run.sh to provide them automatically"
+
+
 if len(sys.argv) < 4:
-    sys.exit("This script requires specific arguments, run tf_run.sh to provide them automatically")
+    sys.exit(ArgError)
 
 if sys.argv[1] in ['GPU', 'CPU']:
     if sys.argv[2] in ['NVIDIA', 'AMD']:
@@ -12,12 +15,12 @@ if sys.argv[1] in ['GPU', 'CPU']:
     elif sys.argv[2] in ['NA']:
         print("Running using", sys.argv[1])
 else:
-    sys.exit("This script requires specific arguments, run tf_run.sh to provide them automatically")
+    sys.exit(ArgError)
 
 if sys.argv[3] in ['1','2']:
     print("Running using tensorflow V.", sys.argv[3])
 else:
-    sys.exit("This script requires specific arguments, run tf_run.sh to provide them automatically")
+    sys.exit(ArgError)
 
 
 #Code
