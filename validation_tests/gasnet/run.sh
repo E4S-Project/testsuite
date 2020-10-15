@@ -27,4 +27,4 @@ for PROGNAME in testbarrier testhello  testsmall  testthreads  testqueue; do
 done
 
 
-rm -rf $OUTFILE
+#rm -rf $OUTFILE
