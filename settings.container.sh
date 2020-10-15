@@ -1,10 +1,10 @@
 export TAU_OPTIONS="-optVerbose -optRevert"
-export TEST_CC=mpicc
-export TEST_CXX=mpicxx
-export TEST_FTN=mpif90
-export TEST_CC_MPI=gcc
-export TEST_CXX_MPI=g++
-export TEST_FTN_MPI=gfortran
+export TEST_CC_MPI=mpicc
+export TEST_CXX_MPI=mpicxx
+export TEST_FTN_MPI=mpif90
+export TEST_CC=gcc
+export TEST_CXX=g++
+export TEST_FTN=gfortran
 export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="8"
