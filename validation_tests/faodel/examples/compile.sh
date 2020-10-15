@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # TODO: kelpie  lunasa  nnti  old  opbox  README.md  services  whookie
 
