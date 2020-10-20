@@ -1,5 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash 
 . ./setup.sh
+set -e
+set -x
 cwd=`pwd`
 for i in `cat testdirs.txt`; do
   cd "${cwd}"
