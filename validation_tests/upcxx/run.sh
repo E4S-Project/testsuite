@@ -1,6 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash
 . ./setup.sh
-
+set -e 
+set -x
 EXAMPLES=(dmap-test 
 dmap-async-insert-test
 dmap-async-find-test 

@@ -1,6 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 spackLoadUnique libquo
+spackLoadUnique hwloc
 #spackLoadUnique mpich
 #spackLoadUnique hwloc
 #spack load hwloc
