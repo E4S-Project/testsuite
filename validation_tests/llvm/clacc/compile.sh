@@ -169,6 +169,14 @@ if [ $RC != 0 ]; then
 else
     echo -e "                            ${BGREEN}[PASSED]${NC}"
 fi
+clang -fopenacc -Wall -o jacobi_data2 jacobi_data2.c 
+RC=$?
+echo -n "Jacobi_data2"
+if [ $RC != 0 ]; then
+    echo -e "                           ${BRED}[FAILED]${NC}"
+else
+    echo -e "                           ${BGREEN}[PASSED]${NC}"
+fi
 
 #make
 clang -O3 -fopenacc -o householder3 householder3.c -lm

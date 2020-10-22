@@ -2,7 +2,7 @@
 
 #make clean
 
-rm -f gang kernel parallel inout jacobi inout_data jacobi_data householder3
+rm -f gang kernel parallel inout jacobi inout_data jacobi_data jacobi_data2 householder3
 
 if [ `arch` == "ppc64le" ]; then
     ARCHITECTURES=(nvptx64-nvidia-cuda powerpc64le-unknown-linux-gnu)

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 . ./setup.sh
-
+set -e
+set -x
 # barrier-subset.c is only testing MPI
 CPROG="dist-work.c  quo-time.c rebind.c trivial.c"
 FPROG="quofort.f90"

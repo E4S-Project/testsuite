@@ -1,11 +1,1 @@
-export TAU_OPTIONS="-optVerbose -optRevert"
-export TEST_CC=cc
-export TEST_CXX=CC
-export TEST_FTN=ftn
-export TEST_CC_MPI=cc
-export TEST_CXX_MPI=CC
-export TEST_FTN_MPI=ftn
-export TEST_RUN_CMD=srun
-export TEST_RUN_PROCFLAG="-n"
-export TEST_RUN_PROCARG="8"
-export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
+settings.container.sh

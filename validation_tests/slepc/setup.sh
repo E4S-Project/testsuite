@@ -1,4 +1,4 @@
 #!/bin/bash
-. /testsuite/setup.sh
+. ../../setup.sh
 spackLoadUnique slepc
 export SLEPC_DIR=$SLEPC_ROOT

@@ -37,6 +37,14 @@ if [ $RC != 0 ]; then
 else
     echo -e "                           ${BGREEN}[PASSED]${NC}"
 fi
+./jacobi_data2
+RC=$?
+echo -n "Jacobi data 2"
+if [ $RC != 0 ]; then
+    echo -e "                         ${BRED}[FAILED]${NC}"
+else
+    echo -e "                         ${BGREEN}[PASSED]${NC}"
+fi
 ./householder3 256 256
 RC=$?
 echo -n "Householder"

@@ -1,4 +1,4 @@
 #!/bin/bash
-
-spack load openmpi
+. ../../setup.sh
+spackLoadUnique openmpi
 NP=4

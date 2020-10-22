@@ -1,9 +1,9 @@
 CC = $(TEST_CC_MPI) #mpicc
 CXX = $(TEST_CXX_MPI) #mpic++
-CFLAGS = -I$ADIOS2_ROOT/include -Wall
-CXXFLAGS = -I$ADIOS2_ROOT/include -Wall
-LD = $(TEST_CXX) #mpic++
-LDFLAGS = -L$ADIOS2_ROOT/lib/ -ladios2_cxx11
+CFLAGS = -I$(ADIOS2_ROOT)/include -Wall
+CXXFLAGS = -I$(ADIOS2_ROOT)/include -Wall
+LD = $(TEST_CXX_MPI) #mpic++
+LDFLAGS = -L$(ADIOS2_ROOT)/lib/ -ladios2_cxx11
 
 all: hello-world
 
