@@ -22,8 +22,8 @@ fi
 
 #VERSION=$(python -c "import torch; print(torch.__version__ )"| grep -o '^[^.]')
 
-echo "Running: python pytorch.py $HARD $BRAND $VERSION"
-python pytorch.py $HARD $BRAND > $TMPFILE
+echo "Running: python pytorchTest.py $HARD $BRAND $VERSION"
+python pytorchTest.py $HARD $BRAND > $TMPFILE
 
 echo $(grep -E "Testing Accuracy:" $TMPFILE)
 

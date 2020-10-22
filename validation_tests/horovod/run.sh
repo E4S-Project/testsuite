@@ -20,12 +20,12 @@ else
     BRAND=NA
 fi
 
-VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '^[^.]')
+#VERSION=$(python -c "import torch; print(torch.__version__ )"| grep -o '^[^.]')
 
-echo "Running: python tensorflowTest.py $HARD $BRAND $VERSION"
-python tensorflowTest.py $HARD $BRAND $VERSION > $TMPFILE
+echo "Running: python horovodTest.py $HARD $BRAND $VERSION"
+python horovodTest.py --HARD $HARD --BRAND $BRAND > $TMPFILE
 
-echo $(grep -E "Testing Accuracy:" $TMPFILE)
+echo $(grep -E "Total" $TMPFILE)
 
 if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
     echo -e "${BGREEN}[PASSED]${NC}"

@@ -31,10 +31,14 @@ if sys.argv[1] == 'GPU':
     if sys.argv[2] == 'NVIDIA':
         device = torch.device("cuda:0")
     else:
-        device = torch.device("hip")
+        device =torch.device("hip")# torch.device("hip")
 else:
     device = torch.device("cpu")
 
+
+#device = torch.device("cpu")
+#device = torch.device("hip")
+#device = torch.device("cuda:0")
 
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
