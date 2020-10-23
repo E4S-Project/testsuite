@@ -25,6 +25,12 @@ fi
 echo "Running: python horovodTest.py $HARD $BRAND $VERSION"
 python horovodTest.py --HARD $HARD --BRAND $BRAND > $TMPFILE
 
+if [ $? -ne 0 ]
+then
+  echo "The script failed" >&2
+  exit 1
+fi
+
 echo $(grep -E "Total" $TMPFILE)
 
 if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then

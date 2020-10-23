@@ -25,6 +25,12 @@ fi
 echo "Running: python pytorchTest.py $HARD $BRAND $VERSION"
 python pytorchTest.py $HARD $BRAND > $TMPFILE
 
+if [ $? -ne 0 ]
+then
+  echo "The script failed" >&2
+  exit 1
+fi
+
 echo $(grep -E "Testing Accuracy:" $TMPFILE)
 
 if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
@@ -32,4 +38,5 @@ if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
 else
     echo -e "${BRED}[FAILED]${NC}"
 fi
+
 

@@ -25,6 +25,12 @@ VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '
 echo "Running: python tensorflowTest.py $HARD $BRAND $VERSION"
 python tensorflowTest.py $HARD $BRAND $VERSION > $TMPFILE
 
+if [ $? -ne 0 ]
+then
+  echo "The script failed" >&2
+  exit 1
+fi
+
 echo $(grep -E "Testing Accuracy:" $TMPFILE)
 
 if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
