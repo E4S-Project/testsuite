@@ -31,7 +31,7 @@ if sys.argv[1] == 'GPU':
     if sys.argv[2] == 'NVIDIA':
         device = torch.device("cuda:0")
     else:
-        device =torch.device("hip")# torch.device("hip")
+        device =torch.device("cuda")# torch.device("hip")
 else:
     device = torch.device("cpu")
 
