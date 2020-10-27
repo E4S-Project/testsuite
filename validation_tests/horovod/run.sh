@@ -1,8 +1,7 @@
 #!/bin/bash
 . ./setup.sh
 
-TMPFILE=/tmp/tutu
-
+TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 BRED='\033[1;31m'
 BGREEN='\033[1;32m'

@@ -1,7 +1,7 @@
 #!/bin/bash
 . ./setup.sh
 
-TMPFILE=/tmp/tutu
+TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 
 BRED='\033[1;31m'
@@ -21,7 +21,7 @@ else
 fi
 
 VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '^[^.]')
-
+ 
 echo "Running: python tensorflowTest.py $HARD $BRAND $VERSION"
 python tensorflowTest.py $HARD $BRAND $VERSION > $TMPFILE
 
