@@ -31,7 +31,7 @@ then
   exit 1
 fi
 
-echo $(grep -E "Testing Accuracy:" $TMPFILE)
+echo $(grep -E "Loss:" $TMPFILE)
 
 if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
     echo -e "${BGREEN}[PASSED]${NC}"

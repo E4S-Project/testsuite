@@ -79,5 +79,6 @@ for t in range(500):
 #========================================
 
 if loss < 0.05:
+    print("Loss:",loss)
     print("PASSED")
 
