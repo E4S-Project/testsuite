@@ -1,2 +1,2 @@
 #!/bin/bash
-#no cleaning required
+rm tmp.*

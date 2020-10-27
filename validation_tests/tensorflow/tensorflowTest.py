@@ -30,10 +30,21 @@ else:
 import tensorflow as tf
 import os
 
+config = tf.compat.v1.ConfigProto(gpu_options = 
+                         tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.8)
+# device_count = {'GPU': 1}
+)
+config.gpu_options.allow_growth = True
+session = tf.compat.v1.Session(config=config)
+tf.compat.v1.keras.backend.set_session(session)
+
+
+    
 if sys.argv[1]=='CPU':
     os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 if sys.argv[3]=='1':
+    
 
 
     # Import MNIST data

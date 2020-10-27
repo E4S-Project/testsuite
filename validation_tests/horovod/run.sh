@@ -22,7 +22,7 @@ fi
 #VERSION=$(python -c "import torch; print(torch.__version__ )"| grep -o '^[^.]')
 
 echo "Running: python horovodTest.py $HARD $BRAND $VERSION"
-python horovodTest.py --HARD $HARD --BRAND $BRAND > $TMPFILE
+mpirun -np 2 python horovodTest.py --HARD $HARD --BRAND $BRAND > $TMPFILE
 
 if [ $? -ne 0 ]
 then
@@ -32,7 +32,7 @@ fi
 
 echo $(grep -E "Total" $TMPFILE)
 
-if [ $(grep "PASSED" $TMPFILE | wc -l) == 1 ]; then
+if [ $(grep "PASSED" $TMPFILE | wc -l) -ne 0 ]; then
     echo -e "${BGREEN}[PASSED]${NC}"
 else
     echo -e "${BRED}[FAILED]${NC}"
