@@ -1,15 +1,15 @@
-CC = g++
+CXX = $(TEST_CXX_MPI) #mpic++ 
 LDFLAGS = -L$(CALIPER_ROOT)lib64 -lcaliper
 
 
 caliper: caliperTest.o
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cpp
-	$(CC) -c $< 
+	$(CXX) -c $< 
 
 clean: 
-	rm -f *.o *.log caliper
+	rm -f *.o *.log tmp.* caliper
 
 .PHONY: clean
 	
