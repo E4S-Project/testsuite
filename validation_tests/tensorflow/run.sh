@@ -23,7 +23,7 @@ fi
 VERSION=$(python -c "import tensorflow as tf; print(tf.__version__ )"| grep -o '^[^.]')
  
 echo "Running: python tensorflowTest.py $HARD $BRAND $VERSION"
-mpirun -np 2 python tensorflowTest.py $HARD $BRAND $VERSION > $TMPFILE
+python tensorflowTest.py $HARD $BRAND $VERSION > $TMPFILE
 
 if [ $? -ne 0 ]
 then

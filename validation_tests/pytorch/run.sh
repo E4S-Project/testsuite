@@ -24,7 +24,7 @@ fi
 #VERSION=$(python -c "import torch; print(torch.__version__ )"| grep -o '^[^.]')
 
 echo "Running: python pytorchTest.py $HARD $BRAND $VERSION"
-mpirun -np 2 python pytorchTest.py $HARD $BRAND > $TMPFILE
+python pytorchTest.py $HARD $BRAND > $TMPFILE
 
 if [ $? -ne 0 ]
 then
