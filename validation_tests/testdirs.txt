@@ -12,3 +12,8 @@ openmpi
 mpich
 gasnet
 adios2
+caliper
+tensorflow
+horovod
+pytorch
+
