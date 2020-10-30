@@ -1,4 +1,4 @@
-export TAU_OPTIONS="-optVerbose -optRevert"
+export TAU_OPTIONS="-optVerbose -optRevert -optShared"
 export TEST_CC=cc
 export TEST_CXX=CC
 export TEST_FTN=ftn
