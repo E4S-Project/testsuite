@@ -2,5 +2,5 @@
 . ./setup.sh
 #spack load openblas threads=none
 #spack load superlu 
--x
+set -x
 ./c_sample
