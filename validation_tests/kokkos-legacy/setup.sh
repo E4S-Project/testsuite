@@ -7,7 +7,7 @@
 spackLoadUniqueNoR tau #@develop
 #spackLoadUnique kokkos
 #kokkosHash=$(spackLoadUnique kokkos) #+openmp
-spackLoadUniqueNoR kokkos
+spackLoadUniqueNoR kokkos-legacy
 #spack load -r kokkos
 #module list
-export KOKKOS=$KOKKOS_ROOT #`spack location -i ${kokkosHash}`
+export KOKKOS=$KOKKOS_LEGACY_ROOT #`spack location -i ${kokkosHash}`
