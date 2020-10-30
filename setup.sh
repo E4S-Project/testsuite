@@ -24,6 +24,7 @@ spackSetPackageRoot(){
         SPAC_NAM=`spack find --format={name} ${1}`
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
         export ${SPAC_NAM^^}_ROOT=${SPAC_LOC}
+	export ${SPAC_NAM^^}_HASH=${1}
 }
 
 spackLoadUnique(){ 
