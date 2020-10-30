@@ -40,7 +40,7 @@ spackLoadUnique(){
 	spack load ${rArg} ${spackHash} || { echo "Package/Spec $@ or dependency not found." >&2 ; exit 215; } ;
 	echo ${spackHash}
 	
-	if [ "$rArg" = " -r " ] ; then
+	#if [ "$rArg" = " -r " ] ; then
 
 	HASHES=`spack find --loaded --format={hash}`
 	for HASH in $HASHES
@@ -49,7 +49,7 @@ spackLoadUnique(){
 		spackSetPackageRoot /$HASH
 	done
 
-	fi
+	#fi
 }
 
 spackLoadUniqueNoR(){
