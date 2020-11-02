@@ -17,6 +17,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(LegionExample_08_multiple_partitions)
 
+ 
+
 # Only search if were building stand-alone and not as part of Legion
 if(NOT Legion_SOURCE_DIR)
   find_package(Legion REQUIRED)

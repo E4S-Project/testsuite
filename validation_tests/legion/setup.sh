@@ -2,4 +2,4 @@
 
 . ../../setup.sh
 
-spackLoadUnique flit 
+spackLoadUnique legion

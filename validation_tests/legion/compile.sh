@@ -1,9 +1,10 @@
 #!/bin/bash -ex
 
-./setup.sh
+. ./setup.sh
 
 cd build
-cmake CMakeLists.txt
+cmake CMakeLists.txt -DLegion_DIR=${LEGION_ROOT}/share/Legion/cmake
+
 make
 cd ../
 
