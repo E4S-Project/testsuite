@@ -8,6 +8,7 @@ source ${SPACK_ROOT}/share/spack/setup-env.sh
 source `dirname $BASH_SOURCE`/settings.sh
 #alias test_run='$TEST_RUN'
 rArg=" -r "
+loadRoots=="True"
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
         if [ $? -ne 0 ] ; then
@@ -22,9 +23,12 @@ spackSetPackageRoot(){
 	#echo ${1}
 	SPAC_LOC=`spack location -i ${1}`
         SPAC_NAM=`spack find --format={name} ${1}`
+	SPAC_NAM=${SPAC_NAM^^}
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
-        export ${SPAC_NAM^^}_ROOT=${SPAC_LOC}
-	export ${SPAC_NAM^^}_HASH=${1}
+	#eval "${SPAC_NAM}_ROOT"
+	###BEWARE: Setting this value can 
+        export ${SPAC_NAM}_ROOT=${SPAC_LOC}
+	export ${SPAC_NAM}_HASH=${1}
 }
 
 spackLoadUnique(){ 
@@ -40,8 +44,8 @@ spackLoadUnique(){
         fi
 	spack load ${rArg} ${spackHash} || { echo "Package/Spec $@ or dependency not found." >&2 ; exit 215; } ;
 	echo ${spackHash}
-	
-	#if [ "$rArg" = " -r " ] ; then
+	#spackSetPackageRoot ${spackHash}	
+	if [ "$loadRoots" = "True" ] ; then
 
 	HASHES=`spack find --loaded --format={hash}`
 	for HASH in $HASHES
@@ -50,10 +54,17 @@ spackLoadUnique(){
 		spackSetPackageRoot /$HASH
 	done
 
-	#fi
+	fi
+}
+
+spackLoadUniqueNoRootVars(){
+	loadRoots="False"
+	spackLoadUnique $@
+	loadRoots="True"
 }
 
 spackLoadUniqueNoR(){
+	#spack load $@
 	rArg=""
 	spackLoadUnique $@
         rArg=" -r "
