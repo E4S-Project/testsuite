@@ -8,7 +8,7 @@ source ${SPACK_ROOT}/share/spack/setup-env.sh
 source `dirname $BASH_SOURCE`/settings.sh
 #alias test_run='$TEST_RUN'
 rArg=" -r "
-loadRoots=="True"
+loadRoots="True"
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
         if [ $? -ne 0 ] ; then
