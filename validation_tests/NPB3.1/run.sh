@@ -6,7 +6,8 @@
 #fi
 
 cd bin
-mpirun -np 4 ./lu.W.4 
+#mpirun -np 4 
+${TEST_RUN} ./lu.W.4 
 retVal=$?
 if [ $retVal -ne 0 ] ; then
   exit $retVal
@@ -16,7 +17,8 @@ fi
 #if [ $? = 0 ]; then
   echo "Running with TAU:" 
   export TAU_METRICS=time:PAPI_L1_DCM
-  mpirun -np 4 tau_exec -ebs ./lu.W.4
+#  mpirun -np 4 
+  ${TEST_RUN} tau_exec -ebs ./lu.W.4
   retVal=$?
   if [ $retVal -ne 0 ] ; then
     exit $retVal
