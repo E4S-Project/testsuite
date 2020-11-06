@@ -2,5 +2,5 @@
 
 . ../../setup.sh
 
-spack load cmake
-spack load arborx
+spackLoadUnique cmake
+spackLoadUnique arborx
