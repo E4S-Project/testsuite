@@ -2,4 +2,4 @@
 
 . ../../setup.sh
 
-spack load archer
+spackLoadUnique archer
