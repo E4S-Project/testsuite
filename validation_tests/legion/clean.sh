@@ -1,5 +1,5 @@
 #!/bin/bash -ex
 cd build
-rm -rf CMakeCache* cmake* CMakeFiles legion tmp.*
+rm -rf Makefile CMakeCache* cmake* CMakeFiles legion tmp.*
 cd ../
-rm *.log tmp.*
+rm -f *.log tmp.*
