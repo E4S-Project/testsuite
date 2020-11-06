@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+project(ArborXExamples CXX)
+find_package(ArborX REQUIRED)
+
+if(Kokkos_ENABLE_CUDA)
+  add_executable(ArborX_AccessTraits.exe example_cuda_access_traits.cpp)
+  target_link_libraries(ArborX_AccessTraits.exe ArborX::ArborX)
+else()
+  add_executable(ArborX_AccessTraits.exe example_host_access_traits.cpp)
+  target_link_libraries(ArborX_AccessTraits.exe ArborX::ArborX)
+endif()
