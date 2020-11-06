@@ -1,7 +1,13 @@
-#!/bin/bash -ex
-set -e
+#!/bin/bash -e
+#-ex
 . ./setup.sh
+set -x
+cd build
 
-OMP_NUM_THREADS=4 ./dreamtest
-
-OMP_NUM_THREADS=4 ./gridtest
+for file in `ls .` ; do                                                                                                                                   
+    if [ ! -d $file ] && [ -x $file ] ; then                                                                                                                                     
+        #mpirun -np 4 
+	OMP_NUM_THREADS=4 ${TEST_RUN} ./$file                                                                                                                                             
+    fi                                                                                                                                                         
+done
+cd -

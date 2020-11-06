@@ -4,6 +4,6 @@
 spackLoadUnique cmake
 mkdir -p build
 cd build
-make $HEFFTE_ROOT/share/heffte/examples
+cmake $HEFFTE_ROOT/share/heffte/examples
 make
 cd -
