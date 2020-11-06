@@ -2,4 +2,4 @@
 
 . ./setup.sh
 
-gcc -o hello-world hello-world.c -laml
+$TEST_CC -o hello-world hello-world.c -laml
