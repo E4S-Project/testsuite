@@ -1,3 +1,5 @@
-#!/usr/bin/env tclsh
-load ./example.so example
-puts $My_variable
+#!/bin/bash
+
+. ./setup.sh
+
+python runme.py
