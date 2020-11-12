@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+. ./setup.sh
+
 export OMP_NUM_THREADS=4
 
 ./testPoisson2d 100
