@@ -1,5 +1,7 @@
-#!/bin/bash 
-set -e
+#!/bin/bash -e
+
 . ./setup.sh
+
 set -x
-./a.out || exit 1
+
+./a.out
