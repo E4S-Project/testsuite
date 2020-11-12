@@ -1,26 +1,7 @@
-#!/bin/bash -ex
-. ./setup.sh
-#retVal=$?
-#if [ $retVal -ne 0 ] ; then
-#  exit $retVal
-#fi
+#!/bin/bash -e
 
-#spackLoadUnique strumpack
-#spack load openblas threads=openmp
-#spack load metis
-#spack load parmetis
-#spack load netlib-scalapack
-#spack load strumpack
-#spack load mpich
+export OMP_NUM_THREADS=4
 
-#if [ ! -d "cbuckle" ]; then
-#	curl -O https://www.cise.ufl.edu/research/sparse/MM/TKK/cbuckle.tar.gz
-#	tar -xvzf cbuckle.tar.gz
-#	rm cbuckle.tar.gz
-#fi
+./testPoisson2d 100
 
-#mpirun -np 4 
-eval $TEST_RUN ./a.out m ./cbuckle/cbuckle.mtx
-
-
-
+mpirun -n 4 ./testPoisson2dMPIDist 100

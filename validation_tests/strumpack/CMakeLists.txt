@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.13)
+project(testPoisson2d LANGUAGES CXX)
+find_package(STRUMPACK REQUIRED)
+add_executable(testPoisson2d testPoisson2d.cpp)
+add_executable(testPoisson2dMPIDist testPoisson2dMPIDist.cpp)
+target_link_libraries(testPoisson2d PRIVATE STRUMPACK::strumpack)
+target_link_libraries(testPoisson2dMPIDist PRIVATE STRUMPACK::strumpack)
