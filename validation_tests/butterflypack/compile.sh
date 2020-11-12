@@ -2,7 +2,7 @@
 . ./setup.sh
 #set -e
 . ../setup.sh
-eval $TEST_FTN \
+eval $TEST_FTN_MPI \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
 -DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
@@ -13,7 +13,7 @@ eval $TEST_FTN \
 -lpthread -cpp -O3 -DNDEBUG \
 -c EMCURV_Module.f90 -o EMCURV_Module.f90.o
 
-eval $TEST_FTN \
+eval $TEST_FTN_MPI \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
 -DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
@@ -25,7 +25,7 @@ eval $TEST_FTN \
 -cpp  -O3 -DNDEBUG \
 -c EMCURV_Driver.f90 -o EMCURV_Driver.f90.o
 
-eval $TEST_FTN \
+eval $TEST_FTN_MPI \
 -DHAVE_TASKLOOP \
 -DHAVE_MPI3 \
 -DHAVE_ARPACK -I$BUTTERFLYPACK_ROOT/include \
