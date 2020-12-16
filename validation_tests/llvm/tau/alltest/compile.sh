@@ -75,7 +75,7 @@ clang++ -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAK
 RC=$?
 echo -n "Error when the input file is wrong"
 if [ $RC != 0 ] ; then
-    echo -e "                   ${BRED}[FAILED]${NC} compilation failed"
+    echo -e "                ${BRED}[FAILED]${NC} compilation failed"
 else
     if [ `grep "Wrong syntax:"  $ERRFILE | wc -l` -gt 0 ] ; then
 	echo -e "                ${BGREEN}[PASSED]${NC}"
