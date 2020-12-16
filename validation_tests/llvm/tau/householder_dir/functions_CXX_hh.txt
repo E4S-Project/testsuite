@@ -1,0 +1,6 @@
+BEGIN_INCLUDE_LIST
+householder(int, int, double**, double**, double**)
+applyQ(int, double**, double*, double, int)
+applyR(int, double**, double*, double, int)
+matmul(int, int, int, double**, double**, double**)
+END_INCLUDE_LIST
