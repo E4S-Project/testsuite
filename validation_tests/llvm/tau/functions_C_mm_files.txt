@@ -1,0 +1,13 @@
+BEGIN_INCLUDE_LIST
+compute_interchange
+initialize
+END_INCLUDE_LIST
+
+BEGIN_FILE_EXCLUDE_LIST
+matmult_initialize.c
+END_FILE_EXCLUDE_LIST
+
+BEGIN_FILE_INCLUDE_LIST
+matmult.c
+END_FILE_INCLUDE_LIST
+
