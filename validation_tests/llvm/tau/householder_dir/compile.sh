@@ -40,6 +40,6 @@ if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
 else
     echo -e "                            ${BRED}[FAILED]${NC}"
 fi
-#rm $ERRFILE $ERRFILE2
+rm $ERRFILE $ERRFILE2
 
 

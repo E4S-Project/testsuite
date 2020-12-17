@@ -19,14 +19,13 @@ export TAU_MAKEFILE=shared-TEST-clang
 export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
 
 ERRFILE="toto"
-ERRFILE2="toto2"
 
 #which clang
 #echo $LLVM_DIR
 
 clang -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_C_files.txt matmul.c householder3.c Q.c R.c &> $ERRFILE
 
-clang -o householder3 matmul.o Q.o householder3.o R.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE -lm&> $ERRFILE2
+clang -o householder3 matmul.o Q.o householder3.o R.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE -lm
 
 RC=$?
 echo -n "C instrumentation with file inclusion/exclusion"
@@ -41,7 +40,7 @@ if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
 else
     echo -e "                            ${BRED}[FAILED]${NC}"
 fi
-rm $ERRFILE $ERRFILE2
+rm $ERRFILE 
 
 # This test doesn't support the use of wildcards, so these testcases are irrelevant
 #echo -e "${BBLUE}Regular expressions${NC}"

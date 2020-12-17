@@ -19,7 +19,6 @@ export TAU_MAKEFILE=shared-TEST-clang
 export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
 
 ERRFILE="toto"
-ERRFILE2="toto2"
 
 #which clang
 #echo $LLVM_DIR
@@ -27,7 +26,7 @@ ERRFILE2="toto2"
 
 # This one is expected to give an error
 clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_CXX_hh_bad.txt householder_bad.cpp &> $ERRFILE
-clang++ -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE householder_bad.o -o householder-bad &> $ERRFILE2
+clang++ -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE householder_bad.o -o householder-bad  
 RC=$?
 echo -n "Error when the input file is wrong"
 if [ $RC != 0 ] ; then
@@ -39,7 +38,7 @@ else
 	echo -e "                ${BRED}[FAILED]${NC} compiled but no warning generated"
     fi
 fi
-rm $ERRFILE $ERRFILE2
+rm $ERRFILE 
 rm householder-bad
 
 
