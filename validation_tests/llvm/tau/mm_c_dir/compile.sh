@@ -23,7 +23,7 @@ ERRFILE="toto"
 #which clang
 #echo $LLVM_DIR
 
-clang -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_C_mm.txt matmult.c matmult_initialize.c &> $ERRFILE
+clang -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./functions_C_mm_files.txt matmult.c matmult_initialize.c &> $ERRFILE
 clang -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE matmult.o matmult_initialize.o -o mm_c 
 RC=$?
 echo -n "C instrumentation"

@@ -128,12 +128,12 @@ done < $fIncluded
 
 
 while read -r line ; do
-    echo "Checking intrumentation of $line"
     varincluded=0
     if echo $line | grep -q "TAU";
     then
         continue
     fi
+    echo "Checking inclusion of $line"
     grep -qw "$line" $fIncluded;
     varincluded=$?
 

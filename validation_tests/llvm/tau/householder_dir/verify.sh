@@ -18,11 +18,10 @@ ERRFILE="toto"
 EXECUTABLE=householder
 
 echo -e "${BBLUE}Instrumentation${NC}"
-echo clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./$1 householder.cpp 
 
-clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./$1 householder.cpp &> $ERRFILE
+clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./$1 householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
 
-clang++ -o $EXECUTABLE householder.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE
+clang++ -o $EXECUTABLE householder.o R.o Q.o matmul.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE
 RC=$?
 echo -n "C++ instrumentation"
 if [ $RC != 0 ]; then
@@ -79,7 +78,7 @@ while read -r line ; do
 
     while read -r linefile ; do
         newlinefile="${linefile%.*}.o"
-        if nm --defined-only $newlinefile | grep -qw "$line";
+        if nm -C --defined-only $newlinefile | grep -qFw "$line";
         then
             varfileexcluded=0
         fi
@@ -89,7 +88,7 @@ while read -r line ; do
         varfileincluded=1
         while read -r linefile ; do
             newlinefile="${linefile%.*}.o"
-            if nm --defined-only $newlinefile | grep -qw "$line";
+            if nm -C --defined-only $newlinefile | grep -qFw "$line";
             then
                 varfileincluded=0
             fi
@@ -132,12 +131,12 @@ done < $fIncluded
 
 
 while read -r line ; do
-    echo "Checking intrumentation of $line"
     varincluded=0
     if echo $line | grep -q "TAU";
     then
         continue
     fi
+    echo "Checking inclusion of $line"
     grep -qF "$line" $fIncluded;
     varincluded=$?
 

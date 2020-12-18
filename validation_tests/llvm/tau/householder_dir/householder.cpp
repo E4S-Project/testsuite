@@ -26,6 +26,10 @@ void matmul( int, int, int, double**, double**, double** );
 bool check( int, int, double**, double**, double** );
 double getTime( void );
 void printPerf( int, int, double );
+void applyR( int, double**, double*, double, int );
+void applyQ( int, double**, double*, double, int );
+void copyR( int, int, double**, double ** );
+void matmul(  int, int, int, double**, double**, double** );
 
 void householder( int, int, double**, double**, double ** );
 
@@ -300,106 +304,9 @@ unsigned int min( unsigned int a, unsigned int b ){
     return ( (a < b) ? a : b );
 }
 
-void copyR( int M, int N, double** dst, double **orig ){
-    int i, j;
-    for( i = 0 ; i < min( M, N ) ; i++ ) {
-        for( j = 0 ; j < min( M, N ) ; j++ ) {
-            dst[i][j] = orig[i][j];
-        }
-    }
-}
 
-void matmul(  int M, int K, int N, double** out, double** A, double** B ){
-    int i, j, k;
 
-    for( i = 0 ; i < M ; i++ ){ 
-        for( j = 0 ; j < N ; j++ ){
-	  //            out[ i * N + j ] = 0.0;
-            for( k = 0 ; k < K ; k++ ){
-                out[ i ][ j ] += A[ i ][ k ] * B[ k ][ j ];
-            }
-        }
-    }
-}
 
-void applyR( int len, double** R, double* w, double tau, int start ){
-    int i, j;
-    auto tmpM = new double*[len];
-    for( i = 0 ; i < len ; i++ ) tmpM[i] = new double[len];
-    auto  tmpV = new double[len];
-
-    /* R(j:end,:) = R(j:end,:)-(tau*w)*(w’*R(j:end,:)); */
-
-     /* tmpV = w'*R(j:end,:) */
-    
-    //memset( tmpV, (char) 0, len*sizeof( double ) );
-    for( i = 0 ; i < len ; i++ ) {
-        tmpV[i] = 0.0;
-    }
-    for( j = 0 ; j < len ; j++ ){
-      for( i = start ; i < len ; i++ ) {
-	tmpV[j] += w[i]*R[ i ][ j ];
-      }
-    }
-
-    /* tmpM = tau * w * tmpV */
-
-    for( i = 0 ; i < len ; i++ ){
-      for( j = start ; j < len ; j++ ){
-	  tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
-	}
-    }
-
-    /* R = R - tmpM */
-
-    for( i = start ; i < len ; i++ ){
-        for( j = 0 ; j < len ; j++ ){
-            R[ i ][ j] -= tmpM[ i ][ j ];
-        }
-    }
-
-    delete[] tmpV;
-    for( i = 0 ; i < len ; i++ ) delete[] tmpM[i];
-    delete[] tmpM;
-}
-
-void applyQ( int len, double** Q, double* w, double tau, int start ){
-    int i, j;
-    auto tmpM = new double*[len];
-    for( i = 0 ; i < len ; i++ ) tmpM[i] = new double[len];
-    auto tmpV = new double[len];
-
-    /* Q(:,j:end) = Q(:,j:end)-(Q(:,j:end)*w)*(tau*w)’; */
-
-    /* tmpV = (Q(:,j:end)*w) */
-
-    for( j = 0 ; j < len ; j++ ) {
-      tmpV[j] = 0.0;
-      for( i = start ; i < len ; i++ ) {
-	tmpV[j] += Q[ j ][i ] * w[i];
-      }      
-    }
-
-    /* tmpM = tmpV * (tau*w)’; */
-
-    for( j = 0 ; j < len ; j++ ) {
-      for( i = start  ; i < len ; i++ ) {
-	tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
-      }      
-    }
-
-    /* Q(:,j:end) -= tmpM */
-
-    for( j = 0 ; j < len ; j++ ) {
-      for( i = start ; i < len ; i++ ) {
-	Q[ j ][ i ] -= tmpM[ j ][ i ];
-      }
-    }
-
-    for( i = 0 ; i < len ; i++ ) delete[] tmpM[i];
-    delete[] tmpM;
-    delete[] tmpV;
-}
 
 void householder( int M, int N, double** A, double** Q, double** R ){
 

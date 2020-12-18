@@ -1,8 +1,6 @@
 BEGIN_INCLUDE_LIST
-householder
 apply#
-matmul
 END_INCLUDE_LIST
 BEGIN_EXCLUDE_LIST
-check
+check#
 END_EXCLUDE_LIST
