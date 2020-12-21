@@ -140,7 +140,7 @@ fi
 
 
 rm $OUTFILE
-rm profile.*
+#rm profile.*
 rm $fIncluded
 rm $fIncludedFile
 rm $fExcluded

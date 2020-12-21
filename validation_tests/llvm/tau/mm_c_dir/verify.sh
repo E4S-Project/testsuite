@@ -1,4 +1,5 @@
 #!/bin/bash
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -10,28 +11,6 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 . ./setup.sh
-export TAU_MAKEFILE=shared-TEST-clang
-export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
-ERRFILE="toto"
-
-EXECUTABLE=mm_c
-
-clang -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -mllvm -tau-input-file=./$1 matmult.c matmult_initialize.c &> $ERRFILE
-clang -fplugin=${LLVM_DIR}/lib/TAU_Profiling.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE matmult.o matmult_initialize.o -o $EXECUTABLE
-RC=$?
-echo -n "C instrumentation"
-if [ $RC != 0 ]; then
-    echo -e "                                 ${BRED}[FAILED]${NC}"
-else
-    echo -e "                                 ${BGREEN}[PASSED]${NC}"
-fi
-echo -n "Instrumented functions"
-if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
-    echo -e "                            ${BGREEN}[PASSED]${NC}"
-else
-    echo -e "                            ${BRED}[FAILED]${NC}"
-fi
-rm $ERRFILE
 
 fIncluded=./Included
 fExcluded=./Excluded
@@ -51,31 +30,29 @@ sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/
 
 
 
-tau_exec  -T serial,clang ./$EXECUTABLE
 
 pprof -l | grep -v "Reading" > $fInstrumented
-
 incorrectInstrumentation=0
 
 
 
 
 while read -r line ; do
-    echo "Checking intrumentation of $line"
+    echo "Checking instrumentation of $line"
     varinstrumented=1
     varexcluded=1
     varfileincluded=0
     varfileexcluded=1
 
-    grep -qw  "$line" $fInstrumented;
+    grep -qF  "$line" $fInstrumented;
     varinstrumented=$?
 
-    grep -qw "$line" $fExcluded;
+    grep -qF "$line" $fExcluded;
     varexcluded=$?
 
     while read -r linefile ; do
         newlinefile="${linefile%.*}.o"
-        if nm --defined-only $newlinefile | grep -qw "$line";
+        if nm -C --defined-only $newlinefile | grep -qFw "$line";
         then
             varfileexcluded=0
         fi
@@ -85,7 +62,7 @@ while read -r line ; do
         varfileincluded=1
         while read -r linefile ; do
             newlinefile="${linefile%.*}.o"
-            if nm --defined-only $newlinefile | grep -qw "$line";
+            if nm -C --defined-only $newlinefile | grep -qFw "$line";
             then
                 varfileincluded=0
             fi
@@ -134,7 +111,7 @@ while read -r line ; do
         continue
     fi
     echo "Checking inclusion of $line"
-    grep -qw "$line" $fIncluded;
+    grep -qF "$line" $fIncluded;
     varincluded=$?
 
     if [ $varincluded -gt 0 ];
@@ -149,7 +126,6 @@ if [ $incorrectInstrumentation -eq 0 ]; then
 else
     echo -e "${BRED}[Instrumentation done incorrectly: $incorrectInstrumentation mistakes]${NC}"
 fi
-
 rm profile.*
 rm $fIncluded
 rm $fIncludedFile
