@@ -97,10 +97,6 @@ while read -r line ; do
             fi
         done < $fIncludedFile
     fi
-    echo $varinstrumented
-    echo $varexcluded
-    echo $varfileincluded
-    echo $varfileexcluded
 
 
     if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];

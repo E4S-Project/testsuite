@@ -49,7 +49,7 @@ BGREEN='\033[1;32m'
 NC='\033[0m'
 
 sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d' > $fExcluded
-sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d' > $fIncluded
+sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d' > $fIncluded 
 sed '/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/{/BEGIN_FILE_EXCLUDE_LIST/{h;d};H;/END_FILE_EXCLUDE_LIST/{x;/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_FILE_EXCLUDE_LIST//' -e 's/END_FILE_EXCLUDE_LIST//' -e '/^$/d' > $fExcludedFile
 sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/{h;d};H;/END_FILE_INCLUDE_LIST/{x;/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_FILE_INCLUDE_LIST//' -e 's/END_FILE_INCLUDE_LIST//'  -e '/^$/d' > $fIncludedFile
 
@@ -70,9 +70,20 @@ while read -r line ; do
     varfileincluded=0
     varfileexcluded=1
 
+
+    if echo $line | grep -qF "#" ;
+    then
+        newline="${line%#}"
+        nm -C --defined-only householder.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded 
+        nm -C --defined-only R.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded 
+        nm -C --defined-only Q.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded 
+        nm -C --defined-only matmul.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded 
+        continue
+    fi
+
     grep -qF  "$line" $fInstrumented;
     varinstrumented=$?
-
+    
     grep -qF "$line" $fExcluded;
     varexcluded=$?
 

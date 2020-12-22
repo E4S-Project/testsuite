@@ -11,31 +11,6 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 . ./setup.sh
-export TAU_MAKEFILE=shared-TEST-clang
-export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
-ERRFILE="toto"
-
-EXECUTABLE=householder
-
-echo -e "${BBLUE}Instrumentation${NC}"
-
-clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./$1 householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
-
-clang++ -o $EXECUTABLE householder.o R.o Q.o matmul.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE
-RC=$?
-echo -n "C++ instrumentation"
-if [ $RC != 0 ]; then
-    echo -e "                               ${BRED}[FAILED]${NC}"
-else
-    echo -e "                               ${BGREEN}[PASSED]${NC}"
-fi
-echo -n "Instrumented functions"
-if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
-    echo -e "                            ${BGREEN}[PASSED]${NC}"
-else
-    echo -e "                            ${BRED}[FAILED]${NC}"
-fi
-rm $ERRFILE
 
 fIncluded=./Included
 fExcluded=./Excluded
@@ -55,7 +30,6 @@ sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/
 
 
 
-tau_exec  -T serial,clang ./$EXECUTABLE
 
 pprof -l | grep -v "Reading" > $fInstrumented
 incorrectInstrumentation=0
@@ -69,6 +43,17 @@ while read -r line ; do
     varexcluded=1
     varfileincluded=0
     varfileexcluded=1
+
+    if echo $line | grep -qF "#" ;
+    then
+        newline="${line%#}"
+        nm -C --defined-only householder.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded
+        nm -C --defined-only R.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded
+        nm -C --defined-only Q.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded
+        nm -C --defined-only matmul.o | grep -F "$newline" | awk '{$1=$2=""; print $0}' >> $fIncluded
+        continue
+    fi
+
 
     grep -qF  "$line" $fInstrumented;
     varinstrumented=$?
@@ -94,6 +79,7 @@ while read -r line ; do
             fi
         done < $fIncludedFile
     fi
+    
 
 
     if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
