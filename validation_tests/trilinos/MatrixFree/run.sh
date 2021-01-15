@@ -1,5 +1,1 @@
-#!/bin/bash
-#mpirun -np 4
-#. ../../../setup.sh
-#. ../setup.sh
-${TEST_RUN} ./MatrixFree
+../run_template.sh
