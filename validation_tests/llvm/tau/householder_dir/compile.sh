@@ -25,8 +25,8 @@ ERRFILE="toto"
 
 echo -e "${BBLUE}Instrumentation${NC}"
 
-clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_CXX_hh.txt householder.cpp &> $ERRFILE
-clang++ -o householder householder.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE 
+clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_CXX_hh_files.txt householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
+clang++ -o householder householder.o R.o Q.o matmul.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE 
 RC=$?
 echo -n "C++ instrumentation"
 if [ $RC != 0 ]; then
@@ -40,6 +40,6 @@ if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
 else
     echo -e "                            ${BRED}[FAILED]${NC}"
 fi
-#rm $ERRFILE $ERRFILE2
+rm $ERRFILE $ERRFILE2
 
 

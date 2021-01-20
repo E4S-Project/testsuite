@@ -1,3 +1,1 @@
-#!/bin/bash
-#mpirun -np 4
-${TEST_RUN} ./METISCoarsening
+../run_template.sh

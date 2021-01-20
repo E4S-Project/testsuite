@@ -1,4 +1,1 @@
-#!/bin/bash
-#. ../setup.sh
-make clean
-make
+../compile_template.sh

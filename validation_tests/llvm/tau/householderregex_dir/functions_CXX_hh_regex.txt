@@ -1,0 +1,21 @@
+BEGIN_INCLUDE_LIST
+apply#
+householder(int, int, double**, double**, double**)
+matmul(int, int, int, double**, double**, double**)
+copyR( int, int, double**, double ** )
+END_INCLUDE_LIST
+
+BEGIN_EXCLUDE_LIST
+copyR( int, int, double**, double ** )
+END_EXCLUDE_LIST
+
+BEGIN_FILE_INCLUDE_LIST
+householder.cpp
+R.cpp
+END_FILE_INCLUDE_LIST
+
+BEGIN_FILE_EXCLUDE_LIST
+matmul.cpp
+END_FILE_EXCLUDE_LIST
+
+

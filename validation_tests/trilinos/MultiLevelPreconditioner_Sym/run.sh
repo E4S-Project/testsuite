@@ -1,2 +1,1 @@
-#!/bin/bash
-mpirun -np 4 ./MultiLevelPreconditioner_Sym
+../run_template.sh

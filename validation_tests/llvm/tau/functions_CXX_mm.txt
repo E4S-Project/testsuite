@@ -1,2 +1,0 @@
-initialize(double**, int, int)
-compute_interchange(double**, double**, double**, int, int, int)

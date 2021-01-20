@@ -1,3 +1,1 @@
-#!/bin/bash
-rm -f *.o *ell profile*
-
+../clean_template.sh
