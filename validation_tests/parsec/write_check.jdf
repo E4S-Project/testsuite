@@ -1,0 +1,183 @@
+extern "C" %{
+/*
+ * Copyright (c) 2014-2021 The University of Tennessee and The University
+ *                         of Tennessee Research Foundation.  All rights
+ *                         reserved.
+ */
+#include "parsec/data_dist/matrix/two_dim_rectangle_cyclic.h"
+
+static int verbose = 0;
+
+%}
+
+A          [type = "parsec_data_collection_t*"]
+NT         [type = int]
+BLOCK      [type = int]
+P          [type = int hidden=true default="((two_dim_block_cyclic_t*)A)->grid.rows-1"]
+
+STARTUP(p, k)
+  k = 0 .. NT
+  p = 0 .. P
+: A(p, k)
+
+  WRITE A1 -> A2 TASK1(p, k)
+
+BODY
+  assert(NULL != A1);
+  if(verbose) printf("STARTUP(%d, %d)\n", p, k);
+  /**
+   * Set each element to their index position.
+   */
+  for( int i = 0; i < BLOCK; i++ ) {
+    ((int*)A1)[i] = k * BLOCK + i;
+  }
+END
+
+TASK1(p, k)
+  k = 0 .. NT
+  p = 0 .. P
+: A(p, k)
+
+  WRITE A3 -> A1 TASK2(p, k)    /* upon return will be set to A2: the index position */
+  RW    A1 <- A(p, k)           /* A1 will be set to 1 */
+           -> A2 TASK2(p, k)    /* upon return the content will be increased by 1 */
+  READ  A2 <- A1 STARTUP(p, k)  /* A2 is set to their index position */
+
+BODY
+  assert(NULL != A3);
+  if(verbose) printf("TASKS1(%d, %d)\n", p, k);
+  for( int i = 0; i < BLOCK; i++ ) {
+    ((int*)A1)[i] += 1;
+    ((int*)A3)[i] = ((int*)A2)[i];
+  }
+END
+
+TASK2(p, k)
+  k = 0 .. NT
+  p = 0 .. P
+: A(p, k)
+
+  READ A1 <- A3 TASK1(p, k)   /* each element is initialized to the index position */
+  RW   A2 <- A1 TASK1(p, k)   /* each element should be set to 2 */
+          -> A(p, k)
+
+BODY
+  if(verbose) printf("TASKS2(%d, %d)\n", p, k);
+  for( int i = 0; i < BLOCK; i++ ) {
+    ((int*)A2)[i] += ((int*)A1)[i];
+  }
+END
+
+extern "C" %{
+
+#define TYPE  matrix_Integer
+static two_dim_block_cyclic_t descA;
+
+int main(int argc, char* argv[])
+{
+    parsec_write_check_taskpool_t* tp;
+    parsec_context_t *parsec;
+    int i = 0, block = 10, n = 1000, rc;
+    int rank = 0, np = 1;
+
+#ifdef PARSEC_HAVE_MPI
+    {
+        int provided;
+        MPI_Init_thread(NULL, NULL, MPI_THREAD_SERIALIZED, &provided);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &np);
+    }
+#endif
+
+    while( NULL != argv[i] ) {
+        if( 0 == strncmp(argv[i], "-n=", 3) ) {
+            n = strtol(argv[i]+3, NULL, 10);
+            if( 0 >= n ) n = 1000;  /* set to default value */
+            goto move_and_continue;
+        }
+        if( 0 == strncmp(argv[i], "-b=", 3) ) {
+            block = strtol(argv[i]+3, NULL, 10);
+            if( 0 >= block ) block = 10;  /* set to default value */
+            goto move_and_continue;
+        }
+        if( 0 == strncmp(argv[i], "-v", 2) ) {
+            verbose = 1;
+            goto move_and_continue;
+        }
+        i++;  /* skip this one */
+        continue;
+    move_and_continue:
+        memmove(&argv[i], &argv[i+1], (argc - 1) * sizeof(char*));
+        argc -= 1;
+    }
+
+    parsec = parsec_init(-1, &argc, &argv);
+    if( NULL == parsec ) {
+        exit(-1);
+    }
+
+    two_dim_block_cyclic_init( &descA, TYPE, matrix_Tile,
+                               rank,
+                               1, block, np, n,
+                               0, 0, np, n, np, 1, 1, 1, 0, 0);
+    descA.mat = parsec_data_allocate( n * parsec_datadist_getsizeoftype(TYPE) );
+    for( int i = 0; i < n; ((int*)descA.mat)[i++] = 1);
+
+    /**
+     * The original data is consistently initialized to 1. Upon completion it should
+     * start with 2 and increase monotonically.
+     */
+    tp = parsec_write_check_new( (parsec_data_collection_t*)&descA, (n / block) - 1, block );
+    assert( NULL != tp );
+
+#if PARSEC_VERSION_MAJOR < 4
+#define PARSEC_write_check_DEFAULT_ADT_IDX PARSEC_write_check_DEFAULT_ARENA
+#endif
+    /* This test generates no communications between processes, so the datatype
+     * associated with the arena are insignificant. */
+    parsec_arena_datatype_construct( &tp->arenas_datatypes[PARSEC_write_check_DEFAULT_ADT_IDX],
+                                     descA.super.mb * descA.super.nb * parsec_datadist_getsizeoftype(TYPE),
+                                     PARSEC_ARENA_ALIGNMENT_SSE,
+                                     PARSEC_DATATYPE_NULL);  /* change for distributed cases */
+
+    rc = parsec_context_start(parsec);
+    PARSEC_CHECK_ERROR(rc, "parsec_context_start");
+
+    rc = parsec_context_add_taskpool( parsec, (parsec_taskpool_t*)tp);
+    PARSEC_CHECK_ERROR(rc, "parsec_context_add_taskpool");
+
+    rc = parsec_context_wait(parsec);
+    PARSEC_CHECK_ERROR(rc, "parsec_context_wait");
+
+    int error_found = -1;
+    for( int i = 0; i < n; i++ ) {
+        if( (2+i) != ((int*)descA.mat)[i] ) {
+            error_found = i;
+            printf("position %d extected %d found %d\n",
+                   i, (1+i), ((int*)descA.mat)[i]);
+        }
+    }
+
+    free(descA.mat);
+
+#ifdef PARSEC_HAVE_MPI
+    int maxloc[2] = {error_found, rank};
+    MPI_Reduce(0 == rank? MPI_IN_PLACE: &maxloc, &maxloc, 1, MPI_2INT, MPI_MAXLOC, 0, MPI_COMM_WORLD);
+    MPI_Finalize();
+#endif
+
+    if( 0 == rank) {
+        if( maxloc[0] > 0 ) {
+            printf("TEST FAILED: last error found when inspecting element %d at rank %d\n", maxloc[0], maxloc[1]);
+            return 1;
+        }
+        else {
+            printf("TEST SUCCESS: elements were inspected and found correctly written\n");
+            return 0;
+        }
+    }
+    return 0;
+}
+
+%}
+
