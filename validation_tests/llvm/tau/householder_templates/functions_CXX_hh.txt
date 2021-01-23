@@ -1,9 +1,9 @@
 BEGIN_INCLUDE_LIST
 void householder<double>(int, int, double**, double**, double**)
 void householder<float>(int, int, float**, float**, float**)
-void apply#<double>(int, double**, double*, double, int)
+void apply#<double>( int, double**, double*, double, int)
 void matmul<double>(int, int, int, double**, double**, double**)
-void matmul<float>(int, int, int, #**, #**, #**)
+void matmul<float>( int, int, int, #**, #**, #** )
 END_INCLUDE_LIST
 BEGIN_EXCLUDE_LIST
 void check(int, int, #**, #**, #**)
