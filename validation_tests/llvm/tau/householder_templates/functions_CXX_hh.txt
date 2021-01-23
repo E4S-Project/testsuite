@@ -1,0 +1,17 @@
+BEGIN_INCLUDE_LIST
+void householder<double>(int, int, double**, double**, double**)
+void householder<float>(int, int, float**, float**, float**)
+void apply#<double>(int, double**, double*, double, int)
+void matmul<double>(int, int, int, double**, double**, double**)
+void matmul<float>(int, int, int, #**, #**, #**)
+END_INCLUDE_LIST
+BEGIN_EXCLUDE_LIST
+void check(int, int, #**, #**, #**)
+void applyQ<#>(int, #**, #*, #, int)
+END_EXCLUDE_LIST
+BEGIN_FILE_INCLUDE_LIST
+householder?.cpp
+END_FILE_INCLUDE_LIST
+BEGIN_FILE_EXCLUDE_LIST
+householder123.c
+END_FILE_EXCLUDE_LIST
