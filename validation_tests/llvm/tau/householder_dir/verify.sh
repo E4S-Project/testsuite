@@ -23,6 +23,19 @@ BGREEN='\033[1;32m'
 
 NC='\033[0m'
 
+if [ $# -ne 1 ]; then
+    echo "Missing input file: stopping the test"
+    exit
+fi
+
+if [ $(cat $1 | wc -l) -eq 0 ]; then
+    echo -e "Input file doesn't exist: stopping the test"
+    exit
+else
+    echo -e "Input file detected"
+fi
+
+
 sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d' > $fExcluded
 sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d' > $fIncluded
 sed '/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/{/BEGIN_FILE_EXCLUDE_LIST/{h;d};H;/END_FILE_EXCLUDE_LIST/{x;/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/p}};d' $1 |  sed -e 's/BEGIN_FILE_EXCLUDE_LIST//' -e 's/END_FILE_EXCLUDE_LIST//' -e '/^$/d' > $fExcludedFile
@@ -32,6 +45,10 @@ sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/
 
 
 pprof -l | grep -v "Reading" > $fInstrumented
+if [ $? -ne "0" ];then
+    echo -e "${BRED}Profile file not found${NC}"
+    exit
+fi
 incorrectInstrumentation=0
 
 
@@ -90,7 +107,7 @@ while read -r line ; do
     then
         ((incorrectInstrumentation=incorrectInstrumentation+1))
         echo -e "${BRED}Wrongfully instrumented: source file is excluded${NC}"
-    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1]);
+    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
     then
         echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"
     else
@@ -122,7 +139,6 @@ if [ $incorrectInstrumentation -eq 0 ]; then
 else
     echo -e "${BRED}[Instrumentation done incorrectly: $incorrectInstrumentation mistakes]${NC}"
 fi
-rm profile.*
 rm $fIncluded
 rm $fIncludedFile
 rm $fExcluded

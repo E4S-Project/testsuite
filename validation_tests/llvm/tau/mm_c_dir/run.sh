@@ -102,7 +102,7 @@ while read -r line ; do
     then
         ((incorrectInstrumentation=incorrectInstrumentation+1))
         #echo -e "${BRED}Wrongfully instrumented: source file is excluded${NC}"
-    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1]);
+    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
     then
         echo null > /dev/null
         #echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"

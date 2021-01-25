@@ -23,7 +23,7 @@ OUTFILE="toto"
 
 rm profile.*
 echo -e "${BBLUE}Basic instrumentation file - cpp${NC}"
-tau_exec  -T serial,clang ./householder 256 256 &> $OUTFILE
+tau_exec  -T serial,clang ./householder &> $OUTFILE
 RC=$?
 echo -n "Execution of C++ instrumented code"
 if [ $RC != 0 ]; then
@@ -112,7 +112,7 @@ while read -r line ; do
     then
         ((incorrectInstrumentation=incorrectInstrumentation+1))
         #echo -e "${BRED}Wrongfully instrumented: source file is excluded${NC}"
-    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1]);
+    elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
     then
         echo null > /dev/null
         #echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"

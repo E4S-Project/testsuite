@@ -1,3 +1,4 @@
+void matmul(  int M, int K, int N, double** out, double** A, double** B );
 
 void matmul(  int M, int K, int N, double** out, double** A, double** B ){
     int i, j, k;

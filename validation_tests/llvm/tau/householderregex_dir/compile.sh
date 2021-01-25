@@ -13,10 +13,10 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 #export TAU_MAKEFILE=shared-clang-pdt
-export TAU_MAKEFILE=shared-TEST-clang
+export TAU_MAKEFILE=shared-libstd++-clang
 #export TAU_OPTIONS='-optCompInst -optVerbose'
 
-export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
+export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-inuse/install
 
 ERRFILE="toto"
 

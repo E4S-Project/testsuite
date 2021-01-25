@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# For commented code, read cev.sh
+
 . ./setup.sh
 
 RED='\033[0;31m'
@@ -16,7 +18,7 @@ NC='\033[0m'
 export TAU_MAKEFILE=shared-TEST-clang
 #export TAU_OPTIONS='-optCompInst -optVerbose'
 
-export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-module-11/install
+export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-inuse/install
 
 ERRFILE="toto"
 
@@ -25,7 +27,7 @@ ERRFILE="toto"
 
 echo -e "${BBLUE}Instrumentation${NC}"
 
-clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_CXX_hh_files.txt householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
+clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_C_files2.txt householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
 clang++ -o householder householder.o R.o Q.o matmul.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE 
 RC=$?
 echo -n "C++ instrumentation"
@@ -41,5 +43,25 @@ else
     echo -e "                            ${BRED}[FAILED]${NC}"
 fi
 rm $ERRFILE $ERRFILE2
+
+echo -e "${BBLUE}Instrumentation${NC}"
+
+clang++ -c -O3 -g -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -mllvm -tau-input-file=./functions_CXX_hh_files.txt householder.cpp R.cpp Q.cpp matmul.cpp &> $ERRFILE
+clang++ -o householdercxx householder.o R.o Q.o matmul.o -fplugin=${LLVM_DIR}/lib/TAU_Profiling_CXX.so -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE 
+RC=$?
+echo -n "C++ instrumentation"
+if [ $RC != 0 ]; then
+    echo -e "                               ${BRED}[FAILED]${NC}"
+else
+    echo -e "                               ${BGREEN}[PASSED]${NC}"
+fi
+echo -n "Instrumented functions"
+if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
+    echo -e "                            ${BGREEN}[PASSED]${NC}"
+else
+    echo -e "                            ${BRED}[FAILED]${NC}"
+fi
+rm $ERRFILE $ERRFILE2
+
 
 
