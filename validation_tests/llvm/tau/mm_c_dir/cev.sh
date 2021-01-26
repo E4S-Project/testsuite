@@ -16,7 +16,7 @@ export TAU_MAKEFILE=shared-TEST-clang
 export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-inuse/install
 ERRFILE="toto"
 
-EXECUTABLE=householder
+EXECUTABLE=mm_c
 
 if [ $# -ne 1 ]; then
     echo "Missing input file: stopping the test"

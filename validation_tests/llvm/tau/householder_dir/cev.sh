@@ -139,6 +139,7 @@ while read -r line ; do
         done < $fIncludedFile
     fi
 
+    echo $varfileincluded
     # We compare the gathered values and draw a conclusion on the validity of 
     # the instrumentation/non-instrumentation of the function 
     if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];

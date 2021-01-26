@@ -152,6 +152,15 @@ else
     echo -e "                       ${BRED}[FAILED]${NC}"
 fi
 
+runtest "functions_C_files3.txt" "householderfileWC"
+runoutput=$?
+
+echo -n "Instrumentation of C++ code"
+if [ $runoutput -eq 0 ]; then
+    echo -e "                       ${BGREEN}[PASSED]${NC}"
+else
+    echo -e "                       ${BRED}[FAILED]${NC}"
+fi
 runtest "functions_CXX_hh_files.txt" "householdercxx"
 runoutput=$?
 
