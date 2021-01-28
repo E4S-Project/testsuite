@@ -206,9 +206,9 @@ verifytest () {
     IFS=$'\n' 
 
     incorrectInstrumentation=0
-    for funcinstru in $fInstrumented; do
+    for funcinclu in $fIncluded; do
         #echo "Checking instrumentation of $line"
-        varincluded=1
+        varinstrumented=1
         varexcluded=1
         varfileincluded=0
         varfileexcluded=1
@@ -216,64 +216,65 @@ verifytest () {
         # First: check that we actually wanted to instrument the instrumented functions
         # in this example we have no wildcards so the matching is straightforward
 
-        # echo "Instrumented function" $funcinstru
+        # echo "Instrumented function" $funcinclu
 
-        echo $fIncluded | grep -qFw "$funcinstru"
-        varincluded=$?
-        echo $fExcluded | grep -qFw "$funcinstru"
+        echo $fInstrumented | grep -qFw "$funcinclu"
+        varinstrumented=$?
+        echo $fExcluded | grep -qFw "$funcinclu"
         varexcluded=$?
         # Where is it defined? Look into all the source files of this directory (might pass as parameters of the function later if necessary)
         # Matching is not as straightforward as with C.
         #	for file in $(ls  *.{cpp,h}); do
-        for file in $(ls  *.cpp); do
-            for line in "$(cat $file)"; do
-                matchname $funcinstru $line
+        for file in $(ls  *.{cpp,h,c}); do
+            for line in $(cat $file); do
+                matchname $funcinclu $line
                 if [[ $matched == 0 ]] ; then
-                    echo QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQqq
-                    # echo "I have found " $funcinstru "in file" $file
+                    # echo "I have found " $funcinclu "in file" $file
                     definition=$file
                     break
                 fi
             done
         done
         echo $definition
-        echo $fIncludedFile | grep -qFw "$definition"
-        varfileincluded=$?
+
+        if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
+            echo $fIncludedFile | grep -qFw "$definition"
+            varfileincluded=$?
+        fi
         echo $fExcludedFile | grep -qFw "$definition"
         varfileexcluded=$?
 
-        echo HEEEEEEEEEEEEEEEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-        # echo "Function " $funcinstru " is defined in file " $definition
+        # echo "Function " $funcinclu " is defined in file " $definition
         #if [[ $fIncludedFile =~ $definition ]] ; then varfileincluded=0 ; fi # good
         #if [[ $fExcludedFile =~ $definition ]] ; then varfileexcluded=1; fi  # bad
 
-        echo $funcinstru
-        echo $varincluded
+        echo $funcinclu
+        echo $varinstrumented
         echo $varexcluded
         echo $varfileincluded
         echo $varfileexcluded
 
-        if [ $varincluded -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
+        if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
             echo null > /dev/null
             echo -e "${BGREEN}Lawfully instrumented${NC}"
-        elif [ $varincluded -eq 1 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
+        elif [ $varinstrumented -eq 1 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
             echo -e "${BRED}Wrongfully not instrumented: included and not excluded${NC}"
-        elif [ $varincluded -eq 0 ] && [ ! $varexcluded -eq 1 ];
+        elif [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
             echo -e "${BRED}Wrongfully instrumented: excluded${NC}"
-        elif [ $varincluded -eq 0 ] && [ $varfileincluded -eq 1 ];
+        elif [ $varinstrumented -eq 0 ] && [ $varfileincluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
             echo -e "${BRED}Wrongfully instrumented: source file is not included${NC}"
-        elif [ $varincluded -eq 0 ] && [ ! $varfileexcluded -eq 1 ];
+        elif [ $varinstrumented -eq 0 ] && [ ! $varfileexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
             echo -e "${BRED}Wrongfully instrumented: source file is excluded${NC}"
-        elif [ $varincluded -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
+        elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
         then
             echo null > /dev/null
             echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"
