@@ -7,6 +7,9 @@ module load llvm/inuse
 module load gcc
 module load tau2/x86_64
 
+. ../testfunctions.sh
+
+
 ### modules for gorgon
 #module load llvm
 #module load tau2/current

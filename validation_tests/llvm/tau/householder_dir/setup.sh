@@ -4,3 +4,5 @@
 module load llvm/inuse
 module load gcc
 module load tau2/x86_64
+
+. ../testfunctions.sh
