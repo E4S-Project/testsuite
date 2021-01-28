@@ -13,13 +13,13 @@ err() {
 }
 
 _status() {
-    if [ $2 ] ; then
+    if [ "$2" -ne 0 ] ; then
         echo -ne "$BRED"
     else
         echo -ne "$BGREEN"
     fi
 
-    echo -e $1$NC
+    echo -e "$1: $2 $NC"
 }
 
 # Set:
@@ -69,7 +69,7 @@ compiletest() {
         &> $ERRFILE
 
     if [ $? -eq 0 ] ; then
-        _status "Compilation succeded"
+        _status "Compilation succeded" 0
     else
         _status "Compilation failed" 1
         cat $ERRFILE
@@ -160,21 +160,34 @@ function matchname(){
     matched=0
 }
 
+runtest(){
+    export FUNC_LIST=$1
+    export EXECUTABLE=$2
+
+    runexec $EXECUTABLE && verifytest $FUNC_LIST
+
+    unset EXECUTABLE
+    unset FUNC_LIST
+}
+
 runexec (){
-    OUTFILE="tata"
+    OUTFILE=`mktemp`
+    ERRFILE=`mktemp`
 
-    executable=$1
+    rm -f profile.*
 
-    rm profile.*
     echo -e "${BBLUE}Basic instrumentation file - cpp${NC}"
-    tau_exec  -T serial,clang ./$executable 256 256 &> $OUTFILE
-    RC=$?
-    echo -n "Execution of C++ instrumented code"
-    if [ $RC != 0 ]; then
-        echo -e "                ${BRED}[FAILED]${NC}"
-    else
-        echo -e "                ${BGREEN}[PASSED]${NC}"
+
+    tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
+    SUCCESS=$?
+
+    _status "Execution of C++ instrumented code" $SUCCESS
+
+    if [ $? -ne 0 ] ; then
+        echo $(cat $ERRFILE)
     fi
+
+    return $SUCCESS
 }
 
 verifytest () {
@@ -297,15 +310,6 @@ verifytest () {
     fi
 
     rm $OUTFILE
-}
-
-runtest(){
-
-    InputFile=$1
-    Executable=$2
-
-    runexec $Executable
-    verifytest $InputFile
 }
 
 cevtest() {
