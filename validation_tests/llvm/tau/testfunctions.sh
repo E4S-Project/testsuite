@@ -8,49 +8,71 @@ BBLUE='\033[1;34m'
 
 NC='\033[0m'
 
-#export TAU_MAKEFILE=shared-clang-pdt
-export TAU_MAKEFILE=shared-TEST-clang
-#export TAU_OPTIONS='-optCompInst -optVerbose'
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+}
 
-export LLVM_DIR=/home/users/fdeny/llvm_build/pluginVersions/plugin-tau-llvm-inuse/install
+_status() {
+    if [ $2 ] ; then
+        echo -ne "$BRED"
+    else
+        echo -ne "$BGREEN"
+    fi
 
+    echo -e $1$NC
+}
 
-#which clang
-#echo $LLVM_DIR
-
+# Set:
+# - LLVM for the install of LLVM to use (default system accessible)
+# - PLUGIN_DIR if the plugin is not installed with LLVM (default with the above LLVM)
+# - TAU_INSTALL for the TAU install to use (no default)
 compiletest() {
+    # Get the target LLVM from either the environment or the $PATH
+    LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
 
-    InputFile=$1
-    Executable=$2
-    SourceList=$3
+    # Is the plugin installed somewhere else ?
+    PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
+
+    if [ -z "$LLVM_INSTALL" -o -z "$PLUGIN_PREFIX" -o -z "$TAU_INSTALL" ] ; then
+        err "Invalid parameters."
+        err LLVM_INSTALL: \"$LLVM_INSTALL\"
+        err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
+        err TAU_INSTALL: \"$TAU_INSTALL\"
+        exit 1
+    fi
+
+    FUNC_LIST=$1
+    OUTPUT=$2
+    SOURCES=$3
 
     OptionalC=${4:-C++}
 
-    Compiler=clang++
-    TAUBinary=TAU_Profiling_CXX.so
-    
+    COMPILER=$LLVM_INSTALL/bin/clang++
+    PLUGIN=$PLUGIN_PREFIX/TAU_Profiling_CXX.so
+
     if [ $OptionalC == "C" ]; then
-        Compiler="clang"
-        TAUBinary="TAU_Profiling.so"
+        COMPILER=$LLVM_INSTALL/bin/clang
+        PLUGIN=$PLUGIN_PREFIX/TAU_Profiling.so
     fi
 
-    ERRFILE="toto"
-    
-    echo -e "${BBLUE}Instrumentation${NC}"
+    ERRFILE=`mktemp`
 
-    $Compiler -o $Executable -O3 -g -fplugin=${LLVM_DIR}/lib/$TAUBinary -mllvm -tau-input-file=$InputFile -ldl -L${TAU}/lib/$TAU_MAKEFILE -lTAU -Wl,-rpath,${TAU}/lib/$TAU_MAKEFILE $SourceList &> $ERRFILE
-    RC=$?
-    echo -n "C++ instrumentation"
-    if [ $RC != 0 ]; then
-        echo -e "                               ${BRED}[FAILED]${NC}"
+    $COMPILER -o $OUTPUT \
+        -O3 -g \
+        -fplugin=$PLUGIN \
+        -mllvm \
+        -tau-input-file=$FUNC_LIST \
+        -L$TAU_INSTALL \
+        -ldl -lTAU \
+        -Wl,-rpath,$TAU_INSTALL \
+        $SOURCES \
+        &> $ERRFILE
+
+    if [ $? -eq 0 ] ; then
+        _status "Compilation succeded"
     else
-        echo -e "                               ${BGREEN}[PASSED]${NC}"
-    fi
-    echo -n "Instrumented functions"
-    if [ `grep "Instrument"  $ERRFILE | wc -l` -gt 0 ] ; then
-        echo -e "                            ${BGREEN}[PASSED]${NC}"
-    else
-        echo -e "                            ${BRED}[FAILED]${NC}"
+        _status "Compilation failed" 1
+        cat $ERRFILE
     fi
 
     rm $ERRFILE
@@ -67,21 +89,21 @@ function matchname(){
     funcproto=$1
     line=$2
 
-    
+
     # Does it end like a function definition?
     # oddly enough, grep is easier for regex matching here
     f1=`echo $line | grep -E "*\)[[:space:]]*\{[[:space:]]*$" | wc -l`
     f2=`echo $line | grep -E "*\)[[:space:]]*$" | wc -l`
     if [[ $(($f1+$f2)) == 0 ]] ; then
-	matched=1
-	return
+        matched=1
+        return
     fi
 
     # Does it start like a function definition?
     nf=`echo $line | cut -d "(" -f 1 | awk {'print NF'}`
     if [[ ! $nf == 2 ]] ; then
-	matched=1
-	return
+        matched=1
+        return
     fi
 
     # Does the input file provide the returned type (optional)
@@ -89,22 +111,22 @@ function matchname(){
     nf=`echo $funcproto | cut -d "(" -f 1 | awk {'print NF'}`
 
     if [[ $nf == 2 ]] ; then
-	# TODO test this
-	# does it return the requested type?
-	type1=`echo $line | cut -f 1 -d " "`
-	type2=`echo $funcproto | cut -f 1 -d " "`
-	if [[ ! $type1 == $type2 ]] ; then
-	    matched=1
-	    return
-	fi
+        # TODO test this
+        # does it return the requested type?
+        type1=`echo $line | cut -f 1 -d " "`
+        type2=`echo $funcproto | cut -f 1 -d " "`
+        if [[ ! $type1 == $type2 ]] ; then
+            matched=1
+            return
+        fi
     fi
 
     # Is this the same function name?
     name1=`echo $line | cut -d '(' -f 1 | awk -F " " {'print $NF'}`
     name2=`echo $funcproto | cut -d '(' -f 1 | awk -F " " {'print $NF'}`
     if [[ ! $name1 == $name2 ]] ; then
-	matched=1
-	return
+        matched=1
+        return
     fi
 
     # Which types do we have between the parenthesis
@@ -116,8 +138,8 @@ function matchname(){
     n1=`echo $linetypes | awk {'print NF'}`
     n2=`echo $prototypes | awk {'print NF'}`
     if [[ ! $n1 == $n2 ]] ; then
-	matched=1
-	return
+        matched=1
+        return
     fi
 
     # We need this to make lists we can manipulate easily
@@ -129,10 +151,10 @@ function matchname(){
 
     # Compare these lists term by term
     for i in "${!lt[@]}"; do
-	if [[ ! ${pt[i]} == ${lt[i]} ]] ; then
-	    matched=1
-	    return
-	fi
+        if [[ ! ${pt[i]} == ${lt[i]} ]] ; then
+            matched=1
+            return
+        fi
     done
 
     matched=0
@@ -142,7 +164,7 @@ runexec (){
     OUTFILE="tata"
 
     executable=$1
-    
+
     rm profile.*
     echo -e "${BBLUE}Basic instrumentation file - cpp${NC}"
     tau_exec  -T serial,clang ./$executable 256 256 &> $OUTFILE
@@ -256,10 +278,10 @@ verifytest () {
         then
             continue
         fi
-        
+
         echo $fIncluded | grep -qF "$funcinstru"; # We check if the function was indeed included
         varincluded=$?
-        
+
         if [ $varincluded -gt 0 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
@@ -278,7 +300,7 @@ verifytest () {
 }
 
 runtest(){
-   
+
     InputFile=$1
     Executable=$2
 
@@ -292,7 +314,7 @@ cevtest() {
     SourceList=$3
     OptionalC=${4:-C++}
 
- 
+
 
     if [ $# -lt 1 ]; then
         echo "Missing input file: stopping the test"

@@ -4,6 +4,13 @@ Some tests for the TAU plugin, in C and C++.
 
 Each executable has a separate directory, with different potential function listings to test different instrumentations.
 
+Set the following environment variables:
+```
+LLVM for the install of LLVM to use (default system accessible)
+PLUGIN_DIR if the plugin is not installed with LLVM (default in the above LLVM)
+TAU_INSTALL for the TAU install to use (no default)
+```
+
 The test works by calling ./compile.sh, then ./run.sh. To obtain more specific outputs of the test, you can call the following scripts.
 
 To  compile, run and check correct instrumentation with a specific function listing file, as well as providing more detailed outputs, you can use:
