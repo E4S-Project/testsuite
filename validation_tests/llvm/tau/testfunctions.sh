@@ -22,6 +22,75 @@ fi
 echo -e "$1: $2 $NC"
 }
 
+symbols::exists() {
+return $([ -f "$SYMBOL_CACHE" ])
+}
+
+SYMBOL_CACHE=.symbols
+
+symbols::analysis() {
+    symbols::exists && return 0
+    
+    # Get the target LLVM from either the environment or the $PATH
+    LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
+
+    # Is the plugin installed somewhere else ?
+    PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
+
+    if [ -z "$LLVM_INSTALL" -o -z "$PLUGIN_PREFIX" -o -z "$TAU_INSTALL" ] ; then
+        output::err "Invalid parameters."
+        output::err LLVM_INSTALL: \"$LLVM_INSTALL\"
+        output::err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
+        output::err TAU_INSTALL: \"$TAU_INSTALL\"
+        exit 1
+    fi
+
+    OUTPUT=`mktemp`
+    ERRFILE=`mktemp`
+    SOURCES=$1
+
+    COMPILER=$LLVM_INSTALL/bin/clang++
+    $COMPILER -o $OUTPUT \
+        -O0 -g \
+        $SOURCES \
+        &> $ERRFILE
+
+    SUCCESS=$?
+
+    output::status "Compilation of sources for symbol analysis" $SUCCESS
+
+    if [ $SUCCESS -ne 0 ] ; then
+        cat $ERRFILE
+        exit $SUCCESS
+    fi
+
+    nm -lC --defined-only $OUTPUT | grep \( | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > .symbols
+
+    rm $OUTPUT $ERRFILE
+}
+
+symbols::file() {
+    symbols::exists || output::err "Symbol database not found"; exit 1
+
+    PROTOTYPE="$1"
+
+    FILES=$(grep $SYMBOL_CACHE -e "$PROTOTYPE" | cut -f2)
+
+    if [ $(echo "$FILES" | wc -l) -ne 1 ] ; then
+        output::err "Prototype $PROTOTYPE matches multiple symbols"
+    fi
+
+    echo $FILES
+}
+
+symbols::match() {
+    symbols::exists || output::err "Symbol database not found"; exit 1
+
+    REGEX="$1"
+
+    grep $SYMBOL_CACHE -e "^$(echo "$REGEX" | sed 's/.$//')" | cut -f1
+}
+
 # Set:
 # - LLVM for the install of LLVM to use (default system accessible)
 # - PLUGIN_DIR if the plugin is not installed with LLVM (default with the above LLVM)
