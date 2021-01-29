@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ../testfunctions.sh
+. ./setup.sh
 
 SOURCES="householder.cpp R.cpp Q.cpp matmul.cpp"
 

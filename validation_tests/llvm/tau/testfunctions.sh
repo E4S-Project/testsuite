@@ -57,17 +57,16 @@ compiletest() {
 
     ERRFILE=`mktemp`
 
-    $COMPILER -o $OUTPUT \
+    $COMPILER  -o $OUTPUT \
         -O3 -g \
         -fplugin=$PLUGIN \
         -mllvm \
         -tau-input-file=$FUNC_LIST \
         -L$TAU_INSTALL \
-        -ldl -lTAU \
+        -ldl -lTAU -lm \
         -Wl,-rpath,$TAU_INSTALL \
         $SOURCES \
         &> $ERRFILE
-
     if [ $? -eq 0 ] ; then
         _status "Compilation succeded" 0
     else
@@ -85,7 +84,7 @@ compiletest() {
 # Does not consider wildcards
 # $1: function prototype
 # $2: line
-function matchname(){
+function matchname() {
     funcproto=$1
     line=$2
 
@@ -160,28 +159,30 @@ function matchname(){
     matched=0
 }
 
-runtest(){
+runtest() {
     export FUNC_LIST=$1
     export EXECUTABLE=$2
 
-    runexec $EXECUTABLE && verifytest $FUNC_LIST
+    OptionalC=${3:-C++}
+
+    runexec $EXECUTABLE && verifytest $FUNC_LIST $OptionalC
 
     unset EXECUTABLE
     unset FUNC_LIST
 }
 
-runexec (){
+runexec() {
     OUTFILE=`mktemp`
     ERRFILE=`mktemp`
 
     rm -f profile.*
 
-    echo -e "${BBLUE}Basic instrumentation file - cpp${NC}"
+    echo -e "${BBLUE}Basic instrumentation file ${NC}"
 
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
 
-    _status "Execution of C++ instrumented code" $SUCCESS
+    _status "Execution of instrumented code" $SUCCESS
 
     if [ $? -ne 0 ] ; then
         echo $(cat $ERRFILE)
@@ -190,8 +191,16 @@ runexec (){
     return $SUCCESS
 }
 
-verifytest () {
+checkwildcard() {
+    fIncluded=$1
+    for funcinclu in $fIncluded; do
+        echo $funcinclu
+    done
+}
+
+verifytest() {
     inputfile=$1
+    OptionalC=${2:-C++}
 
     OUTFILE="tata"
 
@@ -205,6 +214,7 @@ verifytest () {
     # There might be spaces in the function names: change the separator
     IFS=$'\n' 
 
+    #checkwildcard "$fIncluded"
     incorrectInstrumentation=0
     for funcinclu in $fIncluded; do
         #echo "Checking instrumentation of $line"
@@ -222,20 +232,30 @@ verifytest () {
         varinstrumented=$?
         echo $fExcluded | grep -qFw "$funcinclu"
         varexcluded=$?
+
+        echo $funcinclu
+        echo temp:
+        tii=`nm -lC --defined-only householder | grep \( | cut -d' ' -f3- | cut -d: -f1 | grep $funcinclu | cut -f2`
+        echo $tii
         # Where is it defined? Look into all the source files of this directory (might pass as parameters of the function later if necessary)
         # Matching is not as straightforward as with C.
         #	for file in $(ls  *.{cpp,h}); do
-        for file in $(ls  *.{cpp,h,c}); do
-            for line in $(cat $file); do
-                matchname $funcinclu $line
-                if [[ $matched == 0 ]] ; then
-                    # echo "I have found " $funcinclu "in file" $file
-                    definition=$file
-                    break
-                fi
+        if [ $OptionalC == "C" ]; then
+            definition=`grep $funcinclu *.[ch] | grep -v ";$" | cut -d ':' -f 1`
+        else
+            for file in $(ls  *.{cpp,h}); do
+                for line in $(cat $file); do
+                    matchname $funcinclu $line
+                    if [[ $matched == 0 ]] ; then
+                        # echo "I have found " $funcinclu "in file" $file
+                        definition=$file
+                        break
+                    fi
+                done
             done
-        done
+        fi
         echo $definition
+
 
         if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
             echo $fIncludedFile | grep -qFw "$definition"
@@ -335,6 +355,6 @@ cevtest() {
 
 
     compiletest "$InputFile" "$Executable" "$SourceList" "$OptionalC"
-    runtest "$InputFile" "$Executable"
+    runtest "$InputFile" "$Executable" "$OptionalC"
 }
 
