@@ -8,18 +8,18 @@ BBLUE='\033[1;34m'
 
 NC='\033[0m'
 
-err() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+output::err() {
+echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
-_status() {
-    if [ "$2" -ne 0 ] ; then
-        echo -ne "$BRED"
-    else
-        echo -ne "$BGREEN"
-    fi
+output::status() {
+if [ "$2" -ne 0 ] ; then
+    echo -ne "$BRED"
+else
+    echo -ne "$BGREEN"
+fi
 
-    echo -e "$1: $2 $NC"
+echo -e "$1: $2 $NC"
 }
 
 # Set:
@@ -34,10 +34,10 @@ compiletest() {
     PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
 
     if [ -z "$LLVM_INSTALL" -o -z "$PLUGIN_PREFIX" -o -z "$TAU_INSTALL" ] ; then
-        err "Invalid parameters."
-        err LLVM_INSTALL: \"$LLVM_INSTALL\"
-        err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
-        err TAU_INSTALL: \"$TAU_INSTALL\"
+        output::err "Invalid parameters."
+        output::err LLVM_INSTALL: \"$LLVM_INSTALL\"
+        output::err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
+        output::err TAU_INSTALL: \"$TAU_INSTALL\"
         exit 1
     fi
 
@@ -68,17 +68,17 @@ compiletest() {
         $SOURCES \
         &> $ERRFILE
 
-    if [ $? -eq 0 ] ; then
-        _status "Compilation succeded" 0
-    else
-        _status "Compilation failed" 1
+    SUCCESS=$?
+
+    output::status "Compilation of $OUTPUT" $SUCCESS
+
+    if [ $SUCCESS -ne 0 ] ; then
         cat $ERRFILE
+        exit $SUCCESS
     fi
 
     rm $ERRFILE
 }
-
-
 
 # Match a line coming from the input file with a line coming from the source code
 # returns 0 in the variable $matched if the lines match, 1 otherwise
@@ -164,14 +164,17 @@ runtest(){
     export FUNC_LIST=$1
     export EXECUTABLE=$2
 
+    export OUTFILE=`mktemp`
+
     runexec $EXECUTABLE && verifytest $FUNC_LIST
+
+    unset OUTFILE
 
     unset EXECUTABLE
     unset FUNC_LIST
 }
 
 runexec (){
-    OUTFILE=`mktemp`
     ERRFILE=`mktemp`
 
     rm -f profile.*
@@ -181,10 +184,10 @@ runexec (){
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
 
-    _status "Execution of C++ instrumented code" $SUCCESS
+    output::status "Execution of $EXECUTABLE" $SUCCESS
 
-    if [ $? -ne 0 ] ; then
-        echo $(cat $ERRFILE)
+    if [ $SUCCESS -ne 0 ] ; then
+        cat $ERRFILE
     fi
 
     return $SUCCESS
@@ -192,8 +195,6 @@ runexec (){
 
 verifytest () {
     inputfile=$1
-
-    OUTFILE="tata"
 
     fExcluded=`sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d'`
     fIncluded=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d'`
@@ -203,7 +204,7 @@ verifytest () {
     fInstrumented=`pprof -l | grep -v "Reading" | grep -v ".TAU application"`
 
     # There might be spaces in the function names: change the separator
-    IFS=$'\n' 
+    IFS=$'\n'
 
     incorrectInstrumentation=0
     for funcinclu in $fIncluded; do
@@ -279,7 +280,7 @@ verifytest () {
             echo null > /dev/null
             echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"
         else
-            echo Uncovered case to implement 
+            echo Uncovered case to implement
             ((incorrectInstrumentation=incorrectInstrumentation+1))
         fi
 
@@ -310,7 +311,7 @@ verifytest () {
         echo -e "                       ${BRED}[FAILED]${NC}"
     fi
 
-    rm $OUTFILE
+    rm -f $OUTFILE
 }
 
 cevtest() {
@@ -318,8 +319,6 @@ cevtest() {
     Executable=$2
     SourceList=$3
     OptionalC=${4:-C++}
-
-
 
     if [ $# -lt 1 ]; then
         echo "Missing input file: stopping the test"
@@ -333,8 +332,6 @@ cevtest() {
         echo -e "Input file detected"
     fi
 
-
     compiletest "$InputFile" "$Executable" "$SourceList" "$OptionalC"
     runtest "$InputFile" "$Executable"
 }
-
