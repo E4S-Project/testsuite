@@ -126,17 +126,16 @@ compiletest() {
 
     ERRFILE=`mktemp`
 
-    $COMPILER -o $OUTPUT \
+    $COMPILER  -o $OUTPUT \
         -O3 -g \
         -fplugin=$PLUGIN \
         -mllvm \
         -tau-input-file=$FUNC_LIST \
         -L$TAU_INSTALL \
-        -ldl -lTAU \
+        -ldl -lTAU -lm \
         -Wl,-rpath,$TAU_INSTALL \
         $SOURCES \
         &> $ERRFILE
-
     SUCCESS=$?
 
     output::status "Compilation of $OUTPUT" $SUCCESS
@@ -154,7 +153,7 @@ compiletest() {
 # Does not consider wildcards
 # $1: function prototype
 # $2: line
-function matchname(){
+function matchname() {
     funcproto=$1
     line=$2
 
@@ -229,13 +228,14 @@ function matchname(){
     matched=0
 }
 
-runtest(){
+runtest() {
     export FUNC_LIST=$1
     export EXECUTABLE=$2
 
     export OUTFILE=`mktemp`
 
-    runexec $EXECUTABLE && verifytest $FUNC_LIST
+    OptionalC=${3:-C++}
+    runexec $EXECUTABLE && verifytest $FUNC_LIST $OptionalC
 
     unset OUTFILE
 
@@ -243,12 +243,12 @@ runtest(){
     unset FUNC_LIST
 }
 
-runexec (){
+runexec() {
     ERRFILE=`mktemp`
 
     rm -f profile.*
 
-    echo -e "${BBLUE}Basic instrumentation file - cpp${NC}"
+    echo -e "${BBLUE}Basic instrumentation file ${NC}"
 
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
@@ -262,8 +262,16 @@ runexec (){
     return $SUCCESS
 }
 
-verifytest () {
+checkwildcard() {
+    fIncluded=$1
+    for funcinclu in $fIncluded; do
+        echo $funcinclu
+    done
+}
+
+verifytest() {
     inputfile=$1
+    OptionalC=${2:-C++}
 
     fExcluded=`sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d'`
     fIncluded=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d'`
@@ -275,6 +283,7 @@ verifytest () {
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
 
+    #checkwildcard "$fIncluded"
     incorrectInstrumentation=0
     for funcinclu in $fIncluded; do
         #echo "Checking instrumentation of $line"
@@ -292,20 +301,26 @@ verifytest () {
         varinstrumented=$?
         echo $fExcluded | grep -qFw "$funcinclu"
         varexcluded=$?
+
         # Where is it defined? Look into all the source files of this directory (might pass as parameters of the function later if necessary)
         # Matching is not as straightforward as with C.
         #	for file in $(ls  *.{cpp,h}); do
-        for file in $(ls  *.{cpp,h,c}); do
-            for line in $(cat $file); do
-                matchname $funcinclu $line
-                if [[ $matched == 0 ]] ; then
-                    # echo "I have found " $funcinclu "in file" $file
-                    definition=$file
-                    break
-                fi
+        if [ $OptionalC == "C" ]; then
+            definition=`grep $funcinclu *.[ch] | grep -v ";$" | cut -d ':' -f 1`
+        else
+            for file in $(ls  *.{cpp,h}); do
+                for line in $(cat $file); do
+                    matchname $funcinclu $line
+                    if [[ $matched == 0 ]] ; then
+                        # echo "I have found " $funcinclu "in file" $file
+                        definition=$file
+                        break
+                    fi
+                done
             done
-        done
+        fi
         echo $definition
+
 
         if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
             echo $fIncludedFile | grep -qFw "$definition"
@@ -402,5 +417,5 @@ cevtest() {
     fi
 
     compiletest "$InputFile" "$Executable" "$SourceList" "$OptionalC"
-    runtest "$InputFile" "$Executable"
+    runtest "$InputFile" "$Executable" "$OptionalC"
 }
