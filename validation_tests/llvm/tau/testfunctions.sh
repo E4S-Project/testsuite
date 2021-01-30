@@ -51,7 +51,7 @@ echo -e "$1: $2 $NC"
 }
 
 symbols::exists() {
-return $([ -f "$SYMBOL_CACHE" ])
+[ -f "$SYMBOL_CACHE" ]
 }
 
 SYMBOL_CACHE=.symbols
@@ -61,7 +61,10 @@ symbols::analysis() {
 
     environment::enter
 
-    COMPILER=$LLVM_INSTALL/bin/clang++
+    OUTPUT=`mktemp`
+    ERRFILE=`mktemp`
+
+    COMPILER=$TEST_LLVM_INSTALL/bin/clang++
     $COMPILER -o $OUTPUT \
         -O0 -g \
         $SOURCES \
@@ -72,7 +75,7 @@ symbols::analysis() {
     output::status "Compilation of sources for symbol analysis" $SUCCESS
 
     if [ $SUCCESS -ne 0 ] ; then
-        cat $ERRFILE
+        cat "$ERRFILE"
         environment::exit
         exit $SUCCESS
     fi
@@ -85,7 +88,7 @@ symbols::analysis() {
 }
 
 symbols::file() {
-    symbols::exists || output::err "Symbol database not found"; exit 1
+symbols::exists || exit 1
 
     PROTOTYPE="$1"
 
@@ -99,7 +102,7 @@ symbols::file() {
 }
 
 symbols::match() {
-    symbols::exists || output::err "Symbol database not found"; exit 1
+symbols::exists || exit 1
 
     REGEX="$1"
 
@@ -140,7 +143,7 @@ compiletest() {
     output::status "Compilation of $OUTPUT" $SUCCESS
 
     if [ $SUCCESS -ne 0 ] ; then
-        cat $ERRFILE
+        cat "$ERRFILE"
         environment::exit
         exit $SUCCESS
     fi
@@ -257,7 +260,7 @@ runexec() {
     output::status "Execution of $EXECUTABLE" $SUCCESS
 
     if [ $SUCCESS -ne 0 ] ; then
-        cat $ERRFILE
+        cat "$ERRFILE"
     fi
 
     return $SUCCESS
