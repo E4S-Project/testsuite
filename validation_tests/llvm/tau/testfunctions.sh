@@ -95,11 +95,11 @@ symbols::analysis() {
 }
 
 symbols::file() {
-symbols::exists || exit 1
+symbols::exists || { output::err Database file not found; exit 1; }
 
     PROTOTYPE="$1"
 
-    FILES=$(grep $SYMBOL_CACHE -e "$PROTOTYPE" | cut -f2)
+    FILES=$(grep $SYMBOL_CACHE -e "^$PROTOTYPE" | cut -f2)
 
     if [ $(echo "$FILES" | wc -l) -ne 1 ] ; then
         output::err "Prototype $PROTOTYPE matches multiple symbols"
@@ -109,7 +109,7 @@ symbols::exists || exit 1
 }
 
 symbols::match() {
-symbols::exists || exit 1
+symbols::exists || { output::err Database file not found; exit 1; }
 
     REGEX="$1"
 
