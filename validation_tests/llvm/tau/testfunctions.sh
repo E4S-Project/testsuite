@@ -88,7 +88,7 @@ symbols::analysis() {
 }
 
 symbols::file() {
-symbols::exists || exit 1
+symbols::exists || { output::err Database file not found; exit 1; }
 
     PROTOTYPE="$1"
 
@@ -102,7 +102,7 @@ symbols::exists || exit 1
 }
 
 symbols::match() {
-symbols::exists || exit 1
+symbols::exists || { output::err Database file not found; exit 1; }
 
     REGEX="$1"
 
