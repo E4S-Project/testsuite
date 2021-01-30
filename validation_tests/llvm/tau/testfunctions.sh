@@ -8,6 +8,34 @@ BBLUE='\033[1;34m'
 
 NC='\033[0m'
 
+# Set:
+# - LLVM for the install of LLVM to use (default system accessible)
+# - PLUGIN_DIR if the plugin is not installed with LLVM (default with the above LLVM)
+# - TAU_INSTALL for the TAU install to use (no default)
+environment::enter() {
+    # Get the target LLVM from either the environment or the $PATH
+    export TEST_LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
+
+    # Is the plugin installed somewhere else ?
+    export TEST_PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
+
+    export TEST_TAU_INSTALL=$TAU_INSTALL
+
+    if [ -z "$TEST_LLVM_INSTALL" -o -z "$TEST_PLUGIN_PREFIX" -o -z "$TEST_TAU_INSTALL" ] ; then
+        output::err "Invalid parameters."
+        output::err Using LLVM: \"$TEST_LLVM_INSTALL\"
+        output::err Using plugin in: \"$TEST_PLUGIN_PREFIX\"
+        output::err Using libTAU.so from: \"$TEST_TAU_INSTALL\"
+        output::err If any of those values are erroneous, please set the
+        output::err LLVM, PLUGIN_DIR or TAU_INSTALL environment variables.
+        exit 1
+    fi
+}
+
+environment::exit() {
+    unset TEST_LLVM_INSTALL TEST_PLUGIN_PREFIX TEST_TAU_INSTALL
+}
+
 output::err() {
 echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
@@ -30,24 +58,8 @@ SYMBOL_CACHE=.symbols
 
 symbols::analysis() {
     symbols::exists && return 0
-    
-    # Get the target LLVM from either the environment or the $PATH
-    LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
 
-    # Is the plugin installed somewhere else ?
-    PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
-
-    if [ -z "$LLVM_INSTALL" -o -z "$PLUGIN_PREFIX" -o -z "$TAU_INSTALL" ] ; then
-        output::err "Invalid parameters."
-        output::err LLVM_INSTALL: \"$LLVM_INSTALL\"
-        output::err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
-        output::err TAU_INSTALL: \"$TAU_INSTALL\"
-        exit 1
-    fi
-
-    OUTPUT=`mktemp`
-    ERRFILE=`mktemp`
-    SOURCES=$1
+    environment::enter
 
     COMPILER=$LLVM_INSTALL/bin/clang++
     $COMPILER -o $OUTPUT \
@@ -61,12 +73,15 @@ symbols::analysis() {
 
     if [ $SUCCESS -ne 0 ] ; then
         cat $ERRFILE
+        environment::exit
         exit $SUCCESS
     fi
 
     nm -lC --defined-only $OUTPUT | grep \( | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > .symbols
 
     rm $OUTPUT $ERRFILE
+
+    environment::exit
 }
 
 symbols::file() {
@@ -91,24 +106,8 @@ symbols::match() {
     grep $SYMBOL_CACHE -e "^$(echo "$REGEX" | sed 's/.$//')" | cut -f1
 }
 
-# Set:
-# - LLVM for the install of LLVM to use (default system accessible)
-# - PLUGIN_DIR if the plugin is not installed with LLVM (default with the above LLVM)
-# - TAU_INSTALL for the TAU install to use (no default)
 compiletest() {
-    # Get the target LLVM from either the environment or the $PATH
-    LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
-
-    # Is the plugin installed somewhere else ?
-    PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
-
-    if [ -z "$LLVM_INSTALL" -o -z "$PLUGIN_PREFIX" -o -z "$TAU_INSTALL" ] ; then
-        output::err "Invalid parameters."
-        output::err LLVM_INSTALL: \"$LLVM_INSTALL\"
-        output::err PLUGIN_PREFIX: \"$PLUGIN_PREFIX\"
-        output::err TAU_INSTALL: \"$TAU_INSTALL\"
-        exit 1
-    fi
+    environment::enter
 
     FUNC_LIST=$1
     OUTPUT=$2
@@ -116,12 +115,12 @@ compiletest() {
 
     OptionalC=${4:-C++}
 
-    COMPILER=$LLVM_INSTALL/bin/clang++
-    PLUGIN=$PLUGIN_PREFIX/TAU_Profiling_CXX.so
+    COMPILER=$TEST_LLVM_INSTALL/bin/clang++
+    PLUGIN=$TEST_PLUGIN_PREFIX/TAU_Profiling_CXX.so
 
     if [ $OptionalC == "C" ]; then
-        COMPILER=$LLVM_INSTALL/bin/clang
-        PLUGIN=$PLUGIN_PREFIX/TAU_Profiling.so
+        COMPILER=$TEST_LLVM_INSTALL/bin/clang
+        PLUGIN=$TEST_PLUGIN_PREFIX/TAU_Profiling.so
     fi
 
     ERRFILE=`mktemp`
@@ -131,9 +130,9 @@ compiletest() {
         -fplugin=$PLUGIN \
         -mllvm \
         -tau-input-file=$FUNC_LIST \
-        -L$TAU_INSTALL \
+        -L$TEST_TAU_INSTALL \
         -ldl -lTAU -lm \
-        -Wl,-rpath,$TAU_INSTALL \
+        -Wl,-rpath,$TEST_TAU_INSTALL \
         $SOURCES \
         &> $ERRFILE
     SUCCESS=$?
@@ -142,10 +141,12 @@ compiletest() {
 
     if [ $SUCCESS -ne 0 ] ; then
         cat $ERRFILE
+        environment::exit
         exit $SUCCESS
     fi
 
     rm $ERRFILE
+    environment::exit
 }
 
 # Match a line coming from the input file with a line coming from the source code
