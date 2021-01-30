@@ -64,9 +64,16 @@ symbols::analysis() {
     OUTPUT=`mktemp`
     ERRFILE=`mktemp`
 
+    OptionalC=${2:-C++}
+    
     COMPILER=$TEST_LLVM_INSTALL/bin/clang++
+    
+    if [ $OptionalC == "C" ]; then
+        COMPILER=$TEST_LLVM_INSTALL/bin/clang
+    fi    
+    
     $COMPILER -o $OUTPUT \
-        -O0 -g \
+        -O0 -g  -lm\
         $SOURCES \
         &> $ERRFILE
 
@@ -270,10 +277,11 @@ checkwildcard() {
     fIncluded=$1
     for funcinclu in $fIncluded; do
        if echo $funcinclu | grep -qF "#"; then
-           functoadd=symbols::match $funcinclu
-           echo $functoadd
+           functoadd="$(symbols::match $funcinclu)"
+           echo "$functoadd"
        fi 
-    done
+   done
+   echo "$fIncluded"
 }
 
 verifytest() {
@@ -290,9 +298,14 @@ verifytest() {
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
 
-    checkwildcard "$fIncluded"
+    fIncluded="$(checkwildcard "$fIncluded")"
+    echo "$fInstrumented"
     incorrectInstrumentation=0
     for funcinclu in $fIncluded; do
+
+        if echo $funcinclu | grep -qF "#"; then
+            continue
+        fi
         #echo "Checking instrumentation of $line"
         varinstrumented=1
         varexcluded=1
