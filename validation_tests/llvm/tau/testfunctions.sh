@@ -265,7 +265,10 @@ runexec() {
 checkwildcard() {
     fIncluded=$1
     for funcinclu in $fIncluded; do
-        echo $funcinclu
+       if echo $funcinclu | grep -qF "#"; then
+           functoadd=symbols::match $funcinclu
+           echo $functoadd
+       fi 
     done
 }
 
@@ -283,7 +286,7 @@ verifytest() {
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
 
-    #checkwildcard "$fIncluded"
+    checkwildcard "$fIncluded"
     incorrectInstrumentation=0
     for funcinclu in $fIncluded; do
         #echo "Checking instrumentation of $line"
