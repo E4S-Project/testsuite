@@ -93,7 +93,7 @@ symbols::analysis() {
     nm -lC --defined-only $OUTPUT   `# Get debug symbols with addresses` \
         | cut -d' ' -f3-                      `# Remove the hex address` \
         | cut -d: -f1                         `# Remove the line number` \
-        | grep -e "*\t*"                  `# Keep lines with a filename` \
+        | grep -e $'\t'                   `# Keep lines with a filename` \
         | sed -e "s:$PWD:.:"                 `# Make the paths relative` \
         > $SYMBOL_CACHE
 
@@ -109,7 +109,7 @@ symbols::exists || { output::err Database file not found; exit 1; }
 
     PROTOTYPE="$1"
 
-    FILES=$(grep -F $SYMBOL_CACHE -e "^$PROTOTYPE" | cut -f2)
+    FILES=$(grep $SYMBOL_CACHE -e "^$(echo $PROTOTYPE | sed -s 's:*:\\*:g')" | cut -f2)
 
     if [ $(echo "$FILES" | wc -l) -ne 1 ] ; then
         output::err "Prototype $PROTOTYPE matches multiple symbols"
