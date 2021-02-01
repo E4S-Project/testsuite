@@ -41,6 +41,10 @@ echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
 output::status() {
+if [ -n "$QUIET_TEST_OUTPUT" ] ; then
+    return
+fi
+
 if [ "$2" -ne 0 ] ; then
     echo -ne "$BRED"
 else
@@ -264,28 +268,26 @@ verifytest() {
 
         if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
-            echo null > /dev/null
-            echo -e "${BGREEN}Lawfully instrumented${NC}"
+            output::status "Lawfully instrumented" 0
         elif [ $varinstrumented -eq 1 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            echo -e "${BRED}Wrongfully not instrumented: included and not excluded${NC}"
+            output::status "Wrongfully not instrumented: included and not excluded" 1
         elif [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            echo -e "${BRED}Wrongfully instrumented: excluded${NC}"
+            output::status "Wrongfully instrumented: excluded" 1
         elif [ $varinstrumented -eq 0 ] && [ $varfileincluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            echo -e "${BRED}Wrongfully instrumented: source file is not included${NC}"
+            output::status "Wrongfully instrumented: source file is not included" 1
         elif [ $varinstrumented -eq 0 ] && [ ! $varfileexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            echo -e "${BRED}Wrongfully instrumented: source file is excluded${NC}"
+            output::status "Wrongfully instrumented: source file is excluded" 1
         elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
         then
-            echo null > /dev/null
-            echo -e "${BGREEN}Lawfully not instrumented: excluded or not included${NC}"
+            output::status "Lawfully not instrumented: excluded or not included" 0
         else
             echo Uncovered case to implement
             ((incorrectInstrumentation=incorrectInstrumentation+1))
@@ -327,15 +329,15 @@ cevtest() {
     OptionalC=${4:-C++}
 
     if [ $# -lt 1 ]; then
-        echo "Missing input file: stopping the test"
-        exit
+        output::err "Missing input file: stopping the test"
+        exit 1
     fi
 
     if [ $(cat $1 | wc -l) -eq 0 ]; then
-        echo -e "Input file doesn't exist: stopping the test"
-        exit
+        output::err "Input file doesn't exist: stopping the test"
+        exit 1
     else
-        echo -e "Input file detected"
+        output::status "Input file detected" 0
     fi
 
     compiletest "$InputFile" "$Executable" "$SourceList" "$OptionalC"
