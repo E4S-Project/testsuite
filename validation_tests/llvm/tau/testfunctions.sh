@@ -103,7 +103,8 @@ symbols::analysis() {
 }
 
 # Get the file in which a symbol is defined
-# The first argument is the exact symbol to query
+# The first argument is the EXACT symbol to query
+# $1: symbol
 symbols::file() {
 symbols::exists || { output::err Database file not found; exit 1; }
 
@@ -120,6 +121,7 @@ symbols::exists || { output::err Database file not found; exit 1; }
 
 # Expand a REGEX
 # Outputs matches for a symbol REGEX (Using #)
+# $1: prototype regex
 symbols::match() {
 symbols::exists || { output::err Database file not found; exit 1; }
 
@@ -169,86 +171,6 @@ compiletest() {
 
     rm $ERRFILE
     environment::exit
-}
-
-# Match a line coming from the input file with a line coming from the source code
-# returns 0 in the variable $matched if the lines match, 1 otherwise
-# Does not consider wildcards
-# $1: function prototype
-# $2: line
-function matchname() {
-    funcproto=$1
-    line=$2
-
-
-    # Does it end like a function definition?
-    # oddly enough, grep is easier for regex matching here
-    f1=`echo $line | grep -E "*\)[[:space:]]*\{[[:space:]]*$" | wc -l`
-    f2=`echo $line | grep -E "*\)[[:space:]]*$" | wc -l`
-    if [[ $(($f1+$f2)) == 0 ]] ; then
-        matched=1
-        return
-    fi
-
-    # Does it start like a function definition?
-    nf=`echo $line | cut -d "(" -f 1 | awk {'print NF'}`
-    if [[ ! $nf == 2 ]] ; then
-        matched=1
-        return
-    fi
-
-    # Does the input file provide the returned type (optional)
-    # if we have 2 fields before the '(' -> yes, otherwise no
-    nf=`echo $funcproto | cut -d "(" -f 1 | awk {'print NF'}`
-
-    if [[ $nf == 2 ]] ; then
-        # TODO test this
-        # does it return the requested type?
-        type1=`echo $line | cut -f 1 -d " "`
-        type2=`echo $funcproto | cut -f 1 -d " "`
-        if [[ ! $type1 == $type2 ]] ; then
-            matched=1
-            return
-        fi
-    fi
-
-    # Is this the same function name?
-    name1=`echo $line | cut -d '(' -f 1 | awk -F " " {'print $NF'}`
-    name2=`echo $funcproto | cut -d '(' -f 1 | awk -F " " {'print $NF'}`
-    if [[ ! $name1 == $name2 ]] ; then
-        matched=1
-        return
-    fi
-
-    # Which types do we have between the parenthesis
-
-    linetypes=`echo $line |cut -d "(" -f 2 | cut -d ")" -f 1 | awk -F " " {'for(i = 1 ; i < NF ; i+= 2 ) { printf $i " "} '}`
-    prototypes=`echo $funcproto | cut -d "(" -f 2 | cut -d ")" -f 1  | sed 's/,//g'`
-
-    # Same number of arguments?
-    n1=`echo $linetypes | awk {'print NF'}`
-    n2=`echo $prototypes | awk {'print NF'}`
-    if [[ ! $n1 == $n2 ]] ; then
-        matched=1
-        return
-    fi
-
-    # We need this to make lists we can manipulate easily
-    OLDIFS=$IFS
-    IFS=' '
-    lt=($linetypes)
-    pt=($prototypes)
-    IFS=$OLDIFS
-
-    # Compare these lists term by term
-    for i in "${!lt[@]}"; do
-        if [[ ! ${pt[i]} == ${lt[i]} ]] ; then
-            matched=1
-            return
-        fi
-    done
-
-    matched=0
 }
 
 runtest() {
@@ -312,67 +234,33 @@ verifytest() {
     IFS=$'\n'
 
     fIncluded="$(checkwildcard "$fIncluded")"
-    echo "$fInstrumented"
     incorrectInstrumentation=0
+
     for funcinclu in $fIncluded; do
 
         if echo $funcinclu | grep -qF "#"; then
             continue
         fi
-        #echo "Checking instrumentation of $line"
+
         varinstrumented=1
         varexcluded=1
         varfileincluded=0
         varfileexcluded=1
-
-        # First: check that we actually wanted to instrument the instrumented functions
-        # in this example we have no wildcards so the matching is straightforward
-
-        # echo "Instrumented function" $funcinclu
 
         echo $fInstrumented | grep -qFw "$funcinclu"
         varinstrumented=$?
         echo $fExcluded | grep -qFw "$funcinclu"
         varexcluded=$?
 
-        # Where is it defined? Look into all the source files of this directory (might pass as parameters of the function later if necessary)
-        # Matching is not as straightforward as with C.
-        #	for file in $(ls  *.{cpp,h}); do
-
         definition="$(echo $(symbols::file "$funcinclu") | sed "s:.*/::")"
-
-#        if [ $OptionalC == "C" ]; then
-#            definition=`grep $funcinclu *.[ch] | grep -v ";$" | cut -d ':' -f 1`
-#        else
-#            for file in $(ls  *.{cpp,h}); do
-#                for line in $(cat $file); do
-#                    matchname $funcinclu $line
-#                    if [[ $matched == 0 ]] ; then
-#                        # echo "I have found " $funcinclu "in file" $file
-#                        definition=$file
-#                        break
-#                    fi
-#                done
-#            done
-#        fi
-        echo $definition
 
         if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
             echo $fIncludedFile | grep -qFw "$definition"
             varfileincluded=$?
         fi
+
         echo $fExcludedFile | grep -qFw "$definition"
         varfileexcluded=$?
-
-        # echo "Function " $funcinclu " is defined in file " $definition
-        #if [[ $fIncludedFile =~ $definition ]] ; then varfileincluded=0 ; fi # good
-        #if [[ $fExcludedFile =~ $definition ]] ; then varfileexcluded=1; fi  # bad
-
-        echo $funcinclu
-        echo $varinstrumented
-        echo $varexcluded
-        echo $varfileincluded
-        echo $varfileexcluded
 
         if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
@@ -406,7 +294,6 @@ verifytest() {
     done
 
     for funcinstru in $fInstrumented; do
-        echo "Checking inclusion of $funcinstru"
         varincluded=1
         if echo $funcinstru | grep -qF "TAU";
         then
@@ -423,7 +310,7 @@ verifytest() {
         fi
     done
 
-    echo -n "Instrumentation of C++ code"
+    echo -n "Instrumentation of code with '$1':"
     if [ $incorrectInstrumentation -eq 0 ]; then
         echo -e "                       ${BGREEN}[PASSED]${NC}"
     else
