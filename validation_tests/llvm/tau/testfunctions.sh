@@ -50,12 +50,15 @@ fi
 echo -e "$1: $2 $NC"
 }
 
+# File in which the project's symbols are to be stored
+SYMBOL_CACHE=.symbols
+
+# Check for the existence of the symbol cache
 symbols::exists() {
 [ -f "$SYMBOL_CACHE" ]
 }
 
-SYMBOL_CACHE=.symbols
-
+# Generate the project's symbol database if not present
 symbols::analysis() {
     symbols::exists && return 0
 
@@ -87,19 +90,26 @@ symbols::analysis() {
         exit $SUCCESS
     fi
 
-    nm -lC --defined-only $OUTPUT | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > $SYMBOL_CACHE
+    nm -lC --defined-only $OUTPUT   `# Get debug symbols with addresses` \
+        | cut -d' ' -f3-                      `# Remove the hex address` \
+        | cut -d: -f1                         `# Remove the line number` \
+        | grep -e "*\t*"                  `# Keep lines with a filename` \
+        | sed -e "s:$PWD:.:"                 `# Make the paths relative` \
+        > $SYMBOL_CACHE
 
     rm $OUTPUT $ERRFILE
 
     environment::exit
 }
 
+# Get the file in which a symbol is defined
+# The first argument is the exact symbol to query
 symbols::file() {
 symbols::exists || { output::err Database file not found; exit 1; }
 
     PROTOTYPE="$1"
 
-    FILES=$(grep -F $SYMBOL_CACHE -e "$PROTOTYPE" | cut -f2)
+    FILES=$(grep -F $SYMBOL_CACHE -e "^$PROTOTYPE" | cut -f2)
 
     if [ $(echo "$FILES" | wc -l) -ne 1 ] ; then
         output::err "Prototype $PROTOTYPE matches multiple symbols"
@@ -108,6 +118,8 @@ symbols::exists || { output::err Database file not found; exit 1; }
     echo $FILES
 }
 
+# Expand a REGEX
+# Outputs matches for a symbol REGEX (Using #)
 symbols::match() {
 symbols::exists || { output::err Database file not found; exit 1; }
 
