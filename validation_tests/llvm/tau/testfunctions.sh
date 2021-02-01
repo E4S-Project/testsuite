@@ -87,7 +87,7 @@ symbols::analysis() {
         exit $SUCCESS
     fi
 
-    nm -lC --defined-only $OUTPUT | grep \( | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > .symbols
+    nm -lC --defined-only $OUTPUT | grep \( | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > $SYMBOL_CACHE
 
     rm $OUTPUT $ERRFILE
 
@@ -99,7 +99,7 @@ symbols::exists || { output::err Database file not found; exit 1; }
 
     PROTOTYPE="$1"
 
-    FILES=$(grep $SYMBOL_CACHE -e "^$PROTOTYPE" | cut -f2)
+    FILES=$(grep -F $SYMBOL_CACHE -e "$PROTOTYPE" | cut -f2)
 
     if [ $(echo "$FILES" | wc -l) -ne 1 ] ; then
         output::err "Prototype $PROTOTYPE matches multiple symbols"
@@ -284,6 +284,7 @@ checkwildcard() {
    echo "$fIncluded"
 }
 
+
 verifytest() {
     inputfile=$1
     OptionalC=${2:-C++}
@@ -325,22 +326,24 @@ verifytest() {
         # Where is it defined? Look into all the source files of this directory (might pass as parameters of the function later if necessary)
         # Matching is not as straightforward as with C.
         #	for file in $(ls  *.{cpp,h}); do
-        if [ $OptionalC == "C" ]; then
-            definition=`grep $funcinclu *.[ch] | grep -v ";$" | cut -d ':' -f 1`
-        else
-            for file in $(ls  *.{cpp,h}); do
-                for line in $(cat $file); do
-                    matchname $funcinclu $line
-                    if [[ $matched == 0 ]] ; then
-                        # echo "I have found " $funcinclu "in file" $file
-                        definition=$file
-                        break
-                    fi
-                done
-            done
-        fi
-        echo $definition
 
+        definition="$(echo $(symbols::file "$funcinclu") | sed "s:.*/::")"
+
+#        if [ $OptionalC == "C" ]; then
+#            definition=`grep $funcinclu *.[ch] | grep -v ";$" | cut -d ':' -f 1`
+#        else
+#            for file in $(ls  *.{cpp,h}); do
+#                for line in $(cat $file); do
+#                    matchname $funcinclu $line
+#                    if [[ $matched == 0 ]] ; then
+#                        # echo "I have found " $funcinclu "in file" $file
+#                        definition=$file
+#                        break
+#                    fi
+#                done
+#            done
+#        fi
+        echo $definition
 
         if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
             echo $fIncludedFile | grep -qFw "$definition"
