@@ -87,7 +87,7 @@ symbols::analysis() {
         exit $SUCCESS
     fi
 
-    nm -lC --defined-only $OUTPUT | grep \( | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > .symbols
+    nm -lC --defined-only $OUTPUT | cut -d' ' -f3- | cut -d: -f1 | sed -e "s:$PWD:.:" > .symbols
 
     rm $OUTPUT $ERRFILE
 
