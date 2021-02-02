@@ -4,4 +4,5 @@
 
 InputFile=$1
 
+
 verifytest $InputFile

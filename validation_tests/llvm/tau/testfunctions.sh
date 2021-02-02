@@ -206,6 +206,7 @@ runexec() {
 
     if [ $SUCCESS -ne 0 ] ; then
         cat "$ERRFILE"
+        exit 1
     fi
 
     return $SUCCESS
@@ -225,6 +226,13 @@ checkwildcard() {
 
 verifytest() {
     inputfile=$1
+    if [ $(find . -name $inputfile | wc -l) -eq 0 ]; then
+        output::err "Input file not found: stopping the verification"
+        exit 1
+    elif [ $(find . -name profile.* | wc -l) -eq 0 ]; then
+        output::err "Profile file not found: stopping the verification"
+        exit 1
+    fi
     OptionalC=${2:-C++}
 
     fExcluded=`sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d'`
@@ -233,6 +241,7 @@ verifytest() {
     fIncludedFile=`sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/{h;d};H;/END_FILE_INCLUDE_LIST/{x;/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_FILE_INCLUDE_LIST//' -e 's/END_FILE_INCLUDE_LIST//'  -e '/^$/d'`
 
     fInstrumented=`pprof -l | grep -v "Reading" | grep -v ".TAU application"`
+
 
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
