@@ -96,7 +96,7 @@ symbols::analysis() {
 
     nm -lC --defined-only $OUTPUT   `# Get debug symbols with addresses` \
         | cut -d' ' -f3-                      `# Remove the hex address` \
-        | cut -d: -f1                         `# Remove the line number` \
+        | sed 's/:[^:]*$//'                   `# Remove the line number` \
         | grep -e $'\t'                   `# Keep lines with a filename` \
         | sed -e "s:$PWD:.:"                 `# Make the paths relative` \
         > $SYMBOL_CACHE
