@@ -286,26 +286,26 @@ test::verify() {
         # Compares the values to determine lawful or unlawful instrumentation/non-instrumentation
         if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
-            output::status "Lawfully instrumented" 0
+            output::status "$funcinclu: Lawfully instrumented" 0
         elif [ $varinstrumented -eq 1 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            output::status "Wrongfully not instrumented: included and not excluded" 1
+            output::status "$funcinclu: Wrongfully not instrumented: included and not excluded" 1
         elif [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            output::status "Wrongfully instrumented: excluded" 1
+            output::status "$funcinclu: Wrongfully instrumented: excluded" 1
         elif [ $varinstrumented -eq 0 ] && [ $varfileincluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            output::status "Wrongfully instrumented: source file is not included" 1
+            output::status "$funcinclu: Wrongfully instrumented: source file is not included" 1
         elif [ $varinstrumented -eq 0 ] && [ ! $varfileexcluded -eq 1 ];
         then
             ((incorrectInstrumentation=incorrectInstrumentation+1))
-            output::status "Wrongfully instrumented: source file is excluded" 1
+            output::status "$funcinclu: Wrongfully instrumented: source file is excluded" 1
         elif [ $varinstrumented -eq 1 ] && ([ ! $varexcluded -eq 1 ] || [ $varfileincluded -eq 1 ] || [ ! $varfileexcluded -eq 1 ]);
         then
-            output::status "Lawfully not instrumented: excluded or not included" 0
+            output::status "$funcinclu: Lawfully not instrumented: excluded or not included" 0
         else
             echo Uncovered case to implement
             ((incorrectInstrumentation=incorrectInstrumentation+1))
