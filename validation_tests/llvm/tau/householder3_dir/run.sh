@@ -2,7 +2,4 @@
 
 . ./setup.sh
 
-runtest "functions_C_files.txt" "householder3" "C"
-
-#rm profile.*
-
+test::run "functions_C_files.txt" "householder3" "C"

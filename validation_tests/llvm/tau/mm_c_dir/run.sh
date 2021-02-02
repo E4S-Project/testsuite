@@ -2,7 +2,4 @@
 
 . ./setup.sh
 
-runtest "functions_C_mm_files.txt" "mm_c" "C"
-
-#rm profile.*
-
+test::run "functions_C_mm_files.txt" "mm_c" "C"

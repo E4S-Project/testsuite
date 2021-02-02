@@ -2,7 +2,4 @@
 
 . ./setup.sh
 
-InputFile=$1
-
-verifytest $InputFile C
-
+test::verify $1 C

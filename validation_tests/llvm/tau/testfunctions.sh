@@ -134,7 +134,7 @@ symbols::exists || { output::err Database file not found; exit 1; }
     grep $SYMBOL_CACHE -e "^$(echo "$REGEX" | sed 's/.$//')" | cut -f1
 }
 
-compiletest() {
+test::compile() {
     environment::enter
 
     FUNC_LIST=$1
@@ -177,14 +177,14 @@ compiletest() {
     environment::exit
 }
 
-runtest() {
+test::run() {
     export FUNC_LIST=$1
     export EXECUTABLE=$2
 
     export OUTFILE=`mktemp`
 
     OptionalC=${3:-C++}
-    runexec $EXECUTABLE && verifytest $FUNC_LIST $OptionalC
+    test::exec $EXECUTABLE && test::verify $FUNC_LIST $OptionalC
 
     unset OUTFILE
 
@@ -192,7 +192,7 @@ runtest() {
     unset FUNC_LIST
 }
 
-runexec() {
+test::exec() {
     ERRFILE=`mktemp`
 
     rm -f profile.*
@@ -222,7 +222,7 @@ checkwildcard() {
 }
 
 
-verifytest() {
+test::verify() {
     inputfile=$1
     if [ $(find . -name $inputfile | wc -l) -eq 0 ]; then
         output::err "Input file not found: stopping the verification"

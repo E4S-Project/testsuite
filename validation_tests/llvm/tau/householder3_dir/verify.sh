@@ -4,5 +4,4 @@
 
 InputFile=$1
 
-verifytest $InputFile "C"
-
+test::verify $InputFile "C"
