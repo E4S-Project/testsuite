@@ -197,8 +197,6 @@ runexec() {
 
     rm -f profile.*
 
-    echo -e "${BBLUE}Basic instrumentation file ${NC}"
-
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
 
