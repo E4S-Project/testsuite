@@ -248,8 +248,9 @@ test::verify() {
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
 
-    # Updates the list of included files in case of wildcards
+    # Updates the list of included and excluded functions in case of wildcards
     fIncluded="$(checkwildcard "$fIncluded")"
+    fExcluded="$(checkwildcard "$fExcluded")"
     incorrectInstrumentation=0
 
     # Main loop through included functions
