@@ -178,37 +178,28 @@ test::compile() {
 }
 
 test::run() {
-    export FUNC_LIST=$1
-    export EXECUTABLE=$2
-
-    export OUTFILE=`mktemp`
-
+    FUNC_LIST=$1
+    EXECUTABLE=$2
     OptionalC=${3:-C++}
-    test::exec $EXECUTABLE && test::verify $FUNC_LIST $OptionalC
-
-    unset OUTFILE
-
-    unset EXECUTABLE
-    unset FUNC_LIST
-}
-
-test::exec() {
+    
+    OUTFILE=`mktemp`
     ERRFILE=`mktemp`
-
-    rm -f profile.*
-
+    
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
-
+    
     output::status "Execution of $EXECUTABLE" $SUCCESS
-
+    
     if [ $SUCCESS -ne 0 ] ; then
         cat "$ERRFILE"
         exit 1
     fi
+    
+    test::verify $FUNC_LIST $OptionalC
 
-    return $SUCCESS
+    rm -f $OUTFILE $ERRFILE profile.*
 }
+
 
 checkwildcard() {
     fIncluded=$1
@@ -224,6 +215,8 @@ checkwildcard() {
 
 test::verify() {
     inputfile=$1
+    OptionalC=${2:-C++}
+
     if [ $(find . -name $inputfile | wc -l) -eq 0 ]; then
         output::err "Input file not found: stopping the verification"
         exit 1
@@ -231,7 +224,6 @@ test::verify() {
         output::err "Profile file not found: stopping the verification"
         exit 1
     fi
-    OptionalC=${2:-C++}
 
     fExcluded=`sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d'`
     fIncluded=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d'`
@@ -325,6 +317,4 @@ test::verify() {
     else
         echo -e "                       ${BRED}[FAILED]${NC}"
     fi
-
-    rm -f $OUTFILE
 }
