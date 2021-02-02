@@ -221,7 +221,17 @@ checkwildcard() {
    echo "$fIncluded"
 }
 
-
+# Compares instrumentation instructions with actual instrumentation.
+# 
+# For every function listed as included, we look if:
+#   - it is implemented
+#   - it is excluded
+#   - his file is included
+#   - his file is excluded
+#
+# Depending on these caracteristics, it concludes whether the
+# instrumentation (or non-instrumentation) is lawful
+#
 verifytest() {
     inputfile=$1
     if [ $(find . -name $inputfile | wc -l) -eq 0 ]; then
@@ -233,46 +243,54 @@ verifytest() {
     fi
     OptionalC=${2:-C++}
 
+    # Parses the input file for inclusion/exclusion information
     fExcluded=`sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e '/^$/d'`
     fIncluded=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//'  -e '/^$/d'`
     fExcludedFile=`sed '/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/{/BEGIN_FILE_EXCLUDE_LIST/{h;d};H;/END_FILE_EXCLUDE_LIST/{x;/BEGIN_FILE_EXCLUDE_LIST/,/END_FILE_EXCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_FILE_EXCLUDE_LIST//' -e 's/END_FILE_EXCLUDE_LIST//' -e '/^$/d'`
     fIncludedFile=`sed '/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/{/BEGIN_FILE_INCLUDE_LIST/{h;d};H;/END_FILE_INCLUDE_LIST/{x;/BEGIN_FILE_INCLUDE_LIST/,/END_FILE_INCLUDE_LIST/p}};d' $inputfile |  sed -e 's/BEGIN_FILE_INCLUDE_LIST//' -e 's/END_FILE_INCLUDE_LIST//'  -e '/^$/d'`
 
+    # Parses the output of pprof for instrumentation information
     fInstrumented=`pprof -l | grep -v "Reading" | grep -v ".TAU application"`
 
 
     # There might be spaces in the function names: change the separator
     IFS=$'\n'
 
+    # Updates the list of included files in case of wildcards
     fIncluded="$(checkwildcard "$fIncluded")"
     incorrectInstrumentation=0
 
+    # Main loop through included functions
     for funcinclu in $fIncluded; do
 
         if echo $funcinclu | grep -qF "#"; then
             continue
         fi
+        
+        # Determines the file where the current function was implemented
+        definition="$(echo $(symbols::file "$funcinclu") | sed "s:.*/::")"
 
+        # Initialises the characteristics, 0 meaning true, 1 meaning false
         varinstrumented=1
         varexcluded=1
         varfileincluded=0
         varfileexcluded=1
 
+
+        # Checks the inclusion/exclusion status of the function
         echo $fInstrumented | grep -qFw "$funcinclu"
         varinstrumented=$?
-        echo $fExcluded | grep -qFw "$funcinclu"
+                echo $fExcluded | grep -qFw "$funcinclu"
         varexcluded=$?
-
-        definition="$(echo $(symbols::file "$funcinclu") | sed "s:.*/::")"
-
+        # If no file is listed as included, all files are
         if [ $(echo $fIncludedFile | wc -w) -gt 0 ]; then
             echo $fIncludedFile | grep -qFw "$definition"
             varfileincluded=$?
         fi
-
         echo $fExcludedFile | grep -qFw "$definition"
         varfileexcluded=$?
 
+        # Compares the values to determine lawful or unlawful instrumentation/non-instrumentation
         if [ $varinstrumented -eq 0 ] && [ ! $varexcluded -eq 0 ] && [ $varfileincluded -eq 0 ] && [ ! $varfileexcluded -eq 0 ];
         then
             output::status "Lawfully instrumented" 0
@@ -302,6 +320,8 @@ verifytest() {
 
     done
 
+    # Loops through instrumented function
+    # Checks they were initialy included
     for funcinstru in $fInstrumented; do
         varincluded=1
         if echo $funcinstru | grep -qF "TAU";
