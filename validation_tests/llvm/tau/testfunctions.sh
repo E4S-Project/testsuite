@@ -197,8 +197,6 @@ runexec() {
 
     rm -f profile.*
 
-    echo -e "${BBLUE}Basic instrumentation file ${NC}"
-
     tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
 
@@ -329,26 +327,4 @@ verifytest() {
     fi
 
     rm -f $OUTFILE
-}
-
-cevtest() {
-    InputFile=$1
-    Executable=$2
-    SourceList=$3
-    OptionalC=${4:-C++}
-
-    if [ $# -lt 1 ]; then
-        output::err "Missing input file: stopping the test"
-        exit 1
-    fi
-
-    if [ $(cat $1 | wc -l) -eq 0 ]; then
-        output::err "Input file doesn't exist: stopping the test"
-        exit 1
-    else
-        output::status "Input file detected" 0
-    fi
-
-    compiletest "$InputFile" "$Executable" "$SourceList" "$OptionalC"
-    runtest "$InputFile" "$Executable" "$OptionalC"
 }
