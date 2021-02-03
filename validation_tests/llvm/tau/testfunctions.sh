@@ -185,7 +185,7 @@ test::run() {
     OUTFILE=`mktemp`
     ERRFILE=`mktemp`
     
-    tau_exec "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
+    tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
     
     output::status "Execution of $EXECUTABLE" $SUCCESS
@@ -197,7 +197,7 @@ test::run() {
     
     test::verify $FUNC_LIST $OptionalC
 
-    rm -f $OUTFILE $ERRFILE profile.*
+    #rm -f $OUTFILE $ERRFILE profile.*
 }
 
 
