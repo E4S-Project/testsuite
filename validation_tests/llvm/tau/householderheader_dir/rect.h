@@ -5,3 +5,4 @@ class Rect {
     Rect() : x(0), y(0) {};
     Rect(int _x, int _y) : x(_x), y(_y) {};
 };
+Rect create_screen();

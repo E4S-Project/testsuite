@@ -2,7 +2,7 @@
 #include <cstdio>
 
 int main() {
-    Rect r;
-   printf("%d %d\n", r.x, r.y);
+    Rect r=create_screen();
+    printf("%d %d\n", r.x, r.y);
     return 0;
 }
