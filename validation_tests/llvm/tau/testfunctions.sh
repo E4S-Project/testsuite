@@ -54,6 +54,23 @@ fi
 echo -e "$1: $2 $NC"
 }
 
+output::assert() {
+COLS=`tput cols 2>/dev/null || echo 80`
+PASSED="[PASSED]"
+FAILED="[FAILED]"
+
+PROMPT_LEN=${#1}
+ASSERT_LEN=${#PASSED}
+
+SEPARATOR=$(head -c $(($COLS - $PROMPT_LEN - $ASSERT_LEN)) < /dev/zero | tr '\0' '\ ')
+
+if [ "$2" -eq 0 ] ; then
+   echo -e "$1$SEPARATOR$BGREEN$PASSED$NC" 
+else 
+   echo -e "$1$SEPARATOR$BRED$FAILED$NC" 
+fi
+}
+
 # File in which the project's symbols are to be stored
 SYMBOL_CACHE=.symbols
 
@@ -332,10 +349,5 @@ test::verify() {
         fi
     done
 
-    echo -n "Instrumentation of code with '$1':"
-    if [ $incorrectInstrumentation -eq 0 ]; then
-        echo -e "                       ${BGREEN}[PASSED]${NC}"
-    else
-        echo -e "                       ${BRED}[FAILED]${NC}"
-    fi
+    output::assert "Instrumentation of code with '$1':" $incorrectInstrumentation
 }
