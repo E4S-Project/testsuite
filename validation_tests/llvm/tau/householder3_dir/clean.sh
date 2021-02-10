@@ -1,5 +1,13 @@
 #!/bin/bash
 
-rm -f mm_c  householder householder3
-rm -f profile.0.0.0
-rm -f *.o *.log
+read -r -d '' FILES << EOF
+householder
+householder3
+profile.0.0.0
+*.o
+*.log
+.symbols
+EOF
+
+echo rm -f $FILES
+rm -f $FILES
