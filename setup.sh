@@ -5,7 +5,9 @@ source ${SPACK_ROOT}/share/spack/setup-env.sh
 #source ./settings.sh
 #echo $BASH_SOURCE
 #echo dirname $BASH_SOURCE
-source `dirname $BASH_SOURCE`/settings.sh
+if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/settings.sh; else source $TESTSUITE_SETTINGS_FILE; fi
+
+
 #alias test_run='$TEST_RUN'
 rArg=" -r "
 loadRoots="True"

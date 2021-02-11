@@ -15,11 +15,7 @@ git clone https://github.com/E4S-Project/testsuite
 source /path/to/spack/share/spack/setup-env.sh
 ```
 
-3. Source setup.sh
-
-```
-source setup.sh
-```
+3. Check settings.sh. By default the testsuite will get its compile and run commands from settings.sh in the top level testsuite directory. You can smylink this file to one of the settings preset files or indicate a file with an argument to test-all.sh.
 
 
 To run all the test run 
@@ -34,4 +30,20 @@ Alternately you can run a subset of tests by specifying a directory path in `val
 ./test-all.sh ./validation_tests/qthreads
 ```
 
-The output builds and logs will be in the package directory under validation_tests.
+Test subsets may be created by symlinking selected test directories from validation_tests to a new directory.
+
+After the optional test directory argument test-all.sh accepts to additional optional arguments:
+```
+--json
+```
+will cause the test output to be written in json format. Redirect to a file for post-processing.
+
+
+```
+--settings <file>
+```
+allow you to specify a settings file that provides the compile and run commands to be used by the testsuite.
+
+The output builds and logs will be in the test directory.
+
+The return value of test-all.sh is the number of failures encountered (0 for complete success).
