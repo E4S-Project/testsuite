@@ -4,6 +4,6 @@
 
 export QUIET_TEST_OUTPUT=1
 
-test::run "functions_C_mm_files.txt" "mm_c" "C"
+test::run "functions_CXX_header_implemented.txt" "householderheader"
 
 unset QUIET_TEST_OUTPUT

@@ -2,8 +2,7 @@
 
 . ../testfunctions.sh
 
-SOURCES="matmult.c matmult_initialize.c"
+SOURCES="screen.cpp main.cpp"
 
 # Generate .symbol database if needed
-symbols::analysis "$SOURCES" "C"
-
+symbols::analysis "$SOURCES" 

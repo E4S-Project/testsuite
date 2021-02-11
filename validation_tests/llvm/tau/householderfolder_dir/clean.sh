@@ -1,9 +1,7 @@
 #!/bin/bash
 
 read -r -d '' FILES << EOF
-householder
-householderfileWC
-householdercxx
+householder_folder
 profile.0.0.0
 *.o
 *.log

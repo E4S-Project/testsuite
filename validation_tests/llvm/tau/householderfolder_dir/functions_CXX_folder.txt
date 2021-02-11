@@ -1,0 +1,16 @@
+BEGIN_INCLUDE_LIST
+applyR(int, double**, double*, double, int)
+matmul(int, int, int, double**, double**, double**)
+END_INCLUDE_LIST
+
+BEGIN_EXCLUDE_LIST
+END_EXCLUDE_LIST
+
+BEGIN_FILE_INCLUDE_LIST
+./R/R.cpp
+END_FILE_INCLUDE_LIST
+
+BEGIN_FILE_EXCLUDE_LIST
+END_FILE_EXCLUDE_LIST
+
+
