@@ -24,6 +24,16 @@ do
         --settings) export TESTSUITE_SETTINGS_FILE=`readlink -f "$2"`
         shift
             ;;
+        --help)
+        echo "Usage:"
+        echo "    ./test-all.sh [Test Directory (Optional. Must come first if used)] <--json> <--settings [settings file]>"
+        echo "    --json: Print json output. Redirect to file manually if needed. e.g. ./test-all.sh --json > testout.json"
+        echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
+        echo "Examples:"
+        echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
+        echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
+        echo "    ./test-all.sh /path/to/test/directory --json --settings /path/to/some.settings.sh #Run all tests in the specified directory, print output as json, use some.settings.sh as settings file"
+        exit 0
     esac
     shift
 done
