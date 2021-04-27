@@ -11,6 +11,7 @@ fi
 final_ret=0
 ran_test=true
 print_json=false
+print_logs=false
 basedir=validation_tests
 
     if [[ $# -gt 0 && -d $1 ]] ; then
@@ -21,6 +22,8 @@ do
     case "$1" in
         --json) print_json=true
             ;;
+        --print_logs) print_logs=true
+            ;;
         --settings) export TESTSUITE_SETTINGS_FILE=`readlink -f "$2"`
         shift
             ;;
@@ -28,6 +31,7 @@ do
         echo "Usage:"
         echo "    ./test-all.sh [Test Directory (Optional. Must come first if used)] <--json> <--settings [settings file]>"
         echo "    --json: Print json output. Redirect to file manually if needed. e.g. ./test-all.sh --json > testout.json"
+        echo "    --print-logs: Print contents of all clean/compiler/run logs to screen."
         echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
@@ -95,6 +99,11 @@ iterate_files() {
     	fi
         ./clean.sh >& ./clean.log
         _ret=$?
+        
+        if [ $print_logs = true ]; then
+             echo "---CLEANUP LOG---"
+             cat ./clean.log
+        fi
         if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
 		         echo "\"missing\"}},"
@@ -124,6 +133,11 @@ iterate_files() {
          fi
             ./compile.sh >& ./compile.log
             _ret=$?
+            if [ $print_logs = true ]; then
+                 echo "---COMPILE LOG---"
+                 cat ./compile.log
+            fi
+
          if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
                  echo "\"missing\"}},"
@@ -154,6 +168,11 @@ iterate_files() {
 	fi
         ./run.sh >& run.log
         _ret=$?
+        if [ $print_logs = true ]; then
+             echo "---RUN LOG---"
+             cat ./run.log
+        fi
+
            if [ $_ret -eq 215 ] ; then
 	     if [ $print_json = true ]; then
                      echo "\"missing\"}},"
