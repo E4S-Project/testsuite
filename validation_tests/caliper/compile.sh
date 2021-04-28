@@ -1,4 +1,5 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 . ./setup.sh
+set -x
 make

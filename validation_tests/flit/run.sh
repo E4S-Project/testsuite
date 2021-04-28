@@ -1,9 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 TMPFILE=$(mktemp -d ./tmpdir.XXXXXXX)
 
 . ./setup.sh
-
+set -x
 cd $TMPFILE
 
 flit init --litmus-test

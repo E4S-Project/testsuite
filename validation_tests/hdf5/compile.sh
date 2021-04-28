@@ -1,5 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 . ./setup.sh
+set -x
 #spack load \trrej6a
 #spack load mpich
 #spack load hdf5+fortran

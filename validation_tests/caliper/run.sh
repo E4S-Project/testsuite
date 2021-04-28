@@ -1,9 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 . ./setup.sh
-
+-x
 eval ./caliper
 
 CALI_CONFIG_PROFILE=runtime-report ./caliper

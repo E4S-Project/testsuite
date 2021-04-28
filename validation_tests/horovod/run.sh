@@ -1,6 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 . ./setup.sh
-
+set -x
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 BRED='\033[1;31m'

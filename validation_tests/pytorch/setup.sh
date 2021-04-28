@@ -1,3 +1,3 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 #Empty setup file

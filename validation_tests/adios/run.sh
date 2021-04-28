@@ -1,6 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 . ./setup.sh
-
+set -x
 echo "Arrays Write Example"
 #mpirun -np 8 
 eval $TEST_RUN ./arrays_write

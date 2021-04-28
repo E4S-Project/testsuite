@@ -1,5 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 . ./setup.sh
+set -x
 #ldd ./lulesh.host
 #ulimit -c unlimited
 export OMP_PROC_BIND=spread 

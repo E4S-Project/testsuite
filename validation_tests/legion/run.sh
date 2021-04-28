@@ -1,8 +1,8 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 
 . ./setup.sh
-
+set -x
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 cd build

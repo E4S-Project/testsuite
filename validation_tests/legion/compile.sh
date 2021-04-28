@@ -1,7 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 . ./setup.sh
-
+set -x
 cd build
 cmake CMakeLists.txt \
 	-DCMAKE_C_COMPILER=$TEST_CC \
