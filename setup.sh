@@ -30,7 +30,7 @@ spackSetPackageRoot(){
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
 	#eval "${SPAC_NAM}_ROOT"
 	###BEWARE: Setting this value can 
-        echo $SPAC_NAM
+        #echo $SPAC_NAM
 	export ${SPAC_NAM}_ROOT=${SPAC_LOC}
 	export ${SPAC_NAM}_HASH=${1}
 }
@@ -38,7 +38,7 @@ spackSetPackageRoot(){
 spackLoadUnique(){
    spack load -r --first $@
    ret_val=$?
-   echo "Load return: $ret_val"
+   #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
       exit 215;
    fi
