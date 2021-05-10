@@ -16,6 +16,9 @@ environment::enter() {
     # Get the target LLVM from either the environment or the $PATH
     export TEST_LLVM_INSTALL=$([ -n "$LLVM" ] && echo $LLVM || echo `which clang | awk -F"bin" {'print $1'}`)
 
+    # Get the llvm version from llvm-config
+    export LLVM_VERSION_MAJOR=$(echo `$TEST_LLVM_INSTALL/bin/llvm-config --version | awk -F"." {'print $1'}`)
+
     # Is the plugin installed somewhere else ?
     export TEST_PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
 
@@ -167,10 +170,13 @@ test::compile() {
         COMPILER=$TEST_LLVM_INSTALL/bin/clang
         PLUGIN=$TEST_PLUGIN_PREFIX/TAU_Profiling.so
     fi
+    if [ $LLVM_VERSION_MAJOR -gt 12 ]; then
+        LEGACY_FLAG="-flegacy-pass-manager"
+    fi
 
     ERRFILE=`mktemp`
 
-    $COMPILER  -o $OUTPUT \
+    $COMPILER $LEGACY_FLAG  -o $OUTPUT \
         -O3 -g \
         -fplugin=$PLUGIN \
         -mllvm \
