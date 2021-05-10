@@ -1,5 +1,5 @@
-all: test-householder3 test-householder test-householderregex test-mm_c test-householderfolder test-householderheader
-clean: clean-householder3 clean-householder clean-householderregex clean-mm_c clean-householderfolder clean-householderheader
+all: test-householder3 test-householderregex test-mm_c test-householderfolder test-householderheader test-householder
+clean: clean-householder3 clean-householderregex clean-mm_c clean-householderfolder clean-householderheader clean-householder
 
 
 test-%: %_dir

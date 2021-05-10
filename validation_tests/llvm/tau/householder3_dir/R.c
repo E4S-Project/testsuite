@@ -1,3 +1,4 @@
+
 unsigned int min( unsigned int, unsigned int );
 
 void copyR( int M, int N, double dst[N][N], double orig[M][N] ){
@@ -15,7 +16,8 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
 
     /* R(j:end,:) = R(j:end,:)-(tau*w)*(w’*R(j:end,:)); */
 
-     /* tmpV = w'*R(j:end,:) */
+    /* tmpV = w'*R(j:end,:) */
+    
     
     //memset( tmpV, (char) 0, len*sizeof( double ) );
     for( i = 0 ; i < len ; i++ ) {
@@ -23,17 +25,17 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
     }
 
     for( j = 0 ; j < len ; j++ ){
-      for( i = start ; i < len ; i++ ) {
-	tmpV[j] += w[i]*R[ i ][ j ];
-      }
+        for( i = start ; i < len ; i++ ) {
+            tmpV[j] += w[i]*R[ i ][ j ];
+        }
     }
 
     /* tmpM = tau * w * tmpV */
-    
+
     for( i = 0 ; i < len ; i++ ){
-      for( j = start ; j < len ; j++ ){
-	  tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
-	}
+        for( j = start ; j < len ; j++ ){
+            tmpM[ j ][ i ] = tau * w[ j ] * tmpV[ i ];
+        }
     }
 
     /* R = R - tmpM */
@@ -45,4 +47,3 @@ void applyR( int len, double R[len][len], double w[len], double tau, int start )
     }
 
 }
-
