@@ -13,13 +13,15 @@ BBLUE='\033[1;34m'
 NC='\033[0m'
 
 OUTFILE="/dev/null"
-
+set -e
+#set -x
 for PROGNAME in testbarrier testhello  testsmall  testthreads  testqueue; do
     echo -n $PROGNAME
     #mpiexec -n 
-    eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}  2>&1 > $OUTFILE
+    echo timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}
+    eval timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME} # 2>&1 > $OUTFILE
     RC=$?
-    if [ $? != 0 ]; then
+    if [ $RC != 0 ]; then
 	echo -e "                                 ${BRED}[FAILED]${NC}"
     else
 	echo -e "                                 ${BGREEN}[PASSED]${NC}"

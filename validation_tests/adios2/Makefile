@@ -3,7 +3,7 @@ CXX = $(TEST_CXX_MPI) #mpic++
 CFLAGS = -I$(ADIOS2_ROOT)/include -Wall
 CXXFLAGS = -I$(ADIOS2_ROOT)/include -Wall
 LD = $(TEST_CXX_MPI) #mpic++
-LDFLAGS = -L$(ADIOS2_ROOT)/lib64/ -ladios2_cxx11
+LDFLAGS = -L$(ADIOS2_LIB_PATH) -ladios2_cxx11
 
 all: hello-world
 
