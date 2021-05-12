@@ -1,5 +1,5 @@
 . ../../setup.sh
-ONEMFEM=`spackLoadUnique mfem`
+#ONEMFEM=`spackLoadUnique mfem`
 spackLoadUnique mfem
 #spack load $ONEMFEM 
 #spack load /hxeu37v #HDF5
@@ -8,6 +8,6 @@ spackLoadUnique mfem
 #spack load mpich
 #spack load parmetis
 #spack load `oneSpackHash superlu-dist`
-export MFEM_INSTALL_DIR=`spack location --install-dir $ONEMFEM`
+export MFEM_INSTALL_DIR=${MFEM_ROOT}  #`spack location --install-dir $ONEMFEM`
 export MFEM_ROOT=$MFEM_INSTALL_DIR
 #echo $MFEM_INSTALL_DIR
