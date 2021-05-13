@@ -8,7 +8,7 @@ class custom_class_1 {
     public:
         std::string msg;
         custom_class_1() { }
-        custom_class_1(std::string _msg) : msg(_msg) { }
+        custom_class_1(const std::string &_msg) : msg(_msg) { }
 
         UPCXX_SERIALIZED_FIELDS(msg)
 };
@@ -17,7 +17,7 @@ class custom_class_2 {
     public:
         std::vector<custom_class_1> msgs;
         custom_class_2() { }
-        void add_msg(std::string m) { msgs.push_back(custom_class_1(m)); }
+        void add_msg(const std::string &m) { msgs.push_back(custom_class_1(m)); }
 
         UPCXX_SERIALIZED_FIELDS(msgs)
 };

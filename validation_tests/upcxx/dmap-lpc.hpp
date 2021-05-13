@@ -19,7 +19,7 @@ public:
     // the RPC returns an empty upcxx::future by default
     return upcxx::rpc(get_target_rank(key),
                       // lambda to insert the key-value pair
-                      [](dobj_map_t &lmap, std::string key, std::string val) {
+                      [](dobj_map_t &lmap, const std::string &key, const std::string &val) {
                         // insert into the local map at the target
                         lmap->insert({key, val});
                       }, local_map, key, val);
@@ -33,7 +33,7 @@ public:
     auto cx = upcxx::source_cx::as_buffered() | upcxx::operation_cx::as_lpc(persona,func);
     upcxx::rpc(get_target_rank(key),cx,
         // lambda to find the key in the local map
-        [](dobj_map_t &lmap, std::string key) -> std::string {
+        [](dobj_map_t &lmap, const std::string &key) -> std::string {
           auto elem = lmap->find(key);
           // no key found
           if (elem == lmap->end()) return std::string();

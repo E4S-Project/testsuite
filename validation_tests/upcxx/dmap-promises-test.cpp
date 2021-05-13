@@ -7,7 +7,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 100000;
+  long N = 10000;
+  if (argc > 1) N = std::atol(argv[1]);
   DistrMap dmap;
 //SNIPPET
   // create an empty promise, to be used for tracking operations
@@ -21,10 +22,8 @@ int main(int argc, char *argv[])
     // periodically call progress to allow incoming RPCs to be processed
     if (i % 10 == 0) upcxx::progress();
   }
-  // finalize the promise
-  upcxx::future<> fut = prom.finalize();
-  // wait for the operations to complete
-  fut.wait();
+  upcxx::future<> fut = prom.finalize(); // finalize the promise
+  fut.wait(); // wait for the operations to complete
 //SNIPPET  
   // barrier to ensure all insertions have completed
   upcxx::barrier();
@@ -34,7 +33,7 @@ int main(int argc, char *argv[])
     // attach callback, which itself returns a future 
     upcxx::future<> fut = dmap.find(key).then(
       // lambda to check the return value
-      [key](string val) {
+      [key](const string &val) {
         assert(val == key);
       });
     // conjoin the futures

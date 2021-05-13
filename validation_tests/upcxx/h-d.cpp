@@ -1,12 +1,11 @@
 //SNIPPET
 #include <upcxx/upcxx.hpp>
 #include <iostream>
-using namespace std;
-using namespace upcxx;
-
 #if !UPCXX_CUDA_ENABLED
 #error "This example requires UPC++ to be built with CUDA support."
 #endif
+using namespace std;
+using namespace upcxx;
 
 int main() {
   upcxx::init();
@@ -23,9 +22,7 @@ int main() {
 
   double *h1 = host_array1.local();
   double *h2 = host_array2.local();
-  // initialize h1
-  for (int i=0; i< 1024; i++)
-    h1[i] = i;
+  for (int i=0; i< 1024; i++) h1[i] = i; //initialize h1
 
   // copy data from host memory to GPU
   upcxx::copy(host_array1, gpu_array, 1024).wait();
@@ -35,15 +32,12 @@ int main() {
   int nerrs = 0;
   for (int i=0; i< 1024; i++){
     if (h1[i] != h2[i]){
-      if (nerrs < 10)
-        cout << "Error at element " << i << endl;
+      if (nerrs < 10) cout << "Error at element " << i << endl;
       nerrs++;
     }
   }
-  if (nerrs)
-    cout << "Failure: " << nerrs << " errors detected\n";
-  else
-    cout << "Success" << endl;
+  if (nerrs) cout << "Failure/ERROR: " << nerrs << " errors detected" << endl;
+  else cout << "Success/SUCCESS" << endl;
 
   delete_array(host_array2);
   delete_array(host_array1);

@@ -7,7 +7,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 100000;
+  long N = 10000;
+  if (argc > 1) N = std::atol(argv[1]);
   DistrMap dmap;
 //SNIPPET
   // initialize key and value for first insertion
@@ -28,11 +29,10 @@ int main(int argc, char *argv[])
   upcxx::barrier();
   for (long i = 0; i < N; i++) {
     string key = to_string((upcxx::rank_me() + 1) % upcxx::rank_n()) + ":" + to_string(i);
-    string val = dmap.find(key).wait();
     // attach callback, which itself returns a future 
     upcxx::future<> fut = dmap.find(key).then(
       // lambda to check the return value
-      [key](string val) {
+      [key](const string &val) {
         assert(val == key);
       });
     // wait for future and its callback to complete

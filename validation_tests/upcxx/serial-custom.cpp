@@ -24,22 +24,17 @@ class vertex {
 
     public:
         vertex(int _id) : id(_id) { }
-
         int get_id() const { return id; }
-
         int n_neighbors() const { return neighbors.size(); }
-
         bool has_edge(int other) const;
+        void add_neighbor(int neighbor_id); 
 
         std::vector<vertex*>::const_iterator neighbors_begin() const {
             return neighbors.begin();
         }
-
         std::vector<vertex*>::const_iterator neighbors_end() const {
             return neighbors.end();
         }
-
-        void add_neighbor(int neighbor_id);
 
         /*
          * An example of using a member struct upcxx_serialization to implement
@@ -200,6 +195,7 @@ int main(void) {
                 }));
     }
     fut.wait();
+    delete [] edges_to_insert;
 
     upcxx::finalize();
 

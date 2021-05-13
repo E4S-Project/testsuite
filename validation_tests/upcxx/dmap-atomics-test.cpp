@@ -5,10 +5,15 @@
 
 using namespace std;
 
+// simulate an unpredictable predicate
+// test validation relies on this being a pure function
+bool should_perform_insert(long i) { return (i%10 != 0); }
+
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 100000;
+  long N = 10000;
+  if (argc > 1) N = std::atol(argv[1]);
   DistrMap dmap;
 //SNIPPET
   // keep track of how many inserts have been made to each target process
@@ -17,8 +22,10 @@ int main(int argc, char *argv[])
   for (long i = 0; i < N; i++) {
     string key = to_string(upcxx::rank_me()) + ":" + to_string(i);
     string val = key;
-    dmap.insert(key, val);
-    inserts_per_rank[dmap.get_target_rank(key)]++;
+    if (should_perform_insert(i)) { // unpredictable condition
+      dmap.insert(key, val);
+      inserts_per_rank[dmap.get_target_rank(key)]++;
+    }
      // periodically call progress to allow incoming RPCs to be processed
     if (i % 10 == 0) upcxx::progress();
  }
@@ -45,20 +52,23 @@ int main(int argc, char *argv[])
   upcxx::future<> fut_all = upcxx::make_future();
   for (long i = 0; i < N; i++) {
     string key = to_string((upcxx::rank_me() + 1) % upcxx::rank_n()) + ":" + to_string(i);
-    // attach callback, which itself returns a future 
-    upcxx::future<> fut = dmap.find(key).then(
-      // lambda to check the return value
-      [key](string val) {
-        assert(val == key);
-      });
-    // conjoin the futures
-    fut_all = upcxx::when_all(fut_all, fut);
+    if (should_perform_insert(i)) {
+      // attach callback, which itself returns a future 
+      upcxx::future<> fut = dmap.find(key).then(
+        // lambda to check the return value
+        [key](const string &val) {
+          assert(val == key);
+        });
+      // conjoin the futures
+      fut_all = upcxx::when_all(fut_all, fut);
+    }
     // periodically call progress to allow incoming RPCs to be processed
     if (i % 10 == 0) upcxx::progress();
   }
   // wait for all the conjoined futures to complete
   fut_all.wait();
   upcxx::barrier(); // wait for finds to complete globally
+  ad.destroy(); // optional, but recommended
   if (!upcxx::rank_me()) cout << "SUCCESS" << endl;
   upcxx::finalize();
   return 0;

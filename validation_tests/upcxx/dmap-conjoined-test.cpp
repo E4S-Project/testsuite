@@ -7,7 +7,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 100000;
+  long N = 10000;
+  if (argc > 1) N = std::atol(argv[1]);
   DistrMap dmap;
   string key = to_string(upcxx::rank_me()) + ":" + to_string(0);
   string val = key;
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
     // attach callback, which itself returns a future 
     upcxx::future<> fut = dmap.find(key).then(
       // lambda to check the return value
-      [key](string val) {
+      [key](const string &val) {
         assert(val == key);
       });
     // conjoin the futures
