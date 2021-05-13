@@ -43,7 +43,7 @@ spackSetPackageRoot(){
 }
 
 spackLoadUnique(){
-   spack load -r --first $@
+   spack load $rArg --first $@
    ret_val=$?
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
@@ -51,10 +51,8 @@ spackLoadUnique(){
    fi
    #echo "Loaded Spack Hashes: $SPACK_LOADED_HASHES"
    IFS=':' read -ra hash_array <<< "$SPACK_LOADED_HASHES"
-   #echo "HASH ARRAY: $hash_array"
    for HASH in "${hash_array[@]}"
    do
-    #echo $HASH
     spackSetPackageRoot /$HASH
    done
 }
@@ -96,7 +94,7 @@ spackLoadUniqueNoRootVars(){
 
 spackLoadUniqueNoR(){
 	#spack load $@
-	rArg=""
+	rArg=" --only package "
 	spackLoadUnique $@
         rArg=" -r "
 }
