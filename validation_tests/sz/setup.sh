@@ -1,3 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique sz
+spackLoadUnique sz@2:
