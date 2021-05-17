@@ -5,55 +5,61 @@
 
 using namespace std;
 
+// simulate an unpredictable predicate
+// test validation relies on this being a pure function
+bool should_perform_insert(long i) { return (i%10 != 0); }
 
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 100000;
+  long N = 10000;
+  if (argc > 1) N = std::atol(argv[1]);
   DistrMap dmap;
 //SNIPPET  
-  // distributed object to keep track of number of inserts expected at this process
-  upcxx::dist_object<long> n_inserts = 0;
-  // keep track of how many inserts have been made to each target process
-  std::unique_ptr<long[]> inserts_per_rank(new long[upcxx::rank_n()]());
+  // keep track of how many inserts this rank has injected
+  long n_inserts_injected = 0;
   // insert all key-value pairs into the hash map
   for (long i = 0; i < N; i++) {
     string key = to_string(upcxx::rank_me()) + ":" + to_string(i);
     string val = key;
-    // insert has no return because it uses rpc_ff
-    dmap.insert(key, val);
-    // increment the count for the target process
-    inserts_per_rank[dmap.get_target_rank(key)]++;
+    if (should_perform_insert(i)) { // unpredictable condition
+      // insert mapping from key to value in our distributed map.
+      // insert has no return because it uses rpc_ff.
+      dmap.insert(key, val);
+      // increment the local count
+      n_inserts_injected++;
+    }
     // periodically call progress to allow incoming RPCs to be processed
     if (i % 10 == 0) upcxx::progress();
   }
-  // update all remote processes with the expected count
-  for (long i = 0; i < upcxx::rank_n(); i++) {
-    if (inserts_per_rank[i]) {
-      // use rpc to update the remote process's expected count of inserts
-      upcxx::rpc(i,
-                 [](upcxx::dist_object<long> &e_inserts, long count) {
-                   *e_inserts += count;
-                 }, n_inserts, inserts_per_rank[i]).wait();
-    }
-  }
-  // wait until all threads have updated insert counts
-  upcxx::barrier();
-  long expected_inserts = *n_inserts;
-  // wait until we have received all the expected updates, spinning on progress
-  while (dmap.local_size() < expected_inserts) upcxx::progress();
+
+  bool done;
+  do { // Loop while not all insert rpc_ff have completed.
+    // On each rank, capture the counts of inserts injected and completed
+    long local[2] = {n_inserts_injected, dmap.local_size()};
+    // Globally count the number of inserts injected and completed by completing
+    // an element-wise sum reduction of each of the two counters in the local
+    // array, delivering the results in the global array.
+    long global[2];
+    upcxx::reduce_all(local, global, 2, upcxx::op_fast_add).wait();
+    // Test if all inserts have now completed
+    assert(global[0] >= global[1]);
+    done = (global[0] == global[1]);
+  } while (!done);
 //SNIPPET  
   upcxx::future<> fut_all = upcxx::make_future();
   for (long i = 0; i < N; i++) {
     string key = to_string((upcxx::rank_me() + 1) % upcxx::rank_n()) + ":" + to_string(i);
-    // attach callback, which itself returns a future 
-    upcxx::future<> fut = dmap.find(key).then(
-      // lambda to check the return value
-      [key](string val) {
-        assert(val == key);
-      });
-    // conjoin the futures
-    fut_all = upcxx::when_all(fut_all, fut);
+    if (should_perform_insert(i)) { 
+      // attach callback, which itself returns a future 
+      upcxx::future<> fut = dmap.find(key).then(
+        // lambda to check the return value
+        [key](const string &val) {
+          assert(val == key);
+        });
+      // conjoin the futures
+      fut_all = upcxx::when_all(fut_all, fut);
+    }
     // periodically call progress to allow incoming RPCs to be processed
     if (i % 10 == 0) upcxx::progress();
   }

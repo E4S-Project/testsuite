@@ -3,7 +3,7 @@
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 . ./setup.sh
--x
+set -x
 eval ./caliper
 
 CALI_CONFIG_PROFILE=runtime-report ./caliper

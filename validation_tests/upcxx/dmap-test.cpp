@@ -7,7 +7,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
   upcxx::init();
-  const long N = 10000;
+  const long N = 1000;
   DistrMap dmap;
   // insert set of unique key, value pairs into hash map, wait for completion
   for (long i = 0; i < N; i++) {

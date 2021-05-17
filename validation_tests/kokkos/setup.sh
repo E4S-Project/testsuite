@@ -1,4 +1,4 @@
 #!/bin/bash
 . ../../setup.sh
 #spackLoadUniqueNoR tau 
-spackLoadUnique kokkos
+spackLoadUnique kokkos~cuda~rocm

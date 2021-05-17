@@ -7,7 +7,7 @@ TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
 cd build
 
-eval $TEST_RUN ./legion > ${TMPFILE}
+ ./legion > ${TMPFILE}
 
 if [ $? -ne 0 ]
 then

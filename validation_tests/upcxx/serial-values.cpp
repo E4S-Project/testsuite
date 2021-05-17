@@ -1,6 +1,6 @@
 #include <upcxx/upcxx.hpp>
 
-#define N 512
+#define N 32
 
 //SNIPPET
 class dist_reduction {
@@ -16,16 +16,12 @@ class dist_reduction {
         }
 
         dist_reduction() {
-            for (int i = 0; i < N; i++) {
-                values[i] = 1.;
-            }
+            for (int i = 0; i < N; i++) { values[i] = 1.; }
         }
 
         double calculate_partial_sum_reduction() const {
             double partial_sum_reduction = 0.0;
-            for (int i = 0; i < N; i++) {
-                partial_sum_reduction += values[i];
-            }
+            for (int i = 0; i < N; i++) { partial_sum_reduction += values[i]; }
             return partial_sum_reduction;
         }
 

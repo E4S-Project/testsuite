@@ -9,11 +9,13 @@
 ifeq ($(UPCXX_INSTALL),)
 $(warning UPCXX_INSTALL environment variable is not set, assuming upcxx is in the PATH)
 UPCXX=upcxx
+UPCXXRUN=upcxx-run
 else
 ifeq ($(wildcard $(UPCXX_INSTALL)/bin/upcxx),)
 $(error Please set UPCXX_INSTALL=/path/to/upcxx/install)
 else
 UPCXX=$(UPCXX_INSTALL)/bin/upcxx
+UPCXXRUN=$(UPCXX_INSTALL)/bin/upcxx-run
 endif
 endif
 
@@ -39,6 +41,7 @@ EXAMPLES = \
   view-histogram1 \
   view-histogram2 \
   view-matrix-tasks \
+  view-accumulate \
   non-contig-example \
   team_simple \
   team_advanced \
@@ -73,5 +76,21 @@ clean:
 	rm -f $(EXAMPLES)
 	rm -f $(CUDA_EXAMPLES)
 
-.PHONY: clean all
+.PHONY: clean all run
+
+PROCS ?= 4
+ARGS ?=
+LINE = =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+run: 
+	@for file in $(EXAMPLES) ; do \
+          if test -x $$file ; then \
+            echo $(LINE) ; \
+            ( set -x ; \
+              $(UPCXXRUN) -n $(PROCS) $$file $(ARGS) ; \
+            ) ; \
+            echo $(LINE) ; \
+          fi ; \
+         done
+
 

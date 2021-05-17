@@ -24,16 +24,40 @@ oneSpackHash(){
 spackSetPackageRoot(){
 	#echo ${1}
 	SPAC_LOC=`spack location -i ${1}`
-        SPAC_NAM=`spack find --format={name} ${1}`
+	NAME_BLOB=`spack find --format={name} ${1}`
+	SPAC_NAM="${NAME_BLOB##*$'\n'}"
 	SPAC_NAM=${SPAC_NAM^^}
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
 	#eval "${SPAC_NAM}_ROOT"
 	###BEWARE: Setting this value can 
-        export ${SPAC_NAM}_ROOT=${SPAC_LOC}
+        #echo $SPAC_NAM
+	export ${SPAC_NAM}_ROOT=${SPAC_LOC}
 	export ${SPAC_NAM}_HASH=${1}
+
+	export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
+
+        if [[ ! -d ${SPAC_LOC}/lib ]]; then
+          export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib64
+        fi
+
 }
 
-spackLoadUnique(){ 
+spackLoadUnique(){
+   spack load $rArg --first $@
+   ret_val=$?
+   #echo "Load return: $ret_val"
+   if [ $ret_val -ne 0 ] ; then
+      exit 215;
+   fi
+   #echo "Loaded Spack Hashes: $SPACK_LOADED_HASHES"
+   IFS=':' read -ra hash_array <<< "$SPACK_LOADED_HASHES"
+   for HASH in "${hash_array[@]}"
+   do
+    spackSetPackageRoot /$HASH
+   done
+}
+
+spackLoadUniqueOLD(){ 
 
         #rArg=" -r "
 #	if [ ! -z "$2" ] && [ $2 = "nor" ]; then
@@ -52,9 +76,12 @@ spackLoadUnique(){
 	HASHES=`spack find --loaded --format={hash}`
 	for HASH in $HASHES
 	do
-		#echo $HASH
-		spackSetPackageRoot /$HASH
-	done
+		#echo ${#HASH}
+		if [ ${#HASH} -eq 32 ] ; then
+			echo $HASH
+			spackSetPackageRoot /$HASH
+		fi
+	done  
 
 	fi
 }
@@ -67,7 +94,7 @@ spackLoadUniqueNoRootVars(){
 
 spackLoadUniqueNoR(){
 	#spack load $@
-	rArg=""
+	rArg=" --only package "
 	spackLoadUnique $@
         rArg=" -r "
 }

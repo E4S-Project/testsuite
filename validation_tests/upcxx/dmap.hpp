@@ -2,8 +2,7 @@
 #include <map>
 #include <upcxx/upcxx.hpp>
 
-class DistrMap
-{
+class DistrMap {
 private:
   // store the local unordered map in a distributed object to access from RPCs
   using dobj_map_t = upcxx::dist_object<std::unordered_map<std::string, std::string> >;
@@ -20,7 +19,7 @@ public:
     // the RPC returns an empty upcxx::future by default
     return upcxx::rpc(get_target_rank(key),
                       // lambda to insert the key-value pair
-                      [](dobj_map_t &lmap, std::string key, std::string val) {
+                      [](dobj_map_t &lmap, const std::string &key, const std::string &val) {
                         // insert into the local map at the target
                         lmap->insert({key, val});
                       }, local_map, key, val);
@@ -29,10 +28,9 @@ public:
   upcxx::future<std::string> find(const std::string &key) {
     return upcxx::rpc(get_target_rank(key),
                       // lambda to find the key in the local map
-                      [](dobj_map_t &lmap, std::string key) -> std::string {
+                      [](dobj_map_t &lmap, const std::string &key) -> std::string {
                         auto elem = lmap->find(key);
-                        // no key found
-                        if (elem == lmap->end()) return std::string();
+                        if (elem == lmap->end()) return std::string(); // not found
                         // the key was found, return the value
                         return elem->second;
                       }, local_map, key);

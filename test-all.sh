@@ -22,7 +22,7 @@ do
     case "$1" in
         --json) print_json=true
             ;;
-        --print_logs) print_logs=true
+        --print-logs) print_logs=true
             ;;
         --settings) export TESTSUITE_SETTINGS_FILE=`readlink -f "$2"`
         shift

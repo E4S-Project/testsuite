@@ -2,11 +2,11 @@
 #oneSpackHash(){ echo "/`spack find -l $1 | tail -n1 | awk '{print $1;}'`" ;  }
 #PYNUMPY=`oneSpackHash py-numpy`
 . ../../setup.sh
-spackLoadUnique py-numpy
+#spackLoadUnique py-numpy
 spackLoadUnique py-mpi4py
-PYNUMPY=`spackLoadUnique py-numpy`
+#PYNUMPY=`spackLoadUnique py-numpy`
 spack activate py-mpi4py
-spack activate $PYNUMPY
+spack activate py-numpy 
 set -x
 #spack load $PYNUMPY
 #spack load py-mpi4py

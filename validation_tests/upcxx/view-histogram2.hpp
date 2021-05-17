@@ -7,8 +7,7 @@
 // Hash a key to its owning rank.
 upcxx::intrank_t owner_of(std::string const &key) {
   std::uint64_t h = 0x1234abcd5678cdef;
-  for(char c: key)
-    h = 63*h + std::uint64_t(c);
+  for(char c: key) h = 63*h + std::uint64_t(c);
   return h % upcxx::rank_n();
 }
 
@@ -24,7 +23,6 @@ struct histogram2_compare {
 };
 
 using histogram2 = std::map<std::string, double, histogram2_compare>;
-
 // The target rank's histogram which is updated by incoming rpc's.
 histogram2 my_histo2;
 
@@ -32,20 +30,16 @@ histogram2 my_histo2;
 upcxx::future<> send_histo2_byview(histogram2 const &histo) {
   histogram2::const_iterator run_begin = histo.begin();
   
-  upcxx::promise<> *all_done = new upcxx::promise<>;
-  
+  upcxx::promise<> all_done;
   while(run_begin != histo.end()) {
     histogram2::const_iterator run_end = run_begin;
     upcxx::intrank_t owner = owner_of(run_begin->first);
     
     // Compute the end of this run as the beginning of the next run.
-    while(run_end != histo.end() && owner_of(run_end->first) == owner)
-      ++run_end;
+    while(run_end != histo.end() && owner_of(run_end->first) == owner) run_end++;
     
-    upcxx::rpc(owner,
-      upcxx::operation_cx::as_promise(*all_done),
-      
-      [](upcxx::view<std::pair<const std::string, double>> histo_view) {
+    upcxx::rpc(owner, upcxx::operation_cx::as_promise(all_done),
+      [](upcxx::view<std::pair<const std::string, double>> const &histo_view) {
         // Traverse key-values directly in network buffer.
         for(auto const &kv: histo_view)
           my_histo2[kv.first] += kv.second;
@@ -56,9 +50,6 @@ upcxx::future<> send_histo2_byview(histogram2 const &histo) {
     
     run_begin = run_end;
   }
-  
-  return all_done->finalize().then(
-    [=]() { delete all_done; }
-  );
+  return all_done.finalize();
 }
 //SNIPPET

@@ -1,6 +1,6 @@
 #include <upcxx/upcxx.hpp>
 
-#define N 512
+#define N 32
 
 //SNIPPET
 class dist_reduction {
@@ -12,16 +12,12 @@ class dist_reduction {
 
         // Default constructor used by UPC++ serialization
         dist_reduction() {
-            for (int i = 0; i < N; i++) {
-                values[i] = 1.;
-            }
+            for (int i = 0; i < N; i++) { values[i] = 1.; }
         }
 
         void calculate_partial_sum_reduction() {
             partial_sum_reduction = 0.0;
-            for (int i = 0; i < N; i++) {
-                partial_sum_reduction += values[i];
-            }
+            for (int i = 0; i < N; i++) { partial_sum_reduction += values[i]; }
         }
 
         UPCXX_SERIALIZED_FIELDS(partial_sum_reduction)

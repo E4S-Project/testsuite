@@ -3,4 +3,4 @@
 . ../../setup.sh
 
 spackLoadUnique cmake
-spackLoadUnique strumpack
+spackLoadUnique strumpack~rocm

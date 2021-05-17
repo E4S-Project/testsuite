@@ -15,7 +15,7 @@ HDF5CC		= h5cc
 # Compiling using shared library
 #SZFLAG 	= -I$(SZPATH)/include -L$(SZPATH)/lib -lSZ
 # Compiling using static library
-SZFLAG 	= -I$(SZPATH)/include/sz $(SZPATH)/lib64/libSZ.so -lm -Wl,-rpath,$(SZPATH)/lib
+SZFLAG 	= -I$(SZPATH)/include/ -I$(SZPATH)/include/sz  $(SZ_LIB_PATH)/libSZ.so -lm -Wl,-rpath,$(SZ_LIB_PATH)
 GSLFLAG = -I$(GSLPATH)/include $(GSLPATH)/lib/libgsl.a
 NETCDFFLAG = -I$(NETCDFPATH)/include -lnetcdf
 

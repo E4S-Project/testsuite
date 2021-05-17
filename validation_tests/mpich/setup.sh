@@ -1,4 +1,4 @@
 #!/bin/bash
-
-spack load mpich
+. ../../setup.sh
+spackLoadUnique mpich
 NP=4
