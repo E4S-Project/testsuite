@@ -2,7 +2,7 @@
 
 read -r -d '' FILES << EOF
 mm_c
-profile.0.0.0
+profile.*
 *.o
 *.log
 .symbols

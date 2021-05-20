@@ -3,7 +3,7 @@
 read -r -d '' FILES << EOF
 householder
 householder3
-profile.0.0.0
+profile.*
 *.o
 *.log
 .symbols

@@ -1,6 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash 
 
 . ../../setup.sh
 
 spackLoadUnique py-libensemble
-#Empty setup file

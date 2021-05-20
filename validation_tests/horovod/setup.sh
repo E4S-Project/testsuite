@@ -1,3 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash 
+. ../../setup.sh
 
-#Empty setup file
+spackLoadUnique py-horovod

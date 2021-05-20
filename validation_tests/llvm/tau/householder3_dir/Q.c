@@ -8,25 +8,25 @@ void applyQ( int len, double Q[len][len], double w[len], double tau, int start )
     /* tmpV = (Q(:,j:end)*w) */
 
     for( j = 0 ; j < len ; j++ ) {
-      tmpV[j] = 0.0;
-      for( i = start ; i < len ; i++ ) {
-    tmpV[j] += Q[ j ][i ] * w[i];
-      }
+        tmpV[j] = 0.0;
+        for( i = start ; i < len ; i++ ) {
+            tmpV[j] += Q[ j ][i ] * w[i];
+        }
     }
 
     /* tmpM = tmpV * (tau*w) */
 
     for( j = 0 ; j < len ; j++ ) {
-      for( i = start  ; i < len ; i++ ) {
-    tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
-      }
+        for( i = start  ; i < len ; i++ ) {
+            tmpM[ j ][ i ] = tmpV[j] * w[i] * tau;
+        }
     }
 
     /* Q(:,j:end) -= tmpM */
 
     for( j = 0 ; j < len ; j++ ) {
-      for( i = start ; i < len ; i++ ) {
-    Q[ j ][ i ] -= tmpM[ j ][ i ];
-      }
+        for( i = start ; i < len ; i++ ) {
+            Q[ j ][ i ] -= tmpM[ j ][ i ];
+        }
     }
 }

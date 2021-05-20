@@ -1,3 +1,4 @@
 #!/bin/bash -e
+. ../../setup.sh
 
-#Empty setup file
+spackLoadUnique py-tensorflow

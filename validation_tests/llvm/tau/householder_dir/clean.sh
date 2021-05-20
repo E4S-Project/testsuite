@@ -4,7 +4,7 @@ read -r -d '' FILES << EOF
 householder
 householderfileWC
 householdercxx
-profile.0.0.0
+profile.*
 *.o
 *.log
 .symbols

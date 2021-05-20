@@ -1,9 +1,9 @@
-all: test-householder3 test-householder test-householderregex test-mm_c test-householderfolder test-householderheader
-clean: clean-householder3 clean-householder clean-householderregex clean-mm_c clean-householderfolder clean-householderheader
+all: test-householder3 test-householderregex test-mm_c test-householderfolder test-householderheader test-householder
+clean: clean-householder3 clean-householderregex clean-mm_c clean-householderfolder clean-householderheader clean-householder
 
 
 test-%: %_dir
-	@export QUIET_TEST_OUTPUT=1; cd $<; bash setup.sh && bash compile.sh && bash run.sh
+	@export QUIET_TEST_OUTPUT=1; cd $<; bash compile.sh && bash run.sh
 
 clean-%: %_dir
 	cd $<; bash clean.sh

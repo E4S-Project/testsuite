@@ -1,3 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash 
 
-#Empty setup file
+. ../../setup.sh
+
+spackLoadUnique py-torch
