@@ -5,8 +5,8 @@
 #spackLoadUnique py-numpy
 spackLoadUnique py-mpi4py
 #PYNUMPY=`spackLoadUnique py-numpy`
-spack activate py-mpi4py
-spack activate py-numpy 
+#spack activate py-mpi4py
+#spack activate py-numpy 
 set -x
 #spack load $PYNUMPY
 #spack load py-mpi4py

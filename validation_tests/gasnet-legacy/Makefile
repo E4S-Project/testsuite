@@ -1,7 +1,7 @@
 CC=$(TEST_CC) #mpicc
 LD=$(TEST_CC) #mpicc
-CFLAGS = `pkg-config --cflags gasnet-smp-par` -I.
-LDFLAGS = `pkg-config --libs gasnet-smp-par`
+CFLAGS = `pkg-config --cflags gasnet-mpi-par` -I.
+LDFLAGS = `pkg-config --libs gasnet-mpi-par`
 
 all: testbarrier testhello  testsmall  testthreads  testqueue
 
