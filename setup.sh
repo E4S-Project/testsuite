@@ -10,6 +10,7 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 
 #alias test_run='$TEST_RUN'
 rArg=" -r "
+dArg=" -dpl "
 loadRoots="True"
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
@@ -20,26 +21,29 @@ oneSpackHash(){
 	echo "/`echo "${findOut}" | tail -n1 | awk '{print $1;}'`" ;  
 }
 
-
 spackSetPackageRoot(){
-	#echo ${1}
-	SPAC_LOC=`spack location -i ${1}`
-	NAME_BLOB=`spack find --format={name} ${1}`
-	SPAC_NAM="${NAME_BLOB##*$'\n'}"
-	SPAC_NAM=${SPAC_NAM^^}
+ #       echo ${1}
+        IFS=' '
+        PACK_ARRAY=(${1})
+#       echo ${PACK_ARRAY[0]}
+#       echo ${PACK_ARRAY[1]}
+#       echo ${PACK_ARRAY[2]}
+        NAME_BLOB=${PACK_ARRAY[1]}
+        SPAC_NAM=${NAME_BLOB%@*}
+        SPAC_LOC=${PACK_ARRAY[2]} #`spack location -i ${1}`
+        SPAC_NAM=${SPAC_NAM^^}
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
-	#eval "${SPAC_NAM}_ROOT"
-	###BEWARE: Setting this value can 
+        #eval "${SPAC_NAM}_ROOT"
+        ###BEWARE: Setting this value can 
         #echo $SPAC_NAM
-	export ${SPAC_NAM}_ROOT=${SPAC_LOC}
-	export ${SPAC_NAM}_HASH=${1}
+        export ${SPAC_NAM}_ROOT=${SPAC_LOC}
+        export ${SPAC_NAM}_HASH=${PACK_ARRAY[0]}
 
-	export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
+        export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
 
         if [[ ! -d ${SPAC_LOC}/lib ]]; then
           export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib64
         fi
-
 }
 
 spackLoadUnique(){
@@ -49,41 +53,23 @@ spackLoadUnique(){
    if [ $ret_val -ne 0 ] ; then
       exit 215;
    fi
-   #echo "Loaded Spack Hashes: $SPACK_LOADED_HASHES"
-   IFS=':' read -ra hash_array <<< "$SPACK_LOADED_HASHES"
-   for HASH in "${hash_array[@]}"
-   do
-    spackSetPackageRoot /$HASH
-   done
-}
 
-spackLoadUniqueOLD(){ 
-
-        #rArg=" -r "
-#	if [ ! -z "$2" ] && [ $2 = "nor" ]; then
-#		rArg=""
-#	fi
-	spackHash="$(oneSpackHash $@)"
-	ret_val=$?
-	if [ $ret_val -ne 0 ] ; then
-             exit 215;
+   FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
+   HASHDEX=${#FIND_ARRAY1[@]}-2
+   HASH=${FIND_ARRAY1[HASHDEX]}
+   echo $HASH
+   ARCH_IFS=$IFS
+   FIND_BLOB2=`spack find $dArg /$HASH`
+   IFS=$'\n'
+   FIND_ARRAY2=(${FIND_BLOB2})   #($($dArg /$HASH))
+   for((i=${#FIND_ARRAY2[@]}-1; i>=0; i--)); do
+        #echo ${FIND_ARRAY2[i]}
+        if [[ ${FIND_ARRAY2[i]} == --*  ]]; then
+                break
         fi
-	spack load ${rArg} ${spackHash} || { echo "Package/Spec $@ or dependency not found." >&2 ; exit 215; } ;
-	echo ${spackHash}
-	#spackSetPackageRoot ${spackHash}	
-	if [ "$loadRoots" = "True" ] ; then
-
-	HASHES=`spack find --loaded --format={hash}`
-	for HASH in $HASHES
-	do
-		#echo ${#HASH}
-		if [ ${#HASH} -eq 32 ] ; then
-			echo $HASH
-			spackSetPackageRoot /$HASH
-		fi
-	done  
-
-	fi
+        spackSetPackageRoot "${FIND_ARRAY2[i]}"
+   done
+   IFS=$ARCH_IFS
 }
 
 spackLoadUniqueNoRootVars(){
