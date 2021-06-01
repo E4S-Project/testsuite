@@ -2,4 +2,4 @@
 
 . ./setup.sh
 
-$TEST_RUN_CMD ./column_wise
+$TEST_RUN ./column_wise
