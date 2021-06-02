@@ -16,7 +16,7 @@ oneSpackHash(){
 	findOut="$(spack find -l $@)";
         if [ $? -ne 0 ] ; then
              echo "Package/Spec $@ not found." >&2
-             exit 215;
+             return 215;
         fi
 	echo "/`echo "${findOut}" | tail -n1 | awk '{print $1;}'`" ;  
 }
@@ -47,11 +47,15 @@ spackSetPackageRoot(){
 }
 
 spackLoadUnique(){
+   if [[ ! -z $E4S_TEST_SETUP ]]; then
+	   echo "Skipping load: Environment already setup"
+	   return
+   fi
    spack load $rArg --first $@
    ret_val=$?
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
-      exit 215;
+      return 215;
    fi
 
    FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
