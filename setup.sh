@@ -52,7 +52,7 @@ spackLoadUnique(){
 	   echo "Skipping load: Environment already setup"
 	   return
    fi
-   SPACK_LOAD_RESULT=0
+   #SPACK_LOAD_RESULT=0
    spack load $rArg --first $@
    ret_val=$?
    #echo "Load return: $ret_val"
