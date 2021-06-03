@@ -91,8 +91,9 @@ iterate_files() {
         printf "{\"test\": \"$testdir\",  \"test_stages\": {"
     fi
     unset E4S_TEST_SETUP
+    export SPACK_LOAD_RESULT=0
     source $cwd/setup.sh
-    _ret=$?
+    _ret=$SPACK_LOAD_RESULT
     export E4S_TEST_SETUP=1
             if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
