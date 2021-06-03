@@ -11,7 +11,6 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 #alias test_run='$TEST_RUN'
 rArg=" -r "
 dArg=" -dpl "
-loadRoots="True"
 oneSpackHash(){
 	findOut="$(spack find -l $@)";
         if [ $? -ne 0 ] ; then
@@ -23,8 +22,10 @@ oneSpackHash(){
 
 spackSetPackageRoot(){
  #       echo ${1}
+        ARCH_IFS=$IFS
         IFS=' '
         PACK_ARRAY=(${1})
+	IFS=$ARCH_IFS
 #       echo ${PACK_ARRAY[0]}
 #       echo ${PACK_ARRAY[1]}
 #       echo ${PACK_ARRAY[2]}
@@ -55,7 +56,8 @@ spackLoadUnique(){
    ret_val=$?
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
-      return 215;
+	#echo "Returning 215!"
+        return 215
    fi
 
    FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
@@ -66,6 +68,7 @@ spackLoadUnique(){
    FIND_BLOB2=`spack find $dArg /$HASH`
    IFS=$'\n'
    FIND_ARRAY2=(${FIND_BLOB2})   #($($dArg /$HASH))
+   IFS=$ARCH_IFS
    for((i=${#FIND_ARRAY2[@]}-1; i>=0; i--)); do
         #echo ${FIND_ARRAY2[i]}
         if [[ ${FIND_ARRAY2[i]} == --*  ]]; then
@@ -76,15 +79,13 @@ spackLoadUnique(){
    IFS=$ARCH_IFS
 }
 
-spackLoadUniqueNoRootVars(){
-	loadRoots="False"
-	spackLoadUnique $@
-	loadRoots="True"
-}
-
 spackLoadUniqueNoR(){
 	#spack load $@
 	rArg=" --only package "
+	dArg=" -pl "
 	spackLoadUnique $@
+	_ret=$?
         rArg=" -r "
+	dArg=" -dpl "
+	return $_ret
 }
