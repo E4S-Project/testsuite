@@ -34,6 +34,9 @@ spackSetPackageRoot(){
         SPAC_LOC=${PACK_ARRAY[2]} #`spack location -i ${1}`
         SPAC_NAM=${SPAC_NAM^^}
         SPAC_NAM=`echo $SPAC_NAM | tr '-' '_'`
+	if [ $SPAC_NAM = BINUTILS ];then
+		SPAC_NAM=BINUTILS_E4S
+	fi
         #eval "${SPAC_NAM}_ROOT"
         ###BEWARE: Setting this value can 
         #echo $SPAC_NAM
