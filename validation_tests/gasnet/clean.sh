@@ -1,3 +1,3 @@
 #!/bin/bash
 
-make clean
+rm -rf ./tests

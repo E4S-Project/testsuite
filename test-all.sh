@@ -90,6 +90,29 @@ iterate_files() {
     if [ $print_json = true ]; then
         printf "{\"test\": \"$testdir\",  \"test_stages\": {"
     fi
+    unset E4S_TEST_SETUP
+    export SPACK_LOAD_RESULT=0
+    source $cwd/setup.sh
+    _ret=$SPACK_LOAD_RESULT
+    export E4S_TEST_SETUP=1
+            if [ $_ret -eq 215 ] ; then
+             if [ $print_json = true ]; then
+                         echo "\"missing\"}},"
+             else
+                 echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+                 fi
+             return $_ret
+         fi
+         if [ $_ret -ne 0 ] ; then
+
+                 if [ $print_json = true ]; then
+                 echo "\"fail\"}},"
+             else
+                 echo "Clean ${bold}failed${normal}" >&2
+             fi
+                 return $_ret
+         fi
+
 
     if [ -e "$cwd/clean.sh" ] ; then
 	    if [ $print_json = true ]; then

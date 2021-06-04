@@ -7,7 +7,7 @@ TARGETS = $(BINDIR)/diffusion\
 	  $(BINDIR)/ppm\
 	  $(BINDIR)/simple\
 	  $(BINDIR)/speed
-LIBS = -L$(ZFP_ROOT)/lib -lzfp
+LIBS = -L$(ZFP_LIB_PATH) -lzfp
 INCLUDE=-I$(ZFP_ROOT)/include
 CLIBS = $(LIBS) -lm
 CXXLIBS = $(LIBS)

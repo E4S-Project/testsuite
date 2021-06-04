@@ -15,15 +15,14 @@ NC='\033[0m'
 OUTFILE="/dev/null"
 set -e
 set -x
-cd tests
+
 export GASNET_MAX_SEGSIZE='64M'
 
 for PROGNAME in testbarrier testhello  testsmall  testthreads  testqueue; do
     echo -n $PROGNAME
     #mpiexec -n 
-#    echo timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}
-    #eval timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP 
-    ./${PROGNAME} # 2>&1 > $OUTFILE
+    echo timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}
+    eval timeout 15 $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME} # 2>&1 > $OUTFILE
     RC=$?
     if [ $RC != 0 ]; then
 	echo -e "                                 ${BRED}[FAILED]${NC}"

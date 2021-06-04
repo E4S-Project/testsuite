@@ -21,15 +21,14 @@ Warning: verify.sh will work only if a profile file is present at execution.
 
 Current limitations:
 
- * the plugin currently doesn't support including and excluding header files, but does support including and excluding functions defined in header files.
- * to include a file which is not in the current directory, the whole relative path has to be provided, ie:
+ * the plugin supports including and excluding header files and functions defined in header files, but it needs the debug symbols to be available. So in order to use this feature, the code must be compiled using the `-g` option.
+ * to include a file which is not in the current directory, the whole relative path has to be provided (just like you pass this file to the compiler) ie:
 
 ```
 BEGIN_FILE_INCLUDE_LIST
 ./R/R.cpp
 END_FILE_INCLUDE_LIST
 ```
-
 
 For commented code, read ./testfunctions.sh, which contains all the functions of the testing scripts.
 
