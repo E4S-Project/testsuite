@@ -1,4 +1,4 @@
-all: test-householder3 test-householderregex test-mm_c test-householderfolder test-householderheader test-householder
+all: test-householderregex test-mm_c test-householderfolder test-householderheader test-householder
 clean: clean-householder3 clean-householderregex clean-mm_c clean-householderfolder clean-householderheader clean-householder
 
 

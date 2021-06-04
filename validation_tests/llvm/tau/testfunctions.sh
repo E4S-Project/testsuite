@@ -24,6 +24,8 @@ environment::enter() {
 
     export TEST_TAU_INSTALL=$TAU_INSTALL
 
+    export TEST_TAU_INSTALL_BIN=$TEST_TAU_INSTALL/../../bin
+
     if [ -z "$TEST_LLVM_INSTALL" -o -z "$TEST_PLUGIN_PREFIX" -o -z "$TEST_TAU_INSTALL" ] ; then
         output::err "Invalid parameters."
         output::err Using LLVM: \"$TEST_LLVM_INSTALL\"
@@ -36,7 +38,7 @@ environment::enter() {
 }
 
 environment::exit() {
-    unset TEST_LLVM_INSTALL TEST_PLUGIN_PREFIX TEST_TAU_INSTALL TEST_LLVM_VERSION_MAJOR
+    unset TEST_LLVM_INSTALL TEST_PLUGIN_PREFIX TEST_TAU_INSTALL TEST_TAU_INSTALL_BIN TEST_LLVM_VERSION_MAJOR
 }
 
 output::err() {
@@ -204,6 +206,7 @@ test::compile() {
 }
 
 test::run() {
+    environment::enter
     FUNC_LIST=$1
     EXECUTABLE=$2
     OptionalC=${3:-C++}
@@ -211,7 +214,7 @@ test::run() {
     OUTFILE=`mktemp`
     ERRFILE=`mktemp`
     
-    tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
+    $TEST_TAU_INSTALL_BIN/tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
     
     output::status "Execution of $EXECUTABLE" $SUCCESS
@@ -224,6 +227,7 @@ test::run() {
     test::verify $FUNC_LIST $OptionalC
 
     #rm -f $OUTFILE $ERRFILE profile.*
+    environment::exit
 }
 
 
