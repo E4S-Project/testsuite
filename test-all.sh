@@ -60,9 +60,14 @@ iterate_directories() {
         	echo "==="
         	echo $testdir
 	fi
-        ran_test=true
-        iterate_files
+        
+    cwd=`pwd`	
+    if [ -e "$cwd/run.sh" ] ; then
+	#echo "Running in $cwd"
+        local itout
+	itout=$(iterate_files)
          _ret=$?
+	 echo $itout
          if [ $_ret -ne 0 ] ; then
             final_ret=$( expr $final_ret + 1 )
          fi
@@ -71,7 +76,7 @@ iterate_directories() {
 	#	echo "}},"
 	#fi
 
-        if [ "$ran_test" == "false" ] ; then
+    else
             for d in * ; do
                 iterate_directories $d
             done
@@ -85,14 +90,13 @@ iterate_directories() {
 iterate_files() {
     cwd=`pwd`
     local _ret
-    if [ -e "$cwd/run.sh" ] ; then
 
     if [ $print_json = true ]; then
         printf "{\"test\": \"$testdir\",  \"test_stages\": {"
     fi
     unset E4S_TEST_SETUP
     export SPACK_LOAD_RESULT=0
-    source $cwd/setup.sh
+    source $cwd/setup.sh >&2
     _ret=$SPACK_LOAD_RESULT
     export E4S_TEST_SETUP=1
             if [ $_ret -eq 215 ] ; then
@@ -108,7 +112,7 @@ iterate_files() {
                  if [ $print_json = true ]; then
                  echo "\"fail\"}},"
              else
-                 echo "Clean ${bold}failed${normal}" >&2
+                 echo "Setup ${bold}failed${normal}" >&2
              fi
                  return $_ret
          fi
@@ -118,14 +122,14 @@ iterate_files() {
 	    if [ $print_json = true ]; then
 		    printf "\"clean\":"
 	    else
-            	echo "Cleaning $cwd"
+            	echo "Cleaning $cwd" >&2
     	fi
         ./clean.sh >& ./clean.log
         _ret=$?
         
         if [ $print_logs = true ]; then
-             echo "---CLEANUP LOG---"
-             cat ./clean.log
+             echo "---CLEANUP LOG---" >&2
+             cat ./clean.log >&2
         fi
         if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
@@ -152,13 +156,13 @@ iterate_files() {
 	     if [ $print_json = true ]; then
              printf "\"compile\":"
     	 else
-             echo "Compiling $cwd"
+             echo "Compiling $cwd" >&2
          fi
             ./compile.sh >& ./compile.log
             _ret=$?
             if [ $print_logs = true ]; then
-                 echo "---COMPILE LOG---"
-                 cat ./compile.log
+                 echo "---COMPILE LOG---" >&2
+                 cat ./compile.log >&2
             fi
 
          if [ $_ret -eq 215 ] ; then
@@ -187,13 +191,13 @@ iterate_files() {
             printf "\"run\":"
             else
 
-        echo "Running $cwd"
+        echo "Running $cwd" >&2
 	fi
         ./run.sh >& run.log
         _ret=$?
         if [ $print_logs = true ]; then
              echo "---RUN LOG---"
-             cat ./run.log
+             cat ./run.log >&2
         fi
 
            if [ $_ret -eq 215 ] ; then
@@ -220,9 +224,6 @@ iterate_files() {
         
 	   echo "${green}Success${normal}" >&2
 	   fi
-    else
-        ran_test=false
-    fi
 }
 
 #set -x
