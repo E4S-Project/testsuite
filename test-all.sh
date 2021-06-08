@@ -99,6 +99,7 @@ iterate_files() {
     source $cwd/setup.sh >&2
     _ret=$SPACK_LOAD_RESULT
     export E4S_TEST_SETUP=1
+    #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
             if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
                          echo "\"missing\"}},"

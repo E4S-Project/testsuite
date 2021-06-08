@@ -53,8 +53,8 @@ spackLoadUnique(){
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
 	#echo "Returning 215!"
-	#export SPACK_LOAD_RESULT=215
-        exit 215
+	export SPACK_LOAD_RESULT=215
+        return 215
    fi
 
    FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
