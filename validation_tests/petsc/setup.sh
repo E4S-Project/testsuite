@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ../../../../setup.sh
+. ../../setup.sh
 
 spackLoadUnique cmake
 spackLoadUnique petsc

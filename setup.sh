@@ -11,14 +11,6 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 #alias test_run='$TEST_RUN'
 rArg=" -r "
 dArg=" -dpl "
-oneSpackHash(){
-	findOut="$(spack find -l $@)";
-        if [ $? -ne 0 ] ; then
-             echo "Package/Spec $@ not found." >&2
-             return 215;
-        fi
-	echo "/`echo "${findOut}" | tail -n1 | awk '{print $1;}'`" ;  
-}
 
 spackSetPackageRoot(){
  #       echo ${1}
