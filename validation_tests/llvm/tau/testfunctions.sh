@@ -22,23 +22,27 @@ environment::enter() {
     # Is the plugin installed somewhere else ?
     export TEST_PLUGIN_PREFIX=$([ -n "$PLUGIN_DIR" ] && echo $PLUGIN_DIR || echo $LLVM_INSTALL/lib)
 
-    export TEST_TAU_INSTALL=$TAU_INSTALL
+    export TEST_TAU_BASEDIR=$TAU_BASEDIR
+    export TEST_TAU_INSTALL=$TEST_TAU_BASEDIR/lib/$TAU_INSTALL
 
-    export TEST_TAU_INSTALL_BIN=$TEST_TAU_INSTALL/../../bin
+    export TEST_OLD_PATH=$PATH
+    export PATH=$TAU_BASEDIR/bin:$PATH
 
-    if [ -z "$TEST_LLVM_INSTALL" -o -z "$TEST_PLUGIN_PREFIX" -o -z "$TEST_TAU_INSTALL" ] ; then
+    if [ -z "$TEST_LLVM_INSTALL" -o -z "$TEST_PLUGIN_PREFIX" -o -z "$TEST_TAU_INSTALL" -o -z "$TEST_TAU_BASEDIR" ] ; then
         output::err "Invalid parameters."
         output::err Using LLVM: \"$TEST_LLVM_INSTALL\"
         output::err Using plugin in: \"$TEST_PLUGIN_PREFIX\"
         output::err Using libTAU.so from: \"$TEST_TAU_INSTALL\"
         output::err If any of those values are erroneous, please set the
-        output::err LLVM, PLUGIN_DIR or TAU_INSTALL environment variables.
+        output::err LLVM, PLUGIN_DIR, TAU_BASEDIR or TAU_INSTALL
+        output::err environment variables.
         exit 1
     fi
 }
 
 environment::exit() {
-    unset TEST_LLVM_INSTALL TEST_PLUGIN_PREFIX TEST_TAU_INSTALL TEST_TAU_INSTALL_BIN TEST_LLVM_VERSION_MAJOR
+    export PATH=$TEST_OLD_PATH
+    unset TEST_LLVM_INSTALL TEST_PLUGIN_PREFIX TEST_TAU_INSTALL TEST_TAU_BASEDIR TEST_LLVM_VERSION_MAJOR TEST_OLD_PATH
 }
 
 output::err() {
@@ -214,7 +218,7 @@ test::run() {
     OUTFILE=`mktemp`
     ERRFILE=`mktemp`
     
-    $TEST_TAU_INSTALL_BIN/tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
+    tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
     
     output::status "Execution of $EXECUTABLE" $SUCCESS
