@@ -1,18 +1,11 @@
 #!/bin/bash 
 
-
-if [ -n "$TERM" ];
-then
-bold=$(tput bold)$(tput setaf 1)
-green=$(tput bold)$(tput setaf 2)
-yellow=$(tput bold)$(tput setaf 3)
-normal=$(tput sgr0);
-fi
 final_ret=0
 ran_test=true
 print_json=false
 print_logs=false
 basedir=validation_tests
+print_color=true
 
     if [[ $# -gt 0 && -d $1 ]] ; then
        basedir=$1
@@ -27,12 +20,15 @@ do
         --settings) export TESTSUITE_SETTINGS_FILE=`readlink -f "$2"`
         shift
             ;;
+	--color-off) print_color=false
+	    ;;
         --help)
         echo "Usage:"
         echo "    ./test-all.sh [Test Directory (Optional. Must come first if used)] <--json> <--settings [settings file]>"
         echo "    --json: Print json output. Redirect to file manually if needed. e.g. ./test-all.sh --json > testout.json"
         echo "    --print-logs: Print contents of all clean/compiler/run logs to screen."
         echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
+	echo "    --color-off: disable printing test results in color"
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
         echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
@@ -41,6 +37,14 @@ do
     esac
     shift
 done
+
+if [ $print_color = true -a  -n "$TERM" ];
+then
+bold=$(tput bold)$(tput setaf 1)
+green=$(tput bold)$(tput setaf 2)
+yellow=$(tput bold)$(tput setaf 3)
+normal=$(tput sgr0);
+fi
 
 . ./setup.sh
 
