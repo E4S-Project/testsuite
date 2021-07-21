@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ../../setup.sh
+#. ../../setup.sh
 
 cmake \
   -DCMAKE_C_COMPILER=${TEST_CC_MPI} \
