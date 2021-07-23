@@ -101,14 +101,11 @@ symbols::analysis() {
     
     COMPILER=$TEST_LLVM_INSTALL/bin/clang++
     
-    if [ $TEST_LLVM_VERSION_MAJOR -gt 12 ]; then
-        LEGACY_FLAG="-flegacy-pass-manager"
-    fi
     if [ $OptionalC == "C" ]; then
         COMPILER=$TEST_LLVM_INSTALL/bin/clang
     fi    
     
-    $COMPILER $LEGACY_FLAG -o $OUTPUT \
+    $COMPILER -o $OUTPUT \
         -O0 -g  -lm\
         $SOURCES \
         &> $ERRFILE
@@ -180,12 +177,13 @@ test::compile() {
         PLUGIN=$TEST_PLUGIN_PREFIX/TAU_Profiling.so
     fi
     if [ $TEST_LLVM_VERSION_MAJOR -gt 12 ]; then
-        LEGACY_FLAG="-flegacy-pass-manager"
+        NPM_LOAD="-fpass-plugin=${PLUGIN}"
     fi
 
     ERRFILE=`mktemp`
-
-    $COMPILER $LEGACY_FLAG  -o $OUTPUT \
+#missing $NPM_LOAD
+#added -fpass-plugin=$PLUGIN
+    $COMPILER $NPM_LOAD -o $OUTPUT \
         -O3 -g \
         -fplugin=$PLUGIN \
         -mllvm \
@@ -194,7 +192,7 @@ test::compile() {
         -ldl -lTAU -lm \
         -Wl,-rpath,$TEST_TAU_INSTALL \
         $SOURCES \
-        &> $ERRFILE
+       # &> $ERRFILE
     SUCCESS=$?
 
     output::status "Compilation of $OUTPUT" $SUCCESS
@@ -218,6 +216,8 @@ test::run() {
     OUTFILE=`mktemp`
     ERRFILE=`mktemp`
     
+    rm -f profile.*
+
     tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
     
@@ -230,7 +230,7 @@ test::run() {
     
     test::verify $FUNC_LIST $OptionalC
 
-    #rm -f $OUTFILE $ERRFILE profile.*
+    rm -f $OUTFILE $ERRFILE profile.*
     environment::exit
 }
 
