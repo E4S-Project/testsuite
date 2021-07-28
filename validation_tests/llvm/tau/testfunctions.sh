@@ -218,7 +218,7 @@ test::run() {
     
     rm -f profile.*
 
-    tau_exec -T serial "./$EXECUTABLE" 256 256 > $OUTFILE 2> $ERRFILE
+    tau_exec -T serial "./$EXECUTABLE" 50 50 > $OUTFILE 2> $ERRFILE
     SUCCESS=$?
     
     output::status "Execution of $EXECUTABLE" $SUCCESS
