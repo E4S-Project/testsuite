@@ -6,8 +6,8 @@
 #include <math.h>
 #include <mpi.h>
 
-#define PRECISION   0.00001
-#define ITER_TIMES  300
+#define PRECISION   0.001
+#define ITER_TIMES  200
 #define ITER_OUT    50
 #define WORKTAG     5
 #define REDUCE      1
