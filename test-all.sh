@@ -12,6 +12,10 @@ print_color=true
      fi
 while test $# -gt 0
 do
+    if [[ -d $1 ]] ; then
+       basedir=$1
+    else
+
     case "$1" in
         --json) print_json=true
             ;;
@@ -24,7 +28,7 @@ do
 	    ;;
         --help)
         echo "Usage:"
-        echo "    ./test-all.sh [Test Directory (Optional. Must come first if used)] <--json> <--settings [settings file]>"
+        echo "    ./test-all.sh [Test Directory (Optional.)] <--json> <--settings [settings file]> <--color-off>"
         echo "    --json: Print json output. Redirect to file manually if needed. e.g. ./test-all.sh --json > testout.json"
         echo "    --print-logs: Print contents of all clean/compiler/run logs to screen."
         echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
@@ -35,6 +39,7 @@ do
         echo "    ./test-all.sh /path/to/test/directory --json --settings /path/to/some.settings.sh #Run all tests in the specified directory, print output as json, use some.settings.sh as settings file"
         exit 0
     esac
+    fi
     shift
 done
 
