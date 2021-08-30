@@ -1,7 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 
-spack load cmake
+spackLoadUnique cmake
 spackLoadUnique tasmanian
 #spackLoadUnique openblas threads=openmp
 

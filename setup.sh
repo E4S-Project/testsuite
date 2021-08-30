@@ -48,7 +48,7 @@ spackLoadUnique(){
 	   return
    fi
    #SPACK_LOAD_RESULT=0
-   spack load $rArg --first $@
+   spack load $rArg --first $@ $TESTSUITE_VARIANT
    ret_val=$?
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
