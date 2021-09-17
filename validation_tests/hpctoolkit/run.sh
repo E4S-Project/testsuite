@@ -3,6 +3,6 @@
 set -x
 
 cd mpi-vector-add
-eval $TEST_RUN ./make run
+make run
 
 

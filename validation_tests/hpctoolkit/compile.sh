@@ -1,7 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
 . ./setup.sh
-set -x
+#### set -x
 
 cd mpi-vector-add
-./make
+make
 
