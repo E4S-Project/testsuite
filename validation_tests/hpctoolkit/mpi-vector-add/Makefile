@@ -10,7 +10,6 @@ NVCC=${CUDA_PATH}/bin/nvcc
 OBJS=main.o vecadd.o
 
 main: $(OBJS)
-	env	## DEBUG
 	mpicxx -o main $(OBJS) $(LIBS) -lcuda -lcudart
 
 main.o: main.cpp
