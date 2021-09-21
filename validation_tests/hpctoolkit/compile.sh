@@ -1,6 +1,6 @@
 #!/bin/bash
 . ./setup.sh
 
-cd mpi-vector-add
+cd loop
 make
 

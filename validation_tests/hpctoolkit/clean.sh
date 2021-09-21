@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd mpi-vector-add
+cd loop
 make clean
 
