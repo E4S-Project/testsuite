@@ -5,7 +5,7 @@ loop: loop.c
 	$(CC) -o $@ $<
 
 run:
-	hpcrun -e cycles ./loop 10000000000
+	hpcrun -e REALTIME ./loop 10000000000
 	hpcstruct loop
 	hpcprof -S loop.hpcstruct hpctoolkit-loop-measurements
 
