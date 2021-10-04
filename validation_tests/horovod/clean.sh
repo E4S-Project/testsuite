@@ -1,2 +1,2 @@
-#!/bin/bash -ex
+#!/bin/bash 
 rm -f  tmp.* *.log

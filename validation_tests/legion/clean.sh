@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash 
 cd build
 rm -rf Makefile CMakeCache* cmake* CMakeFiles legion tmp.*
 cd ../
