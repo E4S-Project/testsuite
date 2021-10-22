@@ -9,7 +9,7 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 
 
 #alias test_run='$TEST_RUN'
-rArg=" -r "
+rArg="  "
 dArg=" -dpl "
 
 spackSetPackageRoot(){
@@ -82,7 +82,7 @@ spackLoadUniqueNoR(){
 	dArg=" -pl "
 	spackLoadUnique $@
 	_ret=$?
-        rArg=" -r "
+        rArg="  "
 	dArg=" -dpl "
 	return $_ret
 }
