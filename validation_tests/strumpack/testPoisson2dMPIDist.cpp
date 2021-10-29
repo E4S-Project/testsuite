@@ -30,25 +30,21 @@
 #include "StrumpackSparseSolverMPIDist.hpp"
 #include "sparse/CSRMatrix.hpp"
 
+#define ERROR_TOLERANCE 1e2
+
 typedef double scalar;
-//typedef int64_t integer;
 typedef int integer;
 
 using namespace strumpack;
 
 int main(int argc, char* argv[]) {
   int thread_level;
-  //MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &thread_level);
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &thread_level);
   int myrank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   if (thread_level != MPI_THREAD_FUNNELED && myrank == 0)
     std::cout << "MPI implementation does not support MPI_THREAD_FUNNELED"
               << std::endl;
-  // if (thread_level != MPI_THREAD_MULTIPLE && myrank == 0)
-  //   std::cout << "MPI implementation does not support MPI_THREAD_MULTIPLE,"
-  //     " which might be needed for pt-scotch!" << std::endl;
-
   {
     int n = 30, nrhs = 10;
     if (argc > 1) n = atoi(argv[1]); // get grid size
@@ -100,9 +96,19 @@ int main(int argc, char* argv[]) {
     Adist.spmv(x_exact, b);
 
     spss.set_matrix(Adist);
-    spss.reorder(n, n);
-    spss.factor();
-    spss.solve(b, x);
+
+    if (spss.reorder(n, n) != ReturnCode::SUCCESS) {
+      std::cerr << "Problem with reordering of the matrix." << std::endl;
+      return 1;
+    }
+    if (spss.factor() != ReturnCode::SUCCESS) {
+      std::cerr << "Problem during factorization of the matrix." << std::endl;
+      return 1;
+    }
+    if (spss.solve(b, x) != ReturnCode::SUCCESS) {
+      std::cerr << "Problem during solve phase." << std::endl;
+      return 1;
+    }
 
     auto scaled_res = Adist.max_scaled_residual(x, b);
     x.scaled_add(-1., x_exact);
@@ -112,6 +118,10 @@ int main(int argc, char* argv[]) {
                 << scaled_res << std::endl;
       std::cout << "# relative error = ||x-x_exact||_F/||x_exact||_F = "
                 << relerr << std::endl;
+    }
+    if (scaled_res > ERROR_TOLERANCE*spss.options().rel_tol()) {
+      std::cerr << "Solve did not reach required accuracy." << std::endl;
+      return 1;
     }
   }
   scalapack::Cblacs_exit(1);
