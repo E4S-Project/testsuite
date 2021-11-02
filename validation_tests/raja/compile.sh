@@ -1,5 +1,4 @@
-#!/bin/bash 
-#. ../../setup.sh
+#!/bin/bash -e 
 . ./setup.sh
 spackLoadUnique cmake
 spackLoadUnique blt

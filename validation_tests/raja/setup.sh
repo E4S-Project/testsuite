@@ -1,5 +1,9 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique raja
-#ONERAJA=`oneSpackHash raja`
-#spack load $ONERAJA 
+
+THISDIR=`basename "$PWD"`
+if [  "$THISDIR" = "raja-cuda" ];then
+	spackLoadUnique raja+cuda
+else
+	spackLoadUnique raja~cuda~rocm
+fi
