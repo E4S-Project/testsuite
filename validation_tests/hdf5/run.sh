@@ -1,11 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash 
 . ./setup.sh
-set -x
-#spack load \trrej6a
-#spack load mpich
-#spack load hdf5+fortran
 
-#mpirun -np 8 
-eval $TEST_RUN ./ph5example # -v
-
-
+spackTestRun $HDF5_HASH
+#eval $TEST_RUN ./ph5example # -v

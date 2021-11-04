@@ -12,6 +12,23 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 rArg="  "
 dArg=" -dpl "
 
+spackTestRun(){
+	testOut=$(spack test run /${1} )
+	res=$?
+	echo "--- $testOut ---"
+	#echo $testOut | grep "No installed packages match spec"
+	#grepRes=$?
+	#echo $grepRes
+	
+	if [ $res -eq 0 ]; then
+		testHash=$(echo "$testOut" | head -n 1 | awk '{print $NF}')
+		echo TEST-HASH: $testHash
+		spack test results -l $testHash
+	fi
+
+	return $res
+}
+
 spackSetPackageRoot(){
  #       echo ${1}
         ARCH_IFS=$IFS

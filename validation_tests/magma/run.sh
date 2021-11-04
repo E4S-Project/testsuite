@@ -1,9 +1,9 @@
 #!/bin/bash -e
 . ./setup.sh
 set -x
-./example_sparse    
-./example_sparse_operator    
-./example_v1    
-./example_v2
+timeout 2m ./example_sparse    
+timeout 2m ./example_sparse_operator    
+timeout 2m ./example_v1    
+timeout 2m ./example_v2
 
 
