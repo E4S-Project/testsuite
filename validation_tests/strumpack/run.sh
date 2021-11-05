@@ -2,7 +2,7 @@
 
 . ./setup.sh
 
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=1
 
 ./testPoisson2d 100 --sp_disable_gpu
 
