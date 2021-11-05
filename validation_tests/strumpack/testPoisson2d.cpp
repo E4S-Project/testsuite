@@ -29,16 +29,17 @@
 #include <iostream>
 #include "StrumpackSparseSolver.hpp"
 
+#define ERROR_TOLERANCE 1e2
+
 typedef double scalar;
 typedef double real;
-//typedef int64_t integer;
 typedef int integer;
 
 using namespace strumpack;
 
 int main(int argc, char* argv[]) {
   int n = 30;
-  int nrhs = 1;
+  int nrhs = 10;
   if (argc > 1) n = atoi(argv[1]); // get grid size
   else std::cout << "# please provide grid size" << std::endl;
   // get number of right-hand sides
@@ -79,19 +80,28 @@ int main(int argc, char* argv[]) {
   A.spmv(x_exact, b);
 
   spss.set_csr_matrix(N, ptr, ind, val, true);
-  spss.reorder(n, n);
-  // spss.factor();   // not really necessary, called if needed by solve
+  if (spss.reorder(n, n) != ReturnCode::SUCCESS) {
+    std::cerr << "Problem with reordering of the matrix." << std::endl;
+    return 1;
+  }
+  if (spss.factor() != ReturnCode::SUCCESS) {
+    std::cerr << "Problem during factorization of the matrix." << std::endl;
+    return 1;
+  }
+  if (spss.solve(b, x) != ReturnCode::SUCCESS) {
+    std::cerr << "Problem during solve phase." << std::endl;
+    return 1;
+  }
 
-  spss.solve(b, x);
-
-  // just a check, system is already solved, so solving again
-  // with the solution as initial guess should stop immediately
-  spss.solve(b, x, true);
-
+  auto scaled_res = A.max_scaled_residual(x, b);
   std::cout << "# COMPONENTWISE SCALED RESIDUAL = "
-            << A.max_scaled_residual(x, b) << std::endl;
+            << scaled_res << std::endl;
   x.scaled_add(-1., x_exact);
   std::cout << "# relative error = ||x-x_exact||_F/||x_exact||_F = "
             << x.normF() / x_exact.normF() << std::endl;
+  if (scaled_res > ERROR_TOLERANCE*spss.options().rel_tol()) {
+    std::cerr << "Solve did not reach required accuracy." << std::endl;
+    return 1;
+  }
   return 0;
 }
