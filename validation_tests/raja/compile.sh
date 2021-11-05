@@ -1,23 +1,20 @@
-#!/bin/bash -e 
+#!/bin/bash  
 . ./setup.sh
 spackLoadUnique cmake
 spackLoadUnique blt
-
-USECUDA=""
-spack find -v raja | grep +cuda
-res=$?
+CUDADEF=""
+ROCMDEF=""
 set -e
 set -x
-#if command -v CC &> /dev/null
-#then
-#	export CXX=CC
-#fi
-#echo "CXX is ${CXX}"
 mkdir build
 cd build
-if [ $res -eq 0 ];then
+if [ $USECUDA -eq 1 ];then
 	echo Using Cuda
-	USECUDA="-DENABLE_CUDA=True"
+	CUDADEF="-DENABLE_CUDA=True"
+elif [ $USEROCM -eq 1 ];then
+        echo Using Rocm
+        ROCMDEF="-DENABLE_HIP=True"
 fi
-cmake ${USECUDA} -DBLT_SOURCE_DIR=${BLT_ROOT} -DRAJA_DIR=${RAJA_ROOT} ..
+
+cmake ${ROCMDEF}  ${CUDADEF} -DBLT_SOURCE_DIR=${BLT_ROOT} -DRAJA_DIR=${RAJA_ROOT} ..
 make

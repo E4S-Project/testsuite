@@ -19,6 +19,13 @@ if (ENABLE_CUDA)
     cuda)
 endif ()
 
+if (ENABLE_HIP)
+  set(example_depends
+    ${example_depends}
+    hip)
+endif ()
+
+
 blt_add_executable(
   NAME example.exe
   SOURCES example.cpp
