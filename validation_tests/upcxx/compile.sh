@@ -5,4 +5,9 @@ set -x
 #spack load hypre+internal-superlu
 #spack load mpich
 
-make 
+cp -r $UPCXX_ROOT/example .
+cp $UPCXX_ROOT/share/doc/upcxx/LICENSE.txt example
+
+cd example/prog-guide
+
+make all 
