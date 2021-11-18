@@ -1,10 +1,5 @@
-#!/bin/bash -e 
-#-ex
+#!/bin/bash -e
+
 . ./setup.sh
-spackLoadUnique cmake
-set -x
-mkdir -p build
-cd build
-cmake $TASMANIAN_ROOT/share/Tasmanian/examples
-make
-cd -
+
+echo "Skipped Compilation. Using internal spack tests."
