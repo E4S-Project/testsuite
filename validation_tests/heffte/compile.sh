@@ -1,9 +1,5 @@
-#!/bin/bash 
-#-ex
+#!/bin/bash -e
+
 . ./setup.sh
-spackLoadUnique cmake
-mkdir -p build
-cd build
-cmake $HEFFTE_ROOT/share/heffte/examples
-make
-cd -
+
+echo "Skipped Compilation. Using internal spack tests."

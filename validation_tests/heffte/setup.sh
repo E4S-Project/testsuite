@@ -1,3 +1,5 @@
-#!/bin/bash
+#!/bin/bash -e
+
 . ../../setup.sh
-spackLoadUnique heffte
+
+spackLoadUnique heffte@2.2.0:
