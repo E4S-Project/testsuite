@@ -1,2 +1,3 @@
 #!/bin/bash
-rm -f *.o ie2d
+rm -rf *.mod ie2d cmake_install.cmake Makefile CMakeCache.txt CMakeFiles
+
