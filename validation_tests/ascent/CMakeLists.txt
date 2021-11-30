@@ -89,4 +89,10 @@ add_executable(ascent_render_example ascent_render_example.cpp)
 # link to ascent
 target_link_libraries(ascent_render_example ascent::ascent)
 
+# create our cinema example
+add_executable(ascent_render_cinema_example ascent_render_cinema_example.cpp)
+
+# link to ascent
+target_link_libraries(ascent_render_cinema_example ascent::ascent)
+
 
