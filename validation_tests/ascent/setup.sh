@@ -2,5 +2,4 @@
 
 . ../../setup.sh
 spackLoadUnique ascent
-spackLoadUnique mpich
 spackLoadUnique cmake
