@@ -1,0 +1,65 @@
+#!/usr/bin/bash
+
+#
+# cinema unit test for a specific version of the cinemasci module
+#
+# author: david h. rogers
+#         dhr@lanl.gov
+#
+
+# 
+# This script pulls and executes a unit test from the cinemasci
+# repository that is appropriate for the expected release
+#
+
+CINEMASCI=cinemasci
+CINEMASCI_REPOSITORY=git@github.com:cinemascience/cinemasci.git
+CINEMASCI_VERSION=1.3
+CINEMASCI_COMMIT=b98f6d62802f0d3ef8145ef999db7877cc079b75
+TEST_DIR=${CINEMASCI}_unit_test_${CINEMASCI_VERSION}
+
+#
+# clean up, if there is anything that might interfere
+#
+if [ -d $TEST_DIR ] ; then
+    echo "removing existing test directory: $TEST_DIR"
+    rm -rf $TEST_DIR
+fi
+
+#
+# clone the repository we expect 
+#
+echo "Cloning repository for $CINEMASCI $CINEMASCI_VERSION ..."
+git clone $CINEMASCI_REPOSITORY $TEST_DIR
+pushd $TEST_DIR
+git checkout $CINEMASCI_COMMIT
+popd
+
+#
+# load spack python 
+#
+echo "Loading spack python ..."
+eval `spack load --sh python`
+eval `spack load --sh py-cinemasci`
+
+#
+# run the unit test
+#
+echo "Running test ..."
+pushd $TEST_DIR
+python -m unittest testing/test_cdb.py
+TEST_RESULT=$?
+
+#
+# clean up
+#
+if [ -d $TEST_DIR ] ; then
+    echo "Cleaning up ..."
+    rm -rf $TEST_DIR
+fi
+
+#
+# exit with the status of the test
+#
+exit $TEST_RESULT
+~                    
