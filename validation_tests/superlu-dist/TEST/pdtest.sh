@@ -11,12 +11,11 @@ echo "Double-precision testing output" > $ofile
 MATRICES=(../EXAMPLE/g20.rua)
 NPROWS="1 2"
 NPCOLS="1 3"
-NVAL="9 19"
-NRHS="1 3"
-FILLRATIO="2 6"
+NRHS="1"
+FILLRATIO="2"
 # following are blocking parameters, see sp_ienv.c
-RELAX="4 8"
-SUPERSIZE="10 20"
+RELAX="4"
+SUPERSIZE="10"
 MINGEMM="10000"
 
 ##
