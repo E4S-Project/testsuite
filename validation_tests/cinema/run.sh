@@ -11,11 +11,6 @@ git checkout $CINEMASCI_COMMIT
 popd
 
 #
-# load the cinemasci module 
-#
-spackLoadUnique py-cinemasci@1.3
-
-#
 # run the unit test
 #
 echo "Running test ..."
