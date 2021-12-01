@@ -1,7 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 #oneSpackHash(){ echo "/`spack find -l $1 | tail -n1 | awk '{print $1;}'`" ;  }
-spackLoadUnique trilinos
+spackLoadUnique trilinos@:13.0.1
 export TRILINOS=$TRILINOS_ROOT
 #export TSPEC=`spackLoadUnique trilinos`
 #export TRILINOS=`spack location -i $TSPEC`
