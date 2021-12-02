@@ -1,4 +1,4 @@
-# CMAKE File for "MyApp" application building against an installed Trilinos
+# CMAKE File for "Zoltan" application building against an installed Trilinos
 
 cmake_minimum_required(VERSION 3.17.1)
 
@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.17.1)
 # You must do this before calling find_package(Trilinos) when
 # BUILD_SHARED_LIBS=ON or you get a lot of nasty warnings.
 #
-project(MyApp NONE)
+project(Zoltan NONE)
 
 # Disable Kokkos warning about not supporting C++ extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -33,7 +33,7 @@ MESSAGE("End of Trilinos details\n")
 
 # Make sure to use same compilers and flags as Trilinos
 #set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-set(CMAKE_CXX_COMPILER mpicxx -cxx=${Trilinos_DIR}/../../../bin/nvcc_wrapper)
+set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} -cxx=${Trilinos_DIR}/../../../bin/nvcc_wrapper )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
@@ -56,7 +56,7 @@ endif()
 
 # Build the APP and link to Trilinos
 
-add_executable(MyApp ${CMAKE_CURRENT_SOURCE_DIR}/app.cpp)
-target_include_directories(MyApp PRIVATE
+add_executable(Zoltan ${CMAKE_CURRENT_SOURCE_DIR}/app.cpp)
+target_include_directories(Zoltan PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR} ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
-target_link_libraries(MyApp ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+target_link_libraries(Zoltan ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})

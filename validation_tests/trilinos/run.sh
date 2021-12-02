@@ -3,4 +3,5 @@
 set -x
 cd ./build
 export CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
-${TEST_RUN} ./MyApp
+export OMP_NUM_THREADS=4
+${TEST_RUN} ./Zoltan
