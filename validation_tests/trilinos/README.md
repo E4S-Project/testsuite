@@ -54,13 +54,13 @@ This will put a file called `TrilinosConfig.cmake` under a subdirectory of
 ## 4. Build the application
 
 ```
-  $ make -j4
+  $ ./clean.sh; ./compile.sh
 ```
 
 ## 5. Run the application test(s):
 
 ```
-  $ ctest
+  $ ./run.sh
 ```
 
 NOTE: That test will not pass unless Trilinos is propertly built with MPI and

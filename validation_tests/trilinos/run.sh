@@ -2,4 +2,5 @@
 . ./setup.sh
 set -x
 cd ./build
-ctest
+export CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
+${TEST_RUN} ./MyApp
