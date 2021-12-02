@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <exception>
+#include <functional>
 
 #include <cassert>
 #include <cstdint>
@@ -20,6 +21,8 @@
 #include <unistd.h>
 
 #include <umap/umap.h>
+
+namespace umaptest {
 
 class TestException : public std::runtime_error {
   using std::runtime_error::runtime_error;
@@ -143,7 +146,9 @@ public:
 
     return rv;
   }
-};
+}; // class umap_test
+
+} // namespace umaptest
 
 int main() {
   const uint64_t umap_page_size = 512 * 1024ul;
@@ -156,15 +161,15 @@ int main() {
   ::setenv("UMAP_PAGESIZE", std::to_string(umap_page_size).c_str(), 1);
 
   try {
-    umap_test t(umap_page_size * num_pages);
+    umaptest::umap_test t(umap_page_size * num_pages);
     test_result = t.run_test();
 
     switch (test_result) {
-      case umap_test::TEST_RW_PASS:
+      case umaptest::umap_test::TEST_RW_PASS:
         std::cout << "RW test passed." << std::endl;
         exit_status = 0;
         break;
-      case umap_test::TEST_RO_PASS:
+      case umaptest::umap_test::TEST_RO_PASS:
         std::cout << "RO test passed." << std::endl;
         exit_status = 0;
         break;
