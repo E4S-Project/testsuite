@@ -32,8 +32,11 @@ MESSAGE("   Trilinos_BUILD_SHARED_LIBS = ${Trilinos_BUILD_SHARED_LIBS}")
 MESSAGE("End of Trilinos details\n")
 
 # Make sure to use same compilers and flags as Trilinos
-#set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} -cxx=${Trilinos_DIR}/../../../bin/nvcc_wrapper )
+if(ENABLE_E4S_CUDA)
+  set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} -cxx=${Trilinos_DIR}/../../../bin/nvcc_wrapper )
+else()
+  set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
+endif()
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
