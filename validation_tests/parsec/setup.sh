@@ -3,6 +3,6 @@
 . ../../setup.sh
 
 spackLoadUnique cmake
-spackLoadUnique parsec@4:
+spackLoadUnique parsec
 
 NP=4
