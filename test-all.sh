@@ -6,6 +6,7 @@ print_json=false
 print_logs=false
 basedir=validation_tests
 print_color=true
+skip_to=""
 
     if [[ $# -gt 0 && -d $1 ]] ; then
        basedir=$1
@@ -26,6 +27,9 @@ do
             ;;
 	--color-off) print_color=false
 	    ;;
+	--skip-to) skip_to="$2"
+	shift
+	    ;;
         --help)
         echo "Usage:"
         echo "    ./test-all.sh [Test Directory (Optional.)] <--json> <--settings [settings file]> <--color-off>"
@@ -33,6 +37,7 @@ do
         echo "    --print-logs: Print contents of all clean/compiler/run logs to screen."
         echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
 	echo "    --color-off: disable printing test results in color"
+	echo "    --skip-to [test]: Start with the specified test, skipping over any listed earlier in lexical order."
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
         echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
@@ -87,6 +92,9 @@ iterate_directories() {
 
     else
             for d in * ; do
+		if [ ! -z $skip_to ] && [[ $d < $skip_to ]]; then
+			continue
+		fi
                 iterate_directories $d
             done
         fi
