@@ -2,5 +2,4 @@
 
 . ./setup.sh
 
-#eval $TEST_RUN 
-srun -n 4 ./slate04_blas
+eval $TEST_RUN ./slate04_blas

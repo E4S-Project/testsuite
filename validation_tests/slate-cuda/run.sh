@@ -2,4 +2,4 @@
 
 . ./setup.sh
 
-mpirun -np 4 ./slate04_blas
+eval $TEST_RUN ./slate04_blas
