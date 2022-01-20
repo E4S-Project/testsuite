@@ -1,3 +1,4 @@
 *.o
 *.out
 profile.*.*.*
+.DS_Store
