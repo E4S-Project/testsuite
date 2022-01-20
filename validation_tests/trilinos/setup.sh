@@ -12,4 +12,6 @@ else
 	spackLoadUnique trilinos~cuda
 fi
 
-spackLoadUnique cmake@3.17.1:
+if ! command -v cmake >/dev/null 2>&1 ; then
+  spackLoadUnique cmake@3.17.1:
+fi

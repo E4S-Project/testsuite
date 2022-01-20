@@ -2,4 +2,7 @@
 
 . ../../setup.sh
 spackLoadUnique ascent
-spackLoadUnique cmake
+
+if ! command -v cmake >/dev/null 2>&1 ; then
+  spackLoadUnique cmake
+fi
