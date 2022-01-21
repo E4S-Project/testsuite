@@ -10,7 +10,7 @@ BUILD_DIR=${GINKGO_ROOT}
 #THIS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )
 APP=$(basename $(pwd))
 #source ${THIS_DIR}/../build-setup.sh
-LINK_FLAGS="-lginkgo -lginkgo_omp -lginkgo_cuda -lginkgo_reference -lginkgo_hip -lpthread -Wl,-rpath,${GINKGO_LIB_PATH}"
+LINK_FLAGS="-lginkgo -lginkgo_device -lginkgo_omp -lginkgo_dpcpp -lginkgo_cuda -lginkgo_reference -lginkgo_hip -lpthread -Wl,-rpath,${GINKGO_LIB_PATH}"
 # build
 ${CXX} -std=c++14 -o ./${APP} ./${APP}.cpp \
        -I${BUILD_DIR}/include -I${BUILD_DIR}/include/ginkgo\
