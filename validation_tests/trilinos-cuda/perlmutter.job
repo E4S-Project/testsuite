@@ -1,0 +1,6 @@
+#!/bin/bash
+#SBATCH -N 2 -t 5 --gpus 4 
+#SBATCH -A nstaff_g
+#SBATCH --image=ecpe4s/ubuntu20.04-gpu-x86_64:21.11
+#SBATCH -C gpu
+srun -n 2 shifter -- /bin/bash -c 'unset CRAYPE_VERSION; unset MODULEPATH ; . /spack/share/spack/setup-env.sh; spack load trilinos+cuda cuda_arch=80 ; spack unload mpich; export LD_LIBRARY_PATH=/opt/udiImage/modules/mpich/dep/:$LD_LIBRARY_PATH ; ./Zoltan'
