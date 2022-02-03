@@ -9,6 +9,8 @@ cmake_minimum_required(VERSION 3.17.1)
 #
 project(Zoltan NONE)
 
+include(CTest)
+
 # Disable Kokkos warning about not supporting C++ extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -63,3 +65,4 @@ add_executable(Zoltan ${CMAKE_CURRENT_SOURCE_DIR}/app.cpp)
 target_include_directories(Zoltan PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR} ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
 target_link_libraries(Zoltan ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+add_test(NAME Zoltan COMMAND Zoltan)
