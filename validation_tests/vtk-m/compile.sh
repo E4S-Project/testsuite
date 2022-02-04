@@ -4,5 +4,5 @@ source setup.sh
 
 spackLoadUnique cmake
 
-cmake -S . -B build
+cmake -S src -B build
 cmake --build build

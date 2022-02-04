@@ -16,7 +16,8 @@ int main(int argc, char** argv)
   vtkm::cont::Initialize(argc, argv);
   vtkm::source::Wavelet source;
 
-  source.Execute();
+  auto output = source.Execute();
+  output.PrintSummary(std::cout);
 
   return EXIT_SUCCESS;
 }
