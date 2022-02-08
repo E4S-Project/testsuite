@@ -9,4 +9,5 @@ export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="8"
 export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
+#export TEST_ROCM_ARCH="amdgpu_target=gfx908"
 #export TESTSUITE_VARIANT="%gcc"

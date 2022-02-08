@@ -9,6 +9,6 @@ set -x
 
 mkdir -p build
 cd build
-cmake ..
+cmake $ACCEL_DEFINES  ..
 make
 cd -
