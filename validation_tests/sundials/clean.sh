@@ -1,4 +1,5 @@
 #!/bin/bash
-cd examples/nvector/parallel/
-make clean
-cd -
+#cd examples/nvector/parallel/
+#make clean
+#cd -i
+rm -rf ./examples

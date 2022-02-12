@@ -11,4 +11,4 @@ mkdir -p build
 cd build
 cmake $ACCEL_DEFINES  ..
 make
-cd -
+#cd -

@@ -1,5 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash 
 . ./setup.sh
-set -x
-#mpirun -np 4 
-${TEST_RUN} examples/nvector/parallel/test_nvector_mpi 64 4
+
+spackTestRun $SUNDIALS_HASH
+#eval $TEST_RUN ./ph5example # -v
