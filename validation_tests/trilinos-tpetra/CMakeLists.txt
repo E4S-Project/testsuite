@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.17.1)
 # BUILD_SHARED_LIBS=ON or you get a lot of nasty warnings.
 #
 project(iallreduce NONE)
-
+include(CTest)
 # Disable Kokkos warning about not supporting C++ extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -63,3 +63,4 @@ add_executable(iallreduce ${CMAKE_CURRENT_SOURCE_DIR}/Teuchos_StandardParallelUn
 target_include_directories(iallreduce PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR} ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
 target_link_libraries(iallreduce ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+add_test(NAME iallreduce COMMAND ./run.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
