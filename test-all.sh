@@ -119,7 +119,7 @@ iterate_files() {
     #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
             if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
-                         echo "\"missing\"}},"
+                         echo "\"setup\":\"missing\"}},"
              else
                  echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
                  fi
@@ -128,7 +128,7 @@ iterate_files() {
          if [ $_ret -ne 0 ] ; then
 
                  if [ $print_json = true ]; then
-                 echo "\"fail\"}},"
+                 echo "\"setup\":\"fail\"}},"
              else
                  echo "Setup ${bold}failed${normal}" >&2
              fi
@@ -141,7 +141,7 @@ iterate_files() {
 		    printf "\"clean\":"
 	    else
             	echo "Cleaning $cwd" >&2
-    	fi
+    	    fi
         ./clean.sh >& ./clean.log
         _ret=$?
         
@@ -154,22 +154,24 @@ iterate_files() {
 		         echo "\"missing\"}},"
              else
                  echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
-	         fi
+	      fi
              return $_ret
          fi
          if [ $_ret -ne 0 ] ; then
 
    	         if [ $print_json = true ]; then
-                 echo "\"fail\"}},"
-             else
-                 echo "Clean ${bold}failed${normal}" >&2
-     	     fi
+                   echo "\"fail\"}},"
+                 else
+                   echo "Clean ${bold}failed${normal}" >&2
+     	         fi
                  return $_ret
-         fi
-     fi
+          fi
+     
 	 if [ $print_json = true ]; then
                      printf "\"pass\","
+         fi
      fi
+
      if [ -e "$cwd/compile.sh" ] ; then
 	     if [ $print_json = true ]; then
              printf "\"compile\":"
@@ -194,23 +196,21 @@ iterate_files() {
          if [ $_ret -ne 0 ] ; then
 		 if [ $print_json = true ]; then
                      echo "\"fail\"}},"
-             else
-
-             echo "Compile ${bold}failed${normal}" >&2
-     fi
+                  else
+                    echo "Compile ${bold}failed${normal}" >&2
+                  fi
              return $_ret
-           fi
-
-        fi
-	if [ $print_json = true ]; then
+          fi
+	  if [ $print_json = true ]; then
                      printf "\"pass\","
-         fi
-	 if [ $print_json = true ]; then
-            printf "\"run\":"
-            else
+          fi
+      fi
 
+      if [ $print_json = true ]; then
+            printf "\"run\":"
+      else
         echo "Running $cwd" >&2
-	fi
+      fi
         ./run.sh >& run.log
         _ret=$?
         if [ $print_logs = true ]; then
@@ -222,7 +222,6 @@ iterate_files() {
 	     if [ $print_json = true ]; then
                      echo "\"missing\"}},"
              else
-
              echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
              fi
              return $_ret
@@ -230,10 +229,9 @@ iterate_files() {
            if [ $_ret -ne 0 ] ; then
 		   if [ $print_json = true ]; then
                      echo "\"fail\"}},"
-             else
-
-             echo "Run ${bold}failed${normal}" >&2
-     		fi
+                   else
+                      echo "Run ${bold}failed${normal}" >&2
+     		   fi
              return $_ret
            fi
 	   if [ $print_json = true ]; then
