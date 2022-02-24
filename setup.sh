@@ -59,6 +59,17 @@ spackSetPackageRoot(){
         fi
 }
 
+spackGetUniqueExplicit(){
+	xhashes=`spack find -x --format {hash} $@ $TESTSUITE_VARIANT`
+	ret_val=$?
+	if [ $ret_val -ne 0 ] ; then
+        	#echo "Returning 215!"
+        	#export SPACK_LOAD_RESULT=215
+        	return 215
+  	fi
+	echo $xhashes | awk '{print $1}'
+}
+
 spackLoadUnique(){
    if [[ ! -z $E4S_TEST_SETUP ]]; then
 	   echo "Skipping load: Environment already setup"
