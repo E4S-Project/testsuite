@@ -14,11 +14,19 @@ ${TEST_CC_MPI} \
 -o dcreate_matrix.c.o -c dcreate_matrix.c
 
 #mpicxx 
+if [[ $NERSC_HOST = "perlmutter" ]]; then
+LIBBLAS=/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.a
+else
+LIBBLAS=${OPENBLAS_ROOT}/lib/libopenblas.so
+fi
+
 ${TEST_CXX_MPI} \
 -fopenmp -std=c++11 -rdynamic -O3 \
 pddrive.c.o dcreate_matrix.c.o -o pddrive \
 ${SUPERLU_DIST_ROOT}/lib/libsuperlu_dist.a \
-/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.a \
+${LIBBLAS} \
 ${PARMETIS_ROOT}/lib/libparmetis.so \
 ${METIS_ROOT}/lib/libmetis.so \
 -lm
+
+
