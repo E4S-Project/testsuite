@@ -1,0 +1,16 @@
+Skipping load: Environment already setup
+++ pwd
++ cwd=/global/homes/l/liuyangz/Perlmutter/my_research/E4S/testsuite/validation_tests/superlu-dist-nonspacktest
+++ cat testdirs.txt
++ for i in `cat testdirs.txt`
++ cd /global/homes/l/liuyangz/Perlmutter/my_research/E4S/testsuite/validation_tests/superlu-dist-nonspacktest
++ cd EXAMPLE
++ ./compile.sh
+"dcreate_matrix.c", line 80: warning: variable "col" was declared but never referenced
+      int_t    row, col, i, j, relpos;
+                    ^
+
+"dcreate_matrix.c", line 253: warning: variable "col" was declared but never referenced
+      int_t    row, col, i, j, relpos;
+                    ^
+
