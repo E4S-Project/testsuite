@@ -6,9 +6,9 @@ set -x
 #spack load mpich
 
 #mpirun -np 8 
-eval $TEST_RUN ./ex5big
+timeout 2m ${TEST_RUN} ./ex5big
 #mpirun -np 8
-eval $TEST_RUN ./ex15big
+timeout 2m ${TEST_RUN} ./ex15big
 
 
 
