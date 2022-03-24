@@ -30,6 +30,9 @@ do
 	--skip-to) skip_to="$2"
 	shift
 	    ;;
+        --test-only) test_only="$2"
+        shift
+            ;;
         --help)
         echo "Usage:"
         echo "    ./test-all.sh [Test Directory (Optional.)] <--json> <--settings [settings file]> <--color-off>"
@@ -38,6 +41,7 @@ do
         echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
 	echo "    --color-off: disable printing test results in color"
 	echo "    --skip-to [test]: Start with the specified test, skipping over any listed earlier in lexical order."
+	echo "    --test-only [\"list of tests\"]: Run only the tests named in the list."
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
         echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
@@ -91,8 +95,11 @@ iterate_directories() {
 	#fi
 
     else
-            for d in * ; do
+            for d in */ ; do
 		if [ ! -z $skip_to ] && [[ $d < $skip_to ]]; then
+			continue
+		fi
+		if [ ! -z "$test_only" ] && echo "$test_only" | grep -vw `basename $d` >/dev/null; then
 			continue
 		fi
                 iterate_directories $d
@@ -246,6 +253,6 @@ iterate_files() {
 
 iterate_directories $basedir
 if [ $print_json = true ]; then
-                echo "]"
+                echo  "{}]"
 fi
 exit $final_ret
