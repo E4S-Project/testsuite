@@ -5,7 +5,7 @@ ran_test=true
 print_json=false
 print_logs=false
 basedir=validation_tests
-print_color=true
+export e4s_print_color=true
 skip_to=""
 
     if [[ $# -gt 0 && -d $1 ]] ; then
@@ -25,7 +25,7 @@ do
         --settings) export TESTSUITE_SETTINGS_FILE=`readlink -f "$2"`
         shift
             ;;
-	--color-off) print_color=false
+	--color-off) export e4s_print_color=false
 	    ;;
 	--skip-to) skip_to="$2"
 	shift
@@ -52,7 +52,7 @@ do
     shift
 done
 
-if [ $print_color = true -a  -n "$TERM" ];
+if [ $e4s_print_color = true -a  -n "$TERM" ];
 then
 bold=$(tput bold)$(tput setaf 1)
 green=$(tput bold)$(tput setaf 2)

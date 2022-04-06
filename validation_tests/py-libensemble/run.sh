@@ -2,12 +2,13 @@
 . ./setup.sh
 set -x
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
-
+if [ $e4s_print_color = true -a  -n "$TERM" ];
+then
 BRED='\033[1;31m'
 BGREEN='\033[1;32m'
 
 NC='\033[0m'
-
+fi
 python calling_script.py > $TMPFILE 
 
 if [ $? -ne 0 ]

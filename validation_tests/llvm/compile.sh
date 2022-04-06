@@ -9,17 +9,18 @@ fi
 module use /home/users/coti/$ARCH/modulefiles
 
 OUTPUTFILE="compile.log"
+if [ $e4s_print_color = true -a  -n "$TERM" ];
+then
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export BLUE='\033[0;34m'
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
+export BRED='\033[1;31m'
+export BGREEN='\033[1;32m'
+export BBLUE='\033[1;34m'
 
-BRED='\033[1;31m'
-BGREEN='\033[1;32m'
-BBLUE='\033[1;34m'
-
-NC='\033[0m'
-
+export NC='\033[0m'
+fi
 CURRENTDIR=`pwd`
 OUTPUTFILE=$CURRENTDIR/"compile.log"
 

@@ -3,10 +3,13 @@
 set -x
 TMPFILE=$(mktemp ./tmp.XXXXXXX)
 
+if [ $e4s_print_color = true -a  -n "$TERM" ];
+then
 BRED='\033[1;31m'
 BGREEN='\033[1;32m'
 
 NC='\033[0m'
+fi
 
 if [ $(nvidia-smi >& /dev/null; echo $?) == 0 ]; then
     HARD=GPU
