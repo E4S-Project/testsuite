@@ -10,7 +10,7 @@ if [  "$THISDIR" = "kokkos-cuda" ];then
         spackLoadUnique "kokkos+cuda $TEST_CUDA_ARCH"
 elif [  "$THISDIR" = "kokkos-rocm" ];then
         spackLoadUnique "kokkos+rocm $TEST_ROCM_ARCH"
-	export ACCEL_DEFINES="-DCMAKE_CXX_COMPILER=hipcc -DCMAKE_C_COMPILER=hipc"
+	export ACCEL_DEFINES="-DCMAKE_CXX_COMPILER=hipcc"
 elif [  "$THISDIR" = "kokkos-sycl" ];then
         spackLoadUnique "kokkos +sycl"
 	export ACCEL_DEFINES="-DCMAKE_CXX_COMPILER=dpcpp"
