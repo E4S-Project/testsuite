@@ -13,6 +13,6 @@ if [ $USECUDA = 1 ];then
     CUDAFLAG="-DAMReX_GPU_BACKEND=CUDA"
 fi 
 
-cmake -DAMReX_ROOT=${AMREX_ROOT} ${CUDAFLAG} ..
-make -j16
+cmake ${CUDAFLAG} ..
+make -j8
 cd -

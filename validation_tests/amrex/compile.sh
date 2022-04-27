@@ -8,6 +8,6 @@ mv amrex-tutorials/ExampleCodes/* .
 mkdir -p build
 cd build
 
-cmake -DAMReX_ROOT=${AMREX_ROOT} ..
-make -j16
+cmake ..
+make -j8
 cd -
