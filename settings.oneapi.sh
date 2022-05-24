@@ -1,0 +1,11 @@
+export TAU_OPTIONS="-optVerbose -optRevert -optShared"
+export TEST_CC_MPI=mpicc
+export TEST_CXX_MPI=mpicxx
+export TEST_FTN_MPI=mpif90
+export TEST_CC=icx
+export TEST_CXX=icpx
+export TEST_FTN=ifx
+export TEST_RUN_CMD=mpirun
+export TEST_RUN_PROCFLAG="-np"
+export TEST_RUN_PROCARG="4"
+export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
