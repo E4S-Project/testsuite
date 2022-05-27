@@ -10,6 +10,7 @@ mkdir -p bin
 #Fixes possible pdt parser error.
 export LC_ALL=C
 make # LU 
+ls ./bin/lu.W.4
 #retVal=$?
 #if [ $retVal -ne 0 ] ; then
 #  exit $retVal
