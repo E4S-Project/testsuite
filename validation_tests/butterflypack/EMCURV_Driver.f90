@@ -13,26 +13,26 @@
 
 ! Developers: Yang Liu
 !             (Lawrence Berkeley National Lab, Computational Research Division).
-
+!> @file
+!> @brief This is an example that solves a 2D EFIE system for electromagnetics scattering.
+!> @details Note that the use of the following \n
+!> #define DAT 0 \n
+!> #include "zButterflyPACK_config.fi" \n
+!> which will macro replace subroutine, function, type names with those defined in SRC_DOUBLECOMLEX with double-complex precision
 
 ! This exmple works with double-complex precision data
-#define DAT 0
-
-#include "ButterflyPACK_config.fi"
-
-
 PROGRAM ButterflyPACK_IE_2D
-    use BPACK_DEFS
+    use z_BPACK_DEFS
     use EMCURV_MODULE
 
-	use BPACK_structure
-	use BPACK_Solve_Mul
-	use BPACK_factor
-	use BPACK_constr
-	use BPACK_Utilities
+	use z_BPACK_structure
+	use z_BPACK_Solve_Mul
+	use z_BPACK_factor
+	use z_BPACK_constr
+	use z_BPACK_Utilities
 	use omp_lib
-	use MISC_Utilities
-	use BPACK_wrapper
+	use z_MISC_Utilities
+	use z_BPACK_wrapper
     implicit none
 
 	! include "mkl_vml.fi"
@@ -44,7 +44,7 @@ PROGRAM ButterflyPACK_IE_2D
 	integer seed_myid(50)
 	integer times(8)
 	integer edge
-	real(kind=8) t1,t2,t3, x,y,z,r,theta,phi
+	real(kind=8) t1,t2,t3, x,y,z,r,theta,phi,retval(1)
 	complex(kind=8),allocatable:: matU(:,:),matV(:,:),matZ(:,:),LL(:,:),RR(:,:),matZ1(:,:)
 
 	character(len=:),allocatable  :: string
@@ -53,16 +53,16 @@ PROGRAM ButterflyPACK_IE_2D
 	integer :: length
 	integer :: ierr
 	integer*8 oldmode,newmode
-	type(Hoption),target::option,option1
-	type(Hstat),target::stats,stats1
-	type(mesh),target::msh,msh1
-	type(kernelquant),target::ker,ker1
-	type(Bmatrix),target::bmat,bmat1
+	type(z_Hoption),target::option,option1
+	type(z_Hstat),target::stats,stats1
+	type(z_mesh),target::msh,msh1
+	type(z_kernelquant),target::ker,ker1
+	type(z_Bmatrix),target::bmat,bmat1
 	integer,allocatable:: groupmembers(:)
 	integer nmpi
-	type(proctree),target::ptree,ptree1
+	type(z_proctree),target::ptree,ptree1
 	type(quant_EMCURV),target::quant
-	type(quant_bmat),target::quant1
+	type(z_quant_bmat),target::quant1
 	CHARACTER (LEN=1000) DATA_DIR
 	integer:: randsize=50
 	real(kind=8),allocatable::xyz(:,:)
@@ -70,9 +70,11 @@ PROGRAM ButterflyPACK_IE_2D
 	integer Nunk_loc,Maxlevel
 	integer nargs,flag
 	integer v_major,v_minor,v_bugfix
+	integer parent
 
 	! nmpi and groupmembers should be provided by the user
 	call MPI_Init(ierr)
+	call MPI_COMM_GET_PARENT(parent, ierr) ! YL: this is needed if this function is spawned by a master process
 	call MPI_Comm_size(MPI_Comm_World,nmpi,ierr)
 	allocate(groupmembers(nmpi))
 	do ii=1,nmpi
@@ -80,28 +82,28 @@ PROGRAM ButterflyPACK_IE_2D
 	enddo
 
 	! generate the process tree
-	call CreatePtree(nmpi,groupmembers,MPI_Comm_World,ptree)
+	call z_CreatePtree(nmpi,groupmembers,MPI_Comm_World,ptree)
 	deallocate(groupmembers)
 
 
 	if(ptree%MyID==Main_ID)then
     write(*,*) "-------------------------------Program Start----------------------------------"
     write(*,*) "ButterflyPACK_IE_2D"
-	call BPACK_GetVersionNumber(v_major,v_minor,v_bugfix)
+	call z_BPACK_GetVersionNumber(v_major,v_minor,v_bugfix)
 	write(*,'(A23,I1,A1,I1,A1,I1,A1)') " ButterflyPACK Version:",v_major,".",v_minor,".",v_bugfix
     write(*,*) "   "
 	endif
 
 	!**** initialize stats and option
-	call InitStat(stats)
-	call SetDefaultOptions(option)
+	call z_InitStat(stats)
+	call z_SetDefaultOptions(option)
 
 	!**** intialize the user-defined derived type quant
 	quant%RCS_static=1
-    quant%RCS_Nsample=1
+    quant%RCS_Nsample=1000
 	quant%model2d=10
 	quant%wavelength=0.08
-	quant%freq=1/quant%wavelength/sqrt(mu0*eps0)
+	quant%freq=1/quant%wavelength/sqrt(BPACK_mu0*BPACK_eps0)
 	quant%Nunk=5000
 
 	option%ErrSol=1
@@ -114,10 +116,11 @@ PROGRAM ButterflyPACK_IE_2D
         ! option%LRlevel=100
        ! option%level_check=1
     option%tol_itersol=1d-5
+    ! option%sample_heuristic=1
     ! option%sample_para=4d0
 
 	! do ii=2,15
-	! call C_BPACK_TreeIndex_Merged2Child(ii,jj)
+	! call z_C_BPACK_TreeIndex_Merged2Child(ii,jj)
 	! write(*,*)ii,jj
 	! enddo
 
@@ -140,10 +143,10 @@ PROGRAM ButterflyPACK_IE_2D
 							read(strings1,*)quant%Nunk
 						else if	(trim(strings)=='--wavelength')then
 							read(strings1,*)quant%wavelength
-							quant%freq=1/quant%wavelength/sqrt(mu0*eps0)
+							quant%freq=1/quant%wavelength/sqrt(BPACK_mu0*BPACK_eps0)
 						else if (trim(strings)=='--freq')then
 							read(strings1,*)quant%freq
-							quant%wavelength=1/quant%freq/sqrt(mu0*eps0)
+							quant%wavelength=1/quant%freq/sqrt(BPACK_mu0*BPACK_eps0)
 						else
 							if(ptree%MyID==Main_ID)write(*,*)'ignoring unknown quant: ', trim(strings)
 						endif
@@ -155,7 +158,7 @@ PROGRAM ButterflyPACK_IE_2D
 				endif
 			enddo
 		else if(trim(strings)=='-option')then ! options of ButterflyPACK
-			call ReadOption(option,ptree,ii)
+			call z_ReadOption(option,ptree,ii)
 		else
 			if(ptree%MyID==Main_ID)write(*,*)'ignoring unknown argument: ',trim(strings)
 			ii=ii+1
@@ -165,7 +168,7 @@ PROGRAM ButterflyPACK_IE_2D
 
 
 
-    quant%wavenum=2*pi/quant%wavelength
+    quant%wavenum=2*BPACK_pi/quant%wavelength
 
 
    !***********************************************************************
@@ -193,13 +196,13 @@ PROGRAM ButterflyPACK_IE_2D
 		xyz(:,edge) = quant%xyz(:,edge*2-1)
 	enddo
     allocate(Permutation(quant%Nunk))
-	call PrintOptions(option,ptree)
-	call BPACK_construction_Init(quant%Nunk,Permutation,Nunk_loc,bmat,option,stats,msh,ker,ptree,Coordinates=xyz)
+	call z_PrintOptions(option,ptree)
+	call z_BPACK_construction_Init(quant%Nunk,Permutation,Nunk_loc,bmat,option,stats,msh,ker,ptree,Coordinates=xyz)
 	deallocate(Permutation) ! caller can use this permutation vector if needed
 	deallocate(xyz)
 
 	!**** computation of the construction phase
-    call BPACK_construction_Element(bmat,option,stats,msh,ker,ptree)
+    call z_BPACK_construction_Element(bmat,option,stats,msh,ker,ptree)
 
 
 	select case(option%format)
@@ -207,18 +210,21 @@ PROGRAM ButterflyPACK_IE_2D
 		Maxlevel=bmat%ho_bf%Maxlevel
 	case(HMAT)
 		Maxlevel=bmat%h_mat%Maxlevel
+	case(HSS)
+		Maxlevel=bmat%hss_bf%Maxlevel
 	end select
-	if(option%lnoBP>Maxlevel)then	 ! haven't implement the following for Bplus.
+	if(.false.)then
+	! if(option%lnoBP>Maxlevel)then	 ! haven't implement the following for Bplus.
 
 		!*********** Construct the second HODLR by using the first HODLR as parallel element extraction
-		call CopyOptions(option,option1)
+		call z_CopyOptions(option,option1)
 		option1%nogeo=1   ! this indicates the second HOLDR construction requires no geometry information
 		option1%xyzsort=NATURAL ! this indicates the second HOLDR construction requires no reordering
 		option1%elem_extract=1 ! this indicates the second HOLDR construction uses user-defined parallel element extraction
 
 		!**** register the user-defined function and type in ker
 		ker1%FuncZmn=>Zelem_EMCURV
-		ker1%FuncZmnBlock=>Zelem_block_Extraction
+		ker1%FuncZmnBlock=>z_Zelem_block_Extraction
 		ker1%QuantApp=>quant1
 
 		quant1%bmat=>bmat
@@ -239,14 +245,14 @@ PROGRAM ButterflyPACK_IE_2D
 		enddo
 		deallocate(xyz)
 
-		call InitStat(stats1)
+		call z_InitStat(stats1)
 
 		! !**** generate the process tree for the second HODLR, can use larger number of MPIs if you want to
 		! allocate(groupmembers(nmpi))
 		! do ii=1,nmpi
 			! groupmembers(ii)=(ii-1)
 		! enddo
-		! call CreatePtree(nmpi,groupmembers,MPI_Comm_World,ptree1)
+		! call z_CreatePtree(nmpi,groupmembers,MPI_Comm_World,ptree1)
 		! deallocate(groupmembers)
 
 
@@ -258,54 +264,60 @@ PROGRAM ButterflyPACK_IE_2D
 
 		!**** initialization of the construction phase
 		allocate(Permutation(msh1%Nunk))
-		call BPACK_construction_Init(msh1%Nunk,Permutation,Nunk_loc,bmat1,option1,stats1,msh1,ker1,ptree,tree=tree)
+		call z_BPACK_construction_Init(msh1%Nunk,Permutation,Nunk_loc,bmat1,option1,stats1,msh1,ker1,ptree,tree=tree)
 		deallocate(Permutation) ! caller can use this permutation vector if needed
 		deallocate(tree)
 
 		!**** computation of the construction phase
-		call BPACK_construction_Element(bmat1,option1,stats1,msh1,ker1,ptree)
+		call z_BPACK_construction_Element(bmat1,option1,stats1,msh1,ker1,ptree)
 
 
 		!**** deletion of quantities
-		! call delete_proctree(ptree1)
-		call delete_Hstat(stats1)
-		call delete_mesh(msh1)
-		call delete_kernelquant(ker1)
-		call BPACK_delete(bmat1)
+		! call z_delete_proctree(ptree1)
+		call z_delete_Hstat(stats1)
+		call z_delete_mesh(msh1)
+		call z_delete_kernelquant(ker1)
+		call z_BPACK_delete(bmat1)
 	endif
 
 
 
 	!**** factorization phase
-    call BPACK_Factorization(bmat,option,stats,ptree,msh)
+    call z_BPACK_Factorization(bmat,option,stats,ptree,msh)
 
 
-	!**** solve phase
-   ! call EM_solve_CURV(bmat,option,msh,quant,ptree,stats)
+	! !**** solve phase
+	! call EM_solve_CURV(bmat,option,msh,quant,ptree,stats)
 
 
 
 	!**** print statistics
-	call PrintStat(stats,ptree)
-
+	call z_PrintStat(stats,ptree)
+	retval(1)=stats%Time_Fill+stats%Time_Factor+stats%Time_Sol
 
 	!**** deletion of quantities
 	call delete_quant_EMCURV(quant)
-	call delete_proctree(ptree)
-	call delete_Hstat(stats)
-	call delete_mesh(msh)
-	call delete_kernelquant(ker)
-	call BPACK_delete(bmat)
+	call z_delete_proctree(ptree)
+	call z_delete_Hstat(stats)
+	call z_delete_mesh(msh)
+	call z_delete_kernelquant(ker)
+	call z_BPACK_delete(bmat)
 
 
 
 
     if(ptree%MyID==Main_ID .and. option%verbosity>=0)write(*,*) "-------------------------------program end-------------------------------------"
 
+	if(parent/= MPI_COMM_NULL)then
+		call MPI_REDUCE(retval, MPI_BOTTOM, 1, MPI_double_precision, MPI_MAX, Main_ID, parent,ierr)
+		call MPI_Comm_disconnect(parent,ierr)
+	endif
+
 	call blacs_exit(1)
 	call MPI_Finalize(ierr)
 
 end PROGRAM ButterflyPACK_IE_2D
+
 
 
 
