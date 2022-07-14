@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-source setup.sh
+. ./setup.sh
 
-set -x
-
-./build/smoke_test
+spackTestRun $VTK_M_HASH
