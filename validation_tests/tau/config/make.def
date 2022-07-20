@@ -49,7 +49,7 @@ FMPI_INC =
 #---------------------------------------------------------------------------
 # Global *compile time* flags for Fortran programs
 #---------------------------------------------------------------------------
-FFLAGS	= -O3   -g -fallow-argument-mismatch
+FFLAGS	= -O3   -g  ${E4S_AAM} #-fallow-argument-mismatch
 # FFLAGS = -g
 
 #---------------------------------------------------------------------------
