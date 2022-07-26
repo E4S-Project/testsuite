@@ -10,7 +10,7 @@ for d in $TESTLIST; do
     cd $d
     echo -n "Papyrus test $d:   "
     #mpiexec -n 
-    ${TEST_RUN_CMD} $TEST_RUN_PROCFLAG $NP ./test${d} #2>&1 > toto
+    timeout -k 2m 5m ${TEST_RUN_CMD} $TEST_RUN_PROCFLAG $NP ./test${d} #2>&1 > tot
     # test completion and success
     #ERROR=`grep "\[E\] " toto`
     #if [[ ! -z $ERROR ]] ; then

@@ -1,2 +1,3 @@
 #!/bin/bash
-rm -rf plt* plot* build 
+
+rm -rf plt* plot* build

@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-source setup.sh
+. ./setup.sh
 
-spackLoadUnique cmake
-
-cmake -S src -B build
-cmake --build build
+echo "Skipped Compilation. Using internal spack tests."

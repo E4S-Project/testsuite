@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm -rf ./tests
+echo "Nothing to do. Internal spack test."
