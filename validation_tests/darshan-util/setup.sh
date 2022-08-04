@@ -2,6 +2,5 @@
 . ../../setup.sh
 THISDIR=`basename "$PWD"`
 spackLoadUnique $THISDIR
-
-E4S_SPACK_TEST_HASH_NAME=${THISDIR^^}_HASH
-export E4S_SPACK_TEST_HASH=${!E4S_SPACK_TEST_HASH_NAME}
+set -x
+export E4S_SPACK_TEST_HASH=`spackHashFromName $THISDIR` 

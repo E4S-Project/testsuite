@@ -29,6 +29,12 @@ spackTestRun(){
 	return $res
 }
 
+spackHashFromName(){
+	E4S_SPACK_TEST_HASH_NAME=${@^^}_HASH
+	E4S_SPACK_TEST_HASH_NAME=`echo $E4S_SPACK_TEST_HASH_NAME | tr '-' '_'`
+	echo ${!E4S_SPACK_TEST_HASH_NAME}
+}
+
 spackSetPackageRoot(){
  #       echo ${1}
         ARCH_IFS=$IFS
