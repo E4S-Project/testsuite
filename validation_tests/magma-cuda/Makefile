@@ -9,10 +9,11 @@
 MAGMADIR     ?= "${MAGMA_ROOT}"
 CUDADIR      ?= "${CUDA_ROOT}"
 OPENBLASDIR  ?= "${OPENBLAS_ROOT}"
+
 CC            = $(TEST_CC) #gcc
 FORT          = $(TEST_FTN) #gfortran
 LD            = $(TEST_CC) #gcc
-CFLAGS        = -Wall
+CFLAGS        = -Wall ${E4S_ACCEL} ${HIP_PLATFORM}
 # needs -fopenmp if MAGMA was compiled with OpenMP
 LDFLAGS       = -Wall #-fopenmp
 
@@ -21,14 +22,15 @@ LDFLAGS       = -Wall #-fopenmp
 # Flags and paths to MAGMA, CUDA, and LAPACK/BLAS
 MAGMA_CFLAGS     := -DADD_ \
                     -I$(MAGMADIR)/include \
-                    -I$(CUDADIR)/include
+                    -I$(MAGMADIR)/sparse/include \
+                    $(ACCEL_INC)
 
 MAGMA_F90FLAGS   := -Dmagma_devptr_t="integer(kind=8)" \
                     -I$(MAGMADIR)/include
 
 # may be lib instead of lib64 on some systems
 MAGMA_LIBS       := -L$(MAGMADIR)/lib -lmagma_sparse -lmagma \
-                    -L$(CUDADIR)/lib64 -lcublas -lcudart -lcusparse \
+                    ${ACCEL_LIBS} \
                     -L$(OPENBLASDIR)/lib -lopenblas
 
 
@@ -37,7 +39,7 @@ MAGMA_LIBS       := -L$(MAGMADIR)/lib -lmagma_sparse -lmagma \
 # MAGMA_CFLAGS   := $(shell pkg-config --cflags magma)
 #
 # MAGMA_F90FLAGS := -Dmagma_devptr_t="integer(kind=8)" \
-#                   $(shell pkg-config --cflags-only-I magma)
+#                  $(shell pkg-config --cflags-only-I magma)
 #
 # MAGMA_LIBS     := $(shell pkg-config --libs   magma)
 
@@ -64,7 +66,7 @@ clean:
 
 # ----------------------------------------
 # C example
-%.o: %.c
+%.o: %.cpp
 	$(CC) $(CFLAGS) $(MAGMA_CFLAGS) -c -o $@ $<
 
 example_v1: example_v1.o
@@ -86,8 +88,5 @@ example_sparse_operator: example_sparse_operator.o
 %.o: %.F90
 	$(FORT) $(F90FLAGS) $(MAGMA_F90FLAGS) -c -o $@ $<
 
-fortran.o: $(CUDADIR)/src/fortran.c
-	$(CC) $(CFLAGS) $(MAGMA_CFLAGS) -DCUBLAS_GFORTRAN -c -o $@ $<
-
-example_f: example_f.o fortran.o
+example_f: example_f.o
 	$(FORT) $(LDFLAGS) -o $@ $^ $(MAGMA_LIBS)
