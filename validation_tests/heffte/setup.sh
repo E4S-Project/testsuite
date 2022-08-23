@@ -2,4 +2,4 @@
 
 . ../../setup.sh
 
-spackLoadUnique heffte@2.2.0:
+spackLoadUnique heffte@2.2.0: +fftw
