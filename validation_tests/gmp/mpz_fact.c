@@ -32,5 +32,5 @@ int main(int argc, char * argv[]){
   fact(n);
 
 
-  return 1;
+  return 0;
 }
