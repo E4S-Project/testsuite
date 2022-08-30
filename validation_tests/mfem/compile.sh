@@ -1,4 +1,4 @@
 #!/bin/bash -e
 . ./setup.sh
 set -x
-make  
+make ex10p 
