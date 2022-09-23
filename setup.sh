@@ -94,7 +94,8 @@ spackLoadUnique(){
    FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
    HASHDEX=${#FIND_ARRAY1[@]}-2
    HASH=${FIND_ARRAY1[HASHDEX]}
-   echo $HASH
+   echo "$@ $TESTSUITE_VARIANT: $HASH"
+   export E4S_TEST_HASH=$HASH
    ARCH_IFS=$IFS
    FIND_BLOB2=`spack find $dArg /$HASH`
    IFS=$'\n'

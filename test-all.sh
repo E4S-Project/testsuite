@@ -7,6 +7,7 @@ print_logs=false
 basedir=validation_tests
 export e4s_print_color=true
 skip_to=""
+testtime=$(date +"%m-%d-%y_%T")
 
     if [[ $# -gt 0 && -d $1 ]] ; then
        basedir=$1
@@ -123,6 +124,7 @@ iterate_files() {
     source $cwd/setup.sh >&2
     _ret=$SPACK_LOAD_RESULT
     export E4S_TEST_SETUP=1
+    E4S_LOG_PREFIX="$testtime"_"$E4S_TEST_HASH"
     #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
             if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
@@ -149,12 +151,12 @@ iterate_files() {
 	    else
             	echo "Cleaning $cwd" >&2
     	    fi
-        ./clean.sh >& ./clean.log
+	    ./clean.sh >& ./$E4S_LOG_PREFIX-clean.log
         _ret=$?
         
         if [ $print_logs = true ]; then
              echo "---CLEANUP LOG---" >&2
-             cat ./clean.log >&2
+             cat ./$E4S_LOG_PREFIX-clean.log >&2
         fi
         if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
@@ -185,11 +187,11 @@ iterate_files() {
     	 else
              echo "Compiling $cwd" >&2
          fi
-            ./compile.sh >& ./compile.log
+            ./compile.sh >& ./$E4S_LOG_PREFIX-compile.log
             _ret=$?
             if [ $print_logs = true ]; then
                  echo "---COMPILE LOG---" >&2
-                 cat ./compile.log >&2
+                 cat ./$E4S_LOG_PREFIX-compile.log >&2
             fi
 
          if [ $_ret -eq 215 ] ; then
@@ -218,11 +220,11 @@ iterate_files() {
       else
         echo "Running $cwd" >&2
       fi
-        ./run.sh >& run.log
+        ./run.sh >& $E4S_LOG_PREFIX-run.log
         _ret=$?
         if [ $print_logs = true ]; then
              echo "---RUN LOG---"
-             cat ./run.log >&2
+             cat ./$E4S_LOG_PREFIX-run.log >&2
         fi
 
            if [ $_ret -eq 215 ] ; then
