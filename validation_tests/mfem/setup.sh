@@ -1,2 +1,2 @@
 . ../../setup.sh
-spackLoadUnique mfem
+spackLoadUnique mfem~cuda~rocm
