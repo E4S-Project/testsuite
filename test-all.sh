@@ -7,7 +7,7 @@ print_logs=false
 basedir=validation_tests
 export e4s_print_color=true
 skip_to=""
-testtime=$(date +"%m-%d-%y_%T")
+testtime=$(date +"%Y-%m-%d_%T")
 
     if [[ $# -gt 0 && -d $1 ]] ; then
        basedir=$1
