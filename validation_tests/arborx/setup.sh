@@ -8,7 +8,7 @@ fi
 
 THISDIR=`basename "$PWD"`
 if [  "$THISDIR" = "arborx-cuda" ];then
-        spackLoadUnique arborx+cuda
+        spackLoadUnique arborx+cuda $TEST_CUDA_ARCH
 elif [  "$THISDIR" = "arborx-rocm" ];then
         spackLoadUnique "arborx+rocm $TEST_ROCM_ARCH"
 else
