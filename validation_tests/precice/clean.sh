@@ -1,2 +1,2 @@
 #!/bin/bash
-rm -rf solverdummy *.log precice-run *.json
+rm -rf solverdummy  precice-run *.json
