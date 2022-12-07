@@ -1,2 +1,2 @@
 #!/bin/bash
-rm -f castle
+rm -f fieldOnSquare field_on_square.vtu 
