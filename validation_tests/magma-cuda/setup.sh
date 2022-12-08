@@ -17,7 +17,7 @@ if [  "$THISDIR" = "magma-cuda"  ];then
 	export E4S_ACCEL="-DE4S_CUDA"
 	export HIP_PLATFORM="-D__HIP_PLATFORM_NVIDIA__"
 else [  "$THISDIR" = "magma-rocm" ];
-	spackLoadUnique "magma $TEST_ROCM_ARCH"
+	spackLoadUnique "magma+rocm $TEST_ROCM_ARCH"
 	export ACCEL_LIBS="-L$HIP_ROOT/lib -lamdhip64 -lhiprtc-builtins"
 	export ACCEL_INC="-I$HIP_ROOT/include -I$HIPBLAS_ROOT/include -I$HIPSPARSE_ROOT/include"
 	export E4S_ACCEL="-DE4S_ROCM"
