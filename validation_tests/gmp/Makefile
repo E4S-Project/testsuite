@@ -3,9 +3,9 @@ CFLAGS = -I$(GMP_ROOT)/include -Wall
 LD = $(TEST_CC) #mpic++
 LDFLAGS = -L$(GMP_LIB_PATH) -lgmp
 
-all: mpz_fact 
+all: t-rand 
 
-mpz_fact: mpz_fact.o
+mpz_fact: t-rand.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
@@ -16,7 +16,7 @@ mpz_fact: mpz_fact.o
 
 
 clean:
-	rm -f *.o mpz_fact
+	rm -f *.o t-rand
 
 .PHONY: clean
 
