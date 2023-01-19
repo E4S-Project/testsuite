@@ -1,7 +1,7 @@
 #!/bin/bash
 
-rm -rf heatdis_mem #/tmp/scratch /tmp/persistent
-rm -rf  /tmp/scratch/heatdis*
-rm -rf /tmp/persistent/heatdis*
-echo "You may need to alter clean.sh if veloc does not use /tmp on your system"
+rm -rf heatdis_fault #/tmp/scratch /tmp/persistent
+rm -rf  /dev/shm/scratch/heatdis*
+rm -rf /dev/shm/persistent/heatdis*
+echo "You may need to alter clean.sh if veloc does not use /dev/shm on your system"
 

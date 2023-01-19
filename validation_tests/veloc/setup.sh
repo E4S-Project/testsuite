@@ -2,4 +2,4 @@
 
 . ../../setup.sh
 
-spackLoadUnique veloc
+spackLoadUnique veloc@master
