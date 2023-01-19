@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "heatdis.h"
-#include "veloc.h"
+#include "include/veloc.h"
 
 // this examples uses asserts so they need to be activated
 #undef NDEBUG
@@ -75,8 +75,8 @@ int main(int argc, char *argv[]) {
     int rank, nbProcs, nbLines, i, M, arg;
     double wtime, *h, *g, memSize, localerror, globalerror = 1;
 
-    if (argc < 2) {
-	printf("Usage: %s <mem_in_mb> [<cfg_file>]\n", argv[0]);
+    if (argc < 3) {
+	printf("Usage: %s <mem_in_mb> <cfg_file>\n", argv[0]);
 	exit(1);
     }
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 	printf("MPI Init failed to provide MPI_THREAD_MULTIPLE");
 	exit (2);
     }
-
+    
     MPI_Comm_size(MPI_COMM_WORLD, &nbProcs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -94,11 +94,11 @@ int main(int argc, char *argv[]) {
         printf("Wrong memory size! See usage\n");
 	exit(3);
     }
-    if (VELOC_Init(MPI_COMM_WORLD, argc > 2 ? argv[2] : "") != VELOC_SUCCESS) {
+    if (VELOC_Init(MPI_COMM_WORLD, argv[2]) != VELOC_SUCCESS) {
 	printf("Error initializing VELOC! Aborting...\n");
 	exit(2);
     }
-
+	
     M = (int)sqrt((double)(arg * 1024.0 * 1024.0 * nbProcs) / (2 * sizeof(double))); // two matrices needed
     nbLines = (M / nbProcs) + 3;
     h = (double *) malloc(sizeof(double *) * M * nbLines);
@@ -120,10 +120,7 @@ int main(int argc, char *argv[]) {
     wtime = MPI_Wtime();
     int v = VELOC_Restart_test("heatdis", 0);
     if (v > 0) {
-	if (VELOC_Restart("heatdis", v) != VELOC_SUCCESS) {
-            printf("Error restarting from checkpoint! Aborting...\n");
-            exit(2);
-        }
+	assert(VELOC_Restart("heatdis", v) == VELOC_SUCCESS);
 	if (rank == 0)
             printf("Restart from iteration %d finished in %.2lf seconds\n", v, MPI_Wtime() - wtime);
     } else
@@ -138,10 +135,7 @@ int main(int argc, char *argv[]) {
 	    break;
 	i++;
 	if (i % CKPT_FREQ == 0)
-	    if (VELOC_Checkpoint("heatdis", i) != VELOC_SUCCESS) {
-                printf("Error checkpointing! Aborting...\n");
-                exit(2);
-            }
+	    assert(VELOC_Checkpoint("heatdis", i) == VELOC_SUCCESS);
 	if (v <= 0 && i > ITER_TIMES / 2 && rank == nbProcs - 1)
             MPI_Abort(MPI_COMM_WORLD, 1);
     }
@@ -150,9 +144,7 @@ int main(int argc, char *argv[]) {
 
     free(h);
     free(g);
-    VELOC_Checkpoint_wait();
-    VELOC_Cleanup("heatdis");
-    VELOC_Finalize(1);
+    VELOC_Finalize(1); // wait for checkpoints to finish
     MPI_Finalize();
     return 0;
 }
