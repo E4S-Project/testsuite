@@ -1,8 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
 . ./setup.sh
 set -x
-#spack load openblas threads=openmp
-#spack load hypre+internal-superlu
-#spack load mpich
+set -e
 
-make bigint 
+make  

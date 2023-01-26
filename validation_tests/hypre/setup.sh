@@ -1,4 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique hypre #+internal-superlu
-#spackLoadUnique openblas threads=openmp
+spackLoadUnique hypre@2.27.0: 

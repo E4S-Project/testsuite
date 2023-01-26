@@ -1,229 +1,134 @@
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 ########################################################################
 # Compiler and external dependences
 ########################################################################
-CC        =$(TEST_CC_MPI) #mpicc
-F77       =$(TEST_FTN_MPI) #mpif77
-CXX       =$(TEST_CXX_MPI) #mpicxx
-F90       =$(TEST_FTN_MPI) #mpif90
-HYPRE_DIR = "${HYPRE_ROOT}"
+
+CC = $(TEST_CC_MPI) 
+CXX = $(TEST_CXX_MPI) 
+CFLAGS = -I$(ADIOS2_ROOT)/include -Wall
+CXXFLAGS = -I$(ADIOS2_ROOT)/include -Wall
+LD = $(TEST_CXX) #$(TEST_CXX_MPI) #mpic++
+LDFLAGS = -L$(ADIOS2_LIB_PATH) -ladios2_cxx11
+
+
+
+#CC        = mpixlc
+CC        = mpicc
+#CC        = mpiicc
+#CC         = cc
+
+#CXX       = mpixlC
+CXX       = mpic++
+#CXX       = mpiicc
+#CXX        = CC
+
+LINK_CC   = ${CXX}
+LINK_CXX  = ${CXX}
+
+AR	= ar -rcu
+RANLIB  = ranlib
+
+LDFLAGS =
+#LIBS    = -lm ${HYPRE_CUDA_LIBS} ${HYPRE_HIP_LIBS}
+
+INCLUDES = $(HYPRE_ROOT)/include #${HYPRE_CUDA_INCLUDE} ${HYPRE_HIP_INCLUDE} ${MPIINCLUDE}
+
+HYPRE_DIR = $(HYPRE_ROOT)
+
+##################################################################
+##  MPI options
+##################################################################
+#MPIPATH = /opt/cray/pe/mpich/8.1.21/ofi/crayclang/10.0
+#MPIINCLUDE =  -I${MPIPATH}/include
+#MPILIBDIRS = -L${MPIPATH}/lib
+#MPILIBS    =  ${MPILIBDIRS} -lmpi  # -lmpi needed for AMD GPUs
+#MPIFLAGS   =
+
+########################################################################
+# CUDA options
+########################################################################
+HYPRE_CUDA_PATH    = #/usr/tce/packages/cuda/cuda-10.1.243
+HYPRE_CUDA_INCLUDE = #-I${HYPRE_CUDA_PATH}/include
+HYPRE_CUDA_LIBS    = #-L${HYPRE_CUDA_PATH}/lib64 -lcudart -lcusparse -lcublas -lcurand
+
+########################################################################
+# HIP options
+########################################################################
+#HYPRE_HIP_PATH    = /opt/rocm-5.4.1
+#HYPRE_HIP_INCLUDE = -I${HYPRE_HIP_PATH}/include
+#HYPRE_HIP_LIBS    = -L${HYPRE_HIP_PATH}/lib -lamdhip64 -lrocsparse -lrocrand
 
 ########################################################################
 # Compiling and linking options
 ########################################################################
-COPTS     = -g -Wall
-CINCLUDES = -I$(HYPRE_DIR)/include
-CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
-CFLAGS    = $(COPTS) $(CINCLUDES) $(CDEFS)
-FOPTS     = -g
-FINCLUDES = $(CINCLUDES)
-FFLAGS    = $(FOPTS) $(FINCLUDES)
-CXXOPTS   = $(COPTS) -Wno-deprecated
+
+CINCLUDES = -I. -I$(HYPRE_DIR)/include $(INCLUDES)
+CDEFS = -DHYPRE_TIMING
+
+########################################################################
+# MPI only
+########################################################################
+COPTS = -O2 -DHAVE_CONFIG_H 
+LINKOPTS = 
+
+########################################################################
+# MPI  and OpenMP threading
+########################################################################
+#COPTS = -O2 -DHAVE_CONFIG_H -fopenmp
+#LINKOPTS = -fopenmp 
+#COPTS = -O2 -DHAVE_CONFIG_H -qsmp=omp
+#LINKOPTS = -qsmp=omp
+#COPTS = -O2 -DHAVE_CONFIG_H -qopenmp
+#LINKOPTS = -qopenmp 
+
+CFLAGS = $(COPTS) $(CINCLUDES) $(CDEFS)
+CXXOPTS = $(COPTS) -Wno-deprecated
 CXXINCLUDES = $(CINCLUDES) -I..
-CXXDEFS   = $(CDEFS)
-IFLAGS_BXX = 
-CXXFLAGS  = $(CXXOPTS) $(CXXINCLUDES) $(CXXDEFS) $(IFLAGS_BXX)
-IF90FLAGS = 
-F90FLAGS = $(FFLAGS) $(IF90FLAGS)
+CXXDEFS = $(CDEFS)
+CXXFLAGS  = $(COPTS) $(CINCLUDES) $(CDEFS) 
 
+LIBS = -L$(HYPRE_DIR)/lib -lHYPRE $(XLINK) ${MPILIBS} -lm $(HYPRE_CUDA_LIBS) $(HYPRE_HIP_LIBS)
+#LIBS = -L$(HYPRE_DIR)/lib -lHYPRE $(XLINK) ${MPILIBS} $(HYPRE_HIP_LIBS)
+#LFLAGS = $(LINKOPTS) $(LIBS) -lstdc++
 
-LINKOPTS  = $(COPTS)
-LIBS      = -L$(HYPRE_DIR)/lib -lHYPRE -lm
-LFLAGS    = $(LINKOPTS) $(LIBS) -lstdc++
-LFLAGS_B =\
- -L${HYPRE_DIR}/lib\
- -lbHYPREClient-C\
- -lbHYPREClient-CX\
- -lbHYPREClient-F\
- -lbHYPRE\
- -lsidl -ldl -lxml2
-LFLAGS77 = $(LFLAGS)
-LFLAGS90 =
+XLINK = -Wl,-rpath,${HYPRE_DIR}/lib
+
+LFLAGS = $(LINKOPTS) $(LIBS) $(XLINK)
 
 ########################################################################
 # Rules for compiling the source files
 ########################################################################
-.SUFFIXES: .c .f .cxx .f90
+.SUFFIXES: .c .f .cuf .cxx
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
-.f.o:
-	$(F77) $(FFLAGS) -c $<
+.cuf.o:
+	$(CUF) $(FFLAGS) $(CUFFLAGS) -c $<
 .cxx.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
 ########################################################################
 # List of all programs to be compiled
 ########################################################################
-ALLPROGS = ex1 ex2 ex3 ex4 ex5 ex5f ex6 ex7 ex8 ex9 ex10 ex11 ex12 ex12f \
-           ex13 ex14 ex15 ex16
-BIGINTPROGS = ex5big ex15big
-FORTRANPROGS = ex5f ex12f
-MAXDIMPROGS = ex17 ex18
-COMPLEXPROGS = ex18comp
+ALLPROGS = hypre-test
 
 all: $(ALLPROGS)
 
 default: all
 
-bigint: $(BIGINTPROGS)
-
-fortran: $(FORTRANPROGS)
-
-maxdim: $(MAXDIMPROGS)
-
-complex: $(COMPLEXPROGS)
+gpu: all
 
 ########################################################################
-# Example 1
+# AMG driver
 ########################################################################
-ex1: ex1.o
-	$(CC) -o $@ $^ $(LFLAGS)
+hypre-test: hypre-test.o
+	$(LINK_CC) -o $@ $^ $(LFLAGS)
 
-########################################################################
-# Example 2
-########################################################################
-ex2: ex2.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 3
-########################################################################
-ex3: ex3.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 4
-########################################################################
-ex4: ex4.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 5
-########################################################################
-ex5: ex5.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 5 with 64-bit integers
-########################################################################
-ex5big: ex5big.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 5 Fortran 77
-########################################################################
-ex5f: ex5f.o
-	$(F77) -o $@ $^ $(LFLAGS77)
-
-########################################################################
-# Example 6
-########################################################################
-ex6: ex6.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 7
-########################################################################
-ex7: ex7.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 8
-########################################################################
-ex8: ex8.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 9
-########################################################################
-ex9: ex9.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 10
-########################################################################
-ex10: ex10.o
-	$(CXX) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 11
-########################################################################
-ex11: ex11.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 12
-########################################################################
-ex12: ex12.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 12 Fortran 77
-########################################################################
-ex12f: ex12f.o
-	$(F77) -o $@ $^ $(LFLAGS77)
-
-########################################################################
-# Example 13
-########################################################################
-ex13: ex13.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 14
-########################################################################
-ex14: ex14.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 15
-########################################################################
-ex15: ex15.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 15 with 64-bit integers
-########################################################################
-ex15big: ex15big.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 16
-########################################################################
-ex16: ex16.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 17
-########################################################################
-ex17: ex17.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 18
-########################################################################
-ex18: ex18.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Example 18 (complex)
-########################################################################
-ex18comp: ex18comp.o
-	$(CC) -o $@ $^ $(LFLAGS)
-
-########################################################################
-# Clean up
 ########################################################################
 clean:
 	rm -f $(ALLPROGS:=.o)
-	rm -f $(BIGINTPROGS:=.o)
-	rm -f $(FORTRANPROGS:=.o)
-	rm -f $(MAXDIMPROGS:=.o)
-	rm -f $(COMPLEXPROGS:=.o)
 distclean: clean
 	rm -f $(ALLPROGS) $(ALLPROGS:=*~)
-	rm -f $(BIGINTPROGS) $(BIGINTPROGS:=*~)
-	rm -f $(FORTRANLPROGS) $(FORTRANPROGS:=*~)
-	rm -f $(MAXDIMPROGS) $(MAXDIMPROGS:=*~)
-	rm -f $(COMPLEXPROGS) $(COMPLEXPROGS:=*~)
-	rm -fr README*
