@@ -39,14 +39,16 @@ do
         echo "    ./test-all.sh [Test Directory (Optional.)] <--json> <--settings [settings file]> <--color-off>"
         echo "    --json: Print json output. Redirect to file manually if needed. e.g. ./test-all.sh --json > testout.json"
         echo "    --print-logs: Print contents of all clean/compiler/run logs to screen."
-        echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. Defaults to <testsuite>/settings.sh"
+        echo "    --settings </path/to/some.settings.sh>: Use the specified settings.sh file to define compile and run options. 
+		Defaults to <testsuite>/settings.sh"
 	echo "    --color-off: disable printing test results in color"
 	echo "    --skip-to [test]: Start with the specified test, skipping over any listed earlier in lexical order."
 	echo "    --test-only [\"list of tests\"]: Run only the tests named in the list."
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
         echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
-        echo "    ./test-all.sh /path/to/test/directory --json --settings /path/to/some.settings.sh #Run all tests in the specified directory, print output as json, use some.settings.sh as settings file"
+        echo "    ./test-all.sh /path/to/test/directory --json --settings /path/to/some.settings.sh #Run all tests in the specified directory, 
+		#print output as json, use some.settings.sh as settings file"
         exit 0
     esac
     fi
