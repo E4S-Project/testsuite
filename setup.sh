@@ -58,10 +58,9 @@ spackSetPackageRoot(){
         export ${SPAC_NAM}_ROOT=${SPAC_LOC}
         export ${SPAC_NAM}_HASH=${PACK_ARRAY[0]}
 
-        export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
-
-        if [[ ! -d ${SPAC_LOC}/lib ]]; then
-          export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib64
+        export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib64
+        if [[ ! -d ${SPAC_LOC}/lib64 ]]; then
+          export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
         fi
 }
 
