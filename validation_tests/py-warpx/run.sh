@@ -1,4 +1,4 @@
 #!/bin/bash
 . ./setup.sh
-python PICMI_inputs_gaussian_beam.py
+${TEST_RUN_SEQ} python PICMI_inputs_gaussian_beam.py
  

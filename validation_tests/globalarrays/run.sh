@@ -1,3 +1,3 @@
 #!/bin/bash
 . ./setup.sh
-./transp1D-c
+${TEST_RUN_SEQ} ./transp1D-c

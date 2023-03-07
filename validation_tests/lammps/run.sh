@@ -1,3 +1,3 @@
 #!/bin/bash 
 . ./setup.sh
-lmp -in ./in.kim-ex.melt
+${TEST_RUN_SEQ} lmp -in ./in.kim-ex.melt

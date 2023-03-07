@@ -1,3 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique py-warpx 
+spackLoadUnique py-warpx  ^warpx dims=3 

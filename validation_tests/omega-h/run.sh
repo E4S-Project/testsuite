@@ -3,4 +3,4 @@
 set -x
 #mpirun -n 2 
 #eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG 2 
-./fieldOnSquare
+${TEST_RUN_SEQ} ./fieldOnSquare
