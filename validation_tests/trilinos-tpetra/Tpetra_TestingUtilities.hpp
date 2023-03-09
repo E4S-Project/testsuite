@@ -53,7 +53,7 @@
 
 #include "Teuchos_UnitTestHarness.hpp"
 #include "Teuchos_ArrayRCP.hpp"
-#include "Kokkos_View.hpp"
+#include "Kokkos_Core.hpp"
 #include "KokkosCompat_View.hpp"
 #include "Tpetra_Core.hpp"
 #include "TpetraCore_ETIHelperMacros.h"
