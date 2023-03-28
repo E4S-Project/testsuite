@@ -1,3 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique tau+mpi
+spackLoadUnique tau+mpi~cuda~rocm
