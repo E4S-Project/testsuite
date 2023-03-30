@@ -1,5 +1,5 @@
 /*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2020, the Ginkgo authors
+Copyright (c) 2017-2022, the Ginkgo authors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <string>
 
 
@@ -43,8 +44,8 @@ namespace {
 
 
 template <typename ValueType>
-void print_vector(const std::string &name,
-                  const gko::matrix::Dense<ValueType> *vec)
+void print_vector(const std::string& name,
+                  const gko::matrix::Dense<ValueType>* vec)
 {
     std::cout << name << " = [" << std::endl;
     for (int i = 0; i < vec->get_size()[0]; ++i) {
@@ -57,7 +58,7 @@ void print_vector(const std::string &name,
 }  // namespace
 
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     // Some shortcuts
     using ValueType = double;
@@ -72,22 +73,35 @@ int main(int argc, char *argv[])
     // Print version information
     std::cout << gko::version_info::get() << std::endl;
 
-    // Figure out where to run the code
-    std::shared_ptr<gko::Executor> exec;
-    if (argc == 1 || std::string(argv[1]) == "reference") {
-        exec = gko::ReferenceExecutor::create();
-    } else if (argc == 2 && std::string(argv[1]) == "omp") {
-        exec = gko::OmpExecutor::create();
-    } else if (argc == 2 && std::string(argv[1]) == "cuda" &&
-               gko::CudaExecutor::get_num_devices() > 0) {
-        exec = gko::CudaExecutor::create(0, gko::OmpExecutor::create(), true);
-    } else if (argc == 2 && std::string(argv[1]) == "hip" &&
-               gko::HipExecutor::get_num_devices() > 0) {
-        exec = gko::HipExecutor::create(0, gko::OmpExecutor::create(), true);
-    } else {
+    if (argc == 2 && (std::string(argv[1]) == "--help")) {
         std::cerr << "Usage: " << argv[0] << " [executor]" << std::endl;
         std::exit(-1);
     }
+
+    // Figure out where to run the code
+    const auto executor_string = argc >= 2 ? argv[1] : "reference";
+    std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
+        exec_map{
+            {"omp", [] { return gko::OmpExecutor::create(); }},
+            {"cuda",
+             [] {
+                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
+                                                  true);
+             }},
+            {"hip",
+             [] {
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
+                                                 true);
+             }},
+            {"dpcpp",
+             [] {
+                 return gko::DpcppExecutor::create(0,
+                                                   gko::OmpExecutor::create());
+             }},
+            {"reference", [] { return gko::ReferenceExecutor::create(); }}};
+
+    // executor where Ginkgo will perform the computation
+    const auto exec = exec_map.at(executor_string)();  // throws if not valid
 
     // Read data
     auto A = share(gko::read<mtx>(std::ifstream("data/A.mtx"), exec));
@@ -100,7 +114,6 @@ int main(int argc, char *argv[])
     // for convenience.
     std::shared_ptr<gko::log::Stream<ValueType>> stream_logger =
         gko::log::Stream<ValueType>::create(
-            exec,
             gko::log::Logger::all_events_mask ^
                 gko::log::Logger::linop_factory_events_mask ^
                 gko::log::Logger::polymorphic_object_events_mask,
@@ -109,12 +122,12 @@ int main(int argc, char *argv[])
     // Add stream_logger to the executor
     exec->add_logger(stream_logger);
 
-    // Add stream_logger only to the ResidualNormReduction criterion Factory
+    // Add stream_logger only to the ResidualNorm criterion Factory
     // Note that the logger will get automatically propagated to every criterion
     // generated from this factory.
     const RealValueType reduction_factor{1e-7};
     using ResidualCriterionFactory =
-        gko::stop::ResidualNormReduction<ValueType>::Factory;
+        gko::stop::ResidualNorm<ValueType>::Factory;
     std::shared_ptr<ResidualCriterionFactory> residual_criterion =
         ResidualCriterionFactory::create()
             .with_reduction_factor(reduction_factor)
@@ -137,31 +150,22 @@ int main(int argc, char *argv[])
     // Logger class for more information.
     std::ofstream filestream("my_file.txt");
     solver->add_logger(gko::log::Stream<ValueType>::create(
-        exec, gko::log::Logger::all_events_mask, filestream));
+        gko::log::Logger::all_events_mask, filestream));
     solver->add_logger(stream_logger);
 
     // Add another logger which puts all the data in an object, we can later
     // retrieve this object in our code. Here we only have want Executor
     // and criterion check completed events.
     std::shared_ptr<gko::log::Record> record_logger = gko::log::Record::create(
-        exec, gko::log::Logger::executor_events_mask |
-                  gko::log::Logger::criterion_check_completed_mask);
+        gko::log::Logger::executor_events_mask |
+        gko::log::Logger::criterion_check_completed_mask);
     exec->add_logger(record_logger);
     residual_criterion->add_logger(record_logger);
 
     // Solve system
     solver->apply(lend(b), lend(x));
 
-    // Finally, get some data from `record_logger` and print the last memory
-    // location copied
-    auto &last_copy = record_logger->get().copy_completed.back();
-    std::cout << "Last memory copied was of size " << std::hex
-              << std::get<0>(*last_copy).num_bytes << " FROM executor "
-              << std::get<0>(*last_copy).exec << " pointer "
-              << std::get<0>(*last_copy).location << " TO executor "
-              << std::get<1>(*last_copy).exec << " pointer "
-              << std::get<1>(*last_copy).location << std::dec << std::endl;
-    // Also print the residual of the last criterion check event (where
+    // Print the residual of the last criterion check event (where
     // convergence happened)
     auto residual =
         record_logger->get().criterion_check_completed.back()->residual.get();
@@ -169,7 +173,7 @@ int main(int argc, char *argv[])
     print_vector("Residual", residual_d);
 
     // Print solution
-    std::cout << "Solution (x): \n";
+    std::cout << "Solution (x):\n";
     write(std::cout, lend(x));
 
     // Calculate residual
@@ -179,6 +183,6 @@ int main(int argc, char *argv[])
     A->apply(lend(one), lend(x), lend(neg_one), lend(b));
     b->compute_norm2(lend(res));
 
-    std::cout << "Residual norm sqrt(r^T r): \n";
+    std::cout << "Residual norm sqrt(r^T r):\n";
     write(std::cout, lend(res));
 }
