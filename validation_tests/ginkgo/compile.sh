@@ -1,8 +1,9 @@
 #!/bin/bash -e
 . ./setup.sh
 set -x
-for testdir in `readlink -f */`
+for testdir in $GINKGO_DIRS #  `readlink -f */`
 do
     cd ${testdir}
-    ../build.sh 
+    ../build.sh
+   cd - 
 done

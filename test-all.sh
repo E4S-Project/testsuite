@@ -126,7 +126,8 @@ iterate_files() {
     source $cwd/setup.sh >&2
     _ret=$SPACK_LOAD_RESULT
     export E4S_TEST_SETUP=1
-    E4S_LOG_PREFIX="$testtime"_"$E4S_TEST_HASH"
+    E4S_LOG_SUFFIX="$(basename $cwd)"_"$E4S_TEST_HASH"_"$testtime".log
+    #echo $E4S_LOG_SUFFIX >&2
     #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
             if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
@@ -153,12 +154,12 @@ iterate_files() {
 	    else
             	echo "Cleaning $cwd" >&2
     	    fi
-	    ./clean.sh >& ./$E4S_LOG_PREFIX-clean.log
+	    ./clean.sh >& ./clean-"$E4S_LOG_SUFFIX"
         _ret=$?
         
         if [ $print_logs = true ]; then
              echo "---CLEANUP LOG---" >&2
-             cat ./$E4S_LOG_PREFIX-clean.log >&2
+             cat ./clean-$E4S_LOG_SUFFIX >&2
         fi
         if [ $_ret -eq 215 ] ; then
              if [ $print_json = true ]; then
@@ -189,11 +190,11 @@ iterate_files() {
     	 else
              echo "Compiling $cwd" >&2
          fi
-            ./compile.sh >& ./$E4S_LOG_PREFIX-compile.log
+            ./compile.sh >& ./compile-$E4S_LOG_SUFFIX
             _ret=$?
             if [ $print_logs = true ]; then
                  echo "---COMPILE LOG---" >&2
-                 cat ./$E4S_LOG_PREFIX-compile.log >&2
+                 cat ./compile-$E4S_LOG_SUFFIX >&2
             fi
 
          if [ $_ret -eq 215 ] ; then
@@ -222,11 +223,11 @@ iterate_files() {
       else
         echo "Running $cwd" >&2
       fi
-        ./run.sh >& $E4S_LOG_PREFIX-run.log
+        ./run.sh >& run-$E4S_LOG_SUFFIX
         _ret=$?
         if [ $print_logs = true ]; then
              echo "---RUN LOG---"
-             cat ./$E4S_LOG_PREFIX-run.log >&2
+             cat ./run-$E4S_LOG_SUFFIX >&2
         fi
 
            if [ $_ret -eq 215 ] ; then

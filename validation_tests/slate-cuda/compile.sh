@@ -17,4 +17,4 @@ else CUDA_LINK=${TEST_CUDA_LINK}
 fi
 
 
-mpicxx -o slate04_blas slate04_blas.cc -I${BLASPP_ROOT}/include -I${CUDA_ROOT}/include  -I${LAPACKPP_ROOT}/include  -I${SLATE_ROOT}/include -L${BLASPP_LIB_PATH} ${CUDA_LINK}  -L${SLATE_LIB_PATH}  -lblaspp -lslate -fopenmp ${BLAS_LINK} 
+${TEST_CXX_MPI} -o slate04_blas slate04_blas.cc -I${BLASPP_ROOT}/include -I${CUDA_ROOT}/include  -I${LAPACKPP_ROOT}/include  -I${SLATE_ROOT}/include -L${BLASPP_LIB_PATH} ${CUDA_LINK}  -L${SLATE_LIB_PATH}  -lblaspp -lslate  ${BLAS_LINK} -fopenmp
