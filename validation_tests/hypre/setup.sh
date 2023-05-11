@@ -1,5 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
+
+THISDIR=`basename "$PWD"`
 if [  "$THISDIR" = "hypre-cuda" ];then
         spackLoadUnique "hypre@2.27.0:+cuda $TEST_CUDA_ARCH"
 elif [  "$THISDIR" = "hypre-rocm" ];then

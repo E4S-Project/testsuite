@@ -98,13 +98,15 @@ iterate_directories() {
 	#fi
 
     else
+	    #set -x
             for d in */ ; do
 		if [ ! -z $skip_to ] && [[ $d < $skip_to ]]; then
 			continue
 		fi
-		if [ ! -z "$test_only" ] && echo "$test_only" | grep -vw `basename $d` >/dev/null; then
+		if [ ! -z "$test_only" ] && echo "$test_only" | grep -vw -P "(?<![\w-])`basename $d`(?![\w-])" >/dev/null; then
 			continue
 		fi
+		#echo $d
                 iterate_directories $d
             done
         fi
