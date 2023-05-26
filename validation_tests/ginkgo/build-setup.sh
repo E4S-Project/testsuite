@@ -22,5 +22,5 @@ else
     LINK_FLAGS="-lginkgod -lginkgo_ompd -lginkgo_cudad -lginkgo_referenced -lginkgo_hipd -lginkgo_dpcppd -lginkgo_deviced -Wl,-rpath,${THIS_DIR}"
 fi
 if [ -z "${CXX}" ]; then
-    CXX="c++"
+    CXX=$TEST_CXX_MPI #"c++"
 fi

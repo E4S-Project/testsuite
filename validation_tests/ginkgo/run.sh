@@ -16,7 +16,7 @@ do
     elif [ "$APP" = "simple-solver" -a "$THISDIR" = "ginkgo-cuda" ]; then
 	./simple-solver cuda
     else 
-    time timeout 2m srun ./${APP} ${ARG}
+    time timeout 2m ${TEST_RUN} ./${APP} ${ARG}
     fi
     cd ..
 done
