@@ -5,15 +5,11 @@ LDFLAGS = -L$(GMP_LIB_PATH) -lgmp
 
 all: t-rand 
 
-mpz_fact: t-rand.o
-	$(LD) -o $@ $^ $(LDFLAGS)
+t-rand: t-rand.o
+	${CC} $<  $(LDFLAGS) -o $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $<
-
+t-rand.o: t-rand.c
+	$(CC)  -c $<   $(CFLAGS) 
 
 clean:
 	rm -f *.o t-rand
