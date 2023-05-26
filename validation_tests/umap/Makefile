@@ -7,7 +7,7 @@ CXXLIBS=$(LIBS) -std=gnu++11
 all: $(TARGETS)
 
 $(BINDIR)/umaptest: umaptest.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) umaptest.cpp $(CXXLIBS) -o $@
+	$(TEST_CXX) $(CXXFLAGS) $(INCLUDE) umaptest.cpp $(CXXLIBS) -o $@
 
 clean:
 	rm -f $(TARGETS)
