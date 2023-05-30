@@ -3,4 +3,4 @@
 . ./setup.sh
 
 #mpiexec -n 4 
-eval $TEST_RUN ./hello-world
+eval $TEST_RUN  ./helloBPTimeWriter 
