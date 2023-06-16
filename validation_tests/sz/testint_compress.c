@@ -7,7 +7,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +37,7 @@ void cost_end()
 int main(int argc, char * argv[])
 {
     size_t r5=0,r4=0,r3=0,r2=0,r1=0;
-    char oriFilePath[640], outputFilePath[640];
+    char oriFilePath[640], outputFilePath[650];
     char *cfgFile;
     int dataType = SZ_INT32;
     int status; 
