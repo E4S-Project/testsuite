@@ -19,8 +19,8 @@ int hpx_main(hpx::program_options::variables_map &vm) {
   std::uint64_t const n = vm["n"].as<std::uint64_t>();
 
   std::vector<std::uint64_t> v(n);
-  hpx::for_loop(hpx::execution::par, 0, v.size(),
-                [&](std::size_t i) { v[i] = i; });
+  hpx::experimental::for_loop(hpx::execution::par, 0, v.size(),
+                              [&](std::size_t i) { v[i] = i; });
   std::uint64_t const result = hpx::ranges::reduce(hpx::execution::par, v, 0,
                                                    std::plus<std::uint64_t>{});
 

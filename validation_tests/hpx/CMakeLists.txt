@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.17)
 project(test CXX)
-find_package(HPX 1.7.0 REQUIRED)
+find_package(HPX 1.9.0 REQUIRED)
 
 add_executable(test_future test_future.cpp)
 target_link_libraries(test_future PRIVATE HPX::hpx)
