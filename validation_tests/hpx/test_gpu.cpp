@@ -29,15 +29,15 @@ int hpx_main(hpx::program_options::variables_map &vm) {
   std::vector<std::uint64_t> A_host(n);
   hpx::compute::vector<std::uint64_t, decltype(alloc)> A_device(n, alloc);
 
-  hpx::for_loop(hpx::execution::par, 0, n,
-                [&](std::uint64_t i) { A_host[i] = i; });
+  hpx::experimental::for_loop(hpx::execution::par, 0, n,
+                              [&](std::uint64_t i) { A_host[i] = i; });
   hpx::copy(hpx::execution::par, A_host.begin(), A_host.end(),
             A_device.begin());
   hpx::ranges::for_each(hpx::execution::par.on(exec), A_device,
                         [] HPX_HOST_DEVICE(std::uint64_t & i) { i += 5; });
   hpx::copy(hpx::execution::par, A_device.begin(), A_device.end(),
             A_host.begin());
-  hpx::for_loop(hpx::execution::par, 0, n, [&](std::uint64_t i) {
+  hpx::experimental::for_loop(hpx::execution::par, 0, n, [&](std::uint64_t i) {
     std::ostringstream s;
     s << "gpu (element " << i << "/" << n << ")";
     check(s.str(), i + 5, A_host[i]);

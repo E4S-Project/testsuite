@@ -1,4 +1,4 @@
-//  Copyright (c) 2021 Ste||ar Group
+//  Copyright (c) 2021-2023 Ste||ar Group
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -8,6 +8,7 @@
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
 #include <hpx/future.hpp>
 #include <hpx/include/actions.hpp>
+#include <hpx/include/runtime.hpp>
 #include <hpx/iostream.hpp>
 #include <hpx/wrap_main.hpp>
 
@@ -22,11 +23,11 @@ void hello_world() {
 HPX_PLAIN_ACTION(hello_world, hello_world_action);
 
 int main() {
-  std::vector<hpx::naming::id_type> localities = hpx::find_all_localities();
-  std::vector<hpx::lcos::future<void>> futures;
+  std::vector<hpx::id_type> localities = hpx::find_all_localities();
+  std::vector<hpx::future<void>> futures;
   futures.reserve(localities.size());
 
-  for (hpx::naming::id_type const &locality : localities) {
+  for (hpx::id_type const &locality : localities) {
     futures.push_back(hpx::async<hello_world_action>(locality));
   }
 
