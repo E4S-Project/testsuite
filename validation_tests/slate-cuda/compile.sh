@@ -12,9 +12,9 @@ fi
 
 #Detect external CUDA link line and use if present, otherwise default 
 if [ -z ${TEST_CUDA_LINK+x} ]
-then CUDA_LINK="-L${CUDA_LIB_PATH} -lcudart -lcublas"
+then CUDA_LINK="-L${CUDA_LIB_PATH} -lcudart -lcublas -lcusolver"
 else CUDA_LINK=${TEST_CUDA_LINK}
 fi
 
 
-${TEST_CXX_MPI} -o slate04_blas slate04_blas.cc -I${BLASPP_ROOT}/include -I${CUDA_ROOT}/include  -I${LAPACKPP_ROOT}/include  -I${SLATE_ROOT}/include -L${BLASPP_LIB_PATH} ${CUDA_LINK}  -L${SLATE_LIB_PATH}  -lblaspp -lslate  ${BLAS_LINK} -fopenmp
+${TEST_CXX_MPI} -o slate04_blas slate04_blas.cc -I${BLASPP_ROOT}/include -I${CUDA_ROOT}/include  -I${LAPACKPP_ROOT}/include  -I${SLATE_ROOT}/include -L${BLASPP_LIB_PATH}  -L${SLATE_LIB_PATH}  -lblaspp -lslate  ${BLAS_LINK}  ${CUDA_LINK} -fopenmp
