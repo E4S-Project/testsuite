@@ -1,7 +1,7 @@
 export TAU_OPTIONS="-optVerbose -optRevert -optShared"
-export TEST_CC_MPI=mpicc
-export TEST_CXX_MPI=mpicxx
-export TEST_FTN_MPI=mpif90
+export TEST_CC_MPI=mpiicx
+export TEST_CXX_MPI=mpiicpx
+export TEST_FTN_MPI=mpiifx
 export TEST_CC=icx
 export TEST_CXX=icpx
 export TEST_FTN=ifx

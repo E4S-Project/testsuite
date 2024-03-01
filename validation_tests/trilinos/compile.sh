@@ -11,6 +11,6 @@ if [ $USECUDA -eq 1 ];then
         CUDADEF="-DENABLE_E4S_CUDA=True"
 fi
 
-cmake ${CUDADEF}  ..
+cmake -DCMAKE_C_FLAGS="-cc=$TEST_CC" -DCMAKE_CXX_FLAGS="-cxx=$TEST_CXX" ${CUDADEF}  ..
 make
 cd -
