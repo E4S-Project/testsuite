@@ -16,4 +16,5 @@ elif [  "$THISDIR" = "kokkos-sycl" ];then
 	export ACCEL_DEFINES="-DCMAKE_CXX_COMPILER=dpcpp"
 else
 	spackLoadUnique kokkos~cuda~rocm~sycl
+	export ACCEL_DEFINES="-DCMAKE_CXX_COMPILER=`which g++`"
 fi

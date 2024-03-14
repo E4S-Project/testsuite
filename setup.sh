@@ -81,7 +81,9 @@ spackLoadUnique(){
 	   return
    fi
    #SPACK_LOAD_RESULT=0
-   spack load $rArg --first $@ $TESTSUITE_VARIANT
+   uniquehash=`spackGetUniqueExplicit $@`
+   #spack load $rArg --first $@ $TESTSUITE_VARIANT
+   spack load /${uniquehash}
    ret_val=$?
    #echo "Load return: $ret_val"
    if [ $ret_val -ne 0 ] ; then
@@ -90,9 +92,9 @@ spackLoadUnique(){
         return 215
    fi
 
-   FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
-   HASHDEX=${#FIND_ARRAY1[@]}-2
-   HASH=${FIND_ARRAY1[HASHDEX]}
+   #FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
+   #HASHDEX=${#FIND_ARRAY1[@]}-2
+   HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
    echo "$@ $TESTSUITE_VARIANT: $HASH"
    export E4S_TEST_HASH=$HASH
    ARCH_IFS=$IFS
