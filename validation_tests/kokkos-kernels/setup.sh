@@ -1,6 +1,6 @@
 . ../../setup.sh
 
-spackLoadUniqueNoR kokkos+openmp
+#spackLoadUniqueNoR kokkos+openmp
 spackLoadUniqueNoR kokkos-kernels+openmp
 #kokkosHash=$(spackLoadUniqueNoR kokkos+openmp)
 #kokkoskernelsHash=$(spackLoadUniqueNoR kokkos-kernels+openmp)

@@ -1,2 +1,2 @@
 #!/bin/bash
-/bin/rm -f blockjacobi.o blockjacobi
+/bin/rm -rf ./install/build  
