@@ -5,7 +5,7 @@ CFLAGS=-g -O3
 ## ADIOS_DIR/bin should in PATH env
 ADIOS_DIR=$(shell adios_config -d)
 ADIOS_INC=$(shell adios_config -c )
-ADIOS_LIB=-L${ZFP_ROOT}/lib64 $(shell adios_config -l )
+ADIOS_LIB=-L${ZFP_ROOT}/lib64 -L${C_BLOSC_LIB_PATH} $(shell adios_config -l )
 CFLAGS=-g -O3 ${ADIOS_INC} 
 default: clean gread_arrays.ch gwrite_arrays.ch arrays_read arrays_write 
 all: clean default
