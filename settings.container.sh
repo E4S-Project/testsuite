@@ -8,6 +8,7 @@ export TEST_CXX=g++
 export CXX=g++
 export TEST_FTN=gfortran
 export FTN=gfortran
+export FC=gfortran
 export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="8"
