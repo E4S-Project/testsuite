@@ -64,15 +64,19 @@ spackSetPackageRoot(){
         fi
 }
 
+expinst=" -x "
+
 spackGetUniqueExplicit(){
-	xhashes=`spack find -x --format {hash} $@ $TESTSUITE_VARIANT`
+	#set -x
+	xhashes=`spack find $expinst --format {hash} $@ $TESTSUITE_VARIANT`
 	ret_val=$?
 	if [ $ret_val -ne 0 ] ; then
-        	#echo "Returning 215!"
+        	#echo "get unique Returning 215!"
         	#export SPACK_LOAD_RESULT=215
         	return 215
   	fi
 	echo $xhashes | awk '{print $1}'
+	#unset -x
 }
 
 spackLoadUnique(){
@@ -82,6 +86,13 @@ spackLoadUnique(){
    fi
    #SPACK_LOAD_RESULT=0
    uniquehash=`spackGetUniqueExplicit $@`
+   ret_val=$?
+   if [ $ret_val -ne 0 ] ; then
+        #echo "Returning 215!"
+        export SPACK_LOAD_RESULT=215
+        return 215
+   fi
+
    #spack load $rArg --first $@ $TESTSUITE_VARIANT
    spack load /${uniquehash}
    ret_val=$?
@@ -110,6 +121,12 @@ spackLoadUnique(){
         spackSetPackageRoot "${FIND_ARRAY2[i]}"
    done
    IFS=$ARCH_IFS
+}
+
+spackLoadUniqueNoX(){
+  expinst=" "
+  spackLoadUnique $@
+  expinst=" -x "
 }
 
 spackLoadUniqueNoR(){

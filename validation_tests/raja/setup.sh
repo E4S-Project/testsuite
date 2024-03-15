@@ -1,7 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 
 THISDIR=`basename "$PWD"`
 USECUDA=0

@@ -1,5 +1,5 @@
 #!/bin/bash
 
 source ../../setup.sh
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique adios2

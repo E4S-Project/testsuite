@@ -3,7 +3,7 @@
 . ../../setup.sh
 
 if ! command -v cmake >/dev/null 2>&1 ; then
-  spackLoadUnique cmake
+  spackLoadUniqueNoX cmake
 fi
 export ARBORX_CC=$TEST_CC
 export ARBORX_CXX=$TEST_CXX

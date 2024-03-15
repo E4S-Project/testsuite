@@ -1,6 +1,6 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique butterflypack
 #spack load arpack-ng
 #spack load openblas threads=openmp

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 . ./setup.sh
-#spackLoadUnique cmake@3.17:
+#spackLoadUniqueNoX cmake@3.17:
 set -x
 export CXX=`which $TEST_CXX`
 mkdir -p build

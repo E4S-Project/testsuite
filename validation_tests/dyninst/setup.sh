@@ -2,9 +2,9 @@
 
 . ../../setup.sh
 spackLoadUniqueNoR dyninst
-spackLoadUniqueNoR cmake
-spackLoadUniqueNoR boost
-spackLoadUniqueNoR elfutils
-spackLoadUniqueNoR intel-tbb
+spackLoadUniqueNoX cmake
+spackLoadUniqueNoX boost
+spackLoadUniqueNoX elfutils
+spackLoadUniqueNoX intel-tbb
 
 mkdir -p xmas_tree/build

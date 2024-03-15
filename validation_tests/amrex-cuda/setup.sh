@@ -16,5 +16,5 @@ else
 fi
 
 if ! command -v cmake >/dev/null 2>&1 ; then
-    spackLoadUnique cmake@3.22.2:
+    spackLoadUniqueNoX cmake@3.22.2:
 fi

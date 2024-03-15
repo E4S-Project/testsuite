@@ -9,4 +9,4 @@ if [ "$THISDIR" = "vtk-m-cuda" ];then
 else
 	spackLoadUnique "vtk-m"
 fi
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake

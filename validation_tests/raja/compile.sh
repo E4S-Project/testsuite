@@ -1,6 +1,6 @@
 #!/bin/bash  
 . ./setup.sh
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique blt
 CUDADEF=""
 ROCMDEF=""

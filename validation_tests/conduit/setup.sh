@@ -2,4 +2,4 @@
 
 . ../../setup.sh
 spackLoadUnique conduit
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake

@@ -14,5 +14,5 @@ USECUDA=0
 #fi
 
 if ! command -v cmake >/dev/null 2>&1 ; then
-  spackLoadUnique cmake@3.17.1:
+  spackLoadUniqueNoX cmake@3.17.1:
 fi

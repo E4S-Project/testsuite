@@ -2,5 +2,5 @@
 
 . ../../setup.sh
 
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique legion

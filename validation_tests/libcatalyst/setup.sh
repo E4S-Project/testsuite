@@ -5,5 +5,5 @@
 spackLoadUnique libcatalyst@2.0.0-rc3:
 
 # Also need `cmake`, and `ninja` to build tests.
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique ninja

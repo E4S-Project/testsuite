@@ -1,4 +1,4 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique cmake
+spackLoadUniqueNoX cmake
 spackLoadUnique axom
