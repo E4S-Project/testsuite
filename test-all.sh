@@ -31,6 +31,9 @@ do
 	--skip-to) skip_to="$2"
 	shift
 	    ;;
+	--skip-if) skip_if="$2"
+        shift
+            ;;
         --test-only) test_only="$2"
         shift
             ;;
@@ -44,6 +47,7 @@ do
 	echo "    --color-off: disable printing test results in color"
 	echo "    --skip-to [test]: Start with the specified test, skipping over any listed earlier in lexical order."
 	echo "    --test-only [\"list of tests\"]: Run only the tests named in the list."
+	echo "    --skip-if [substring]: Bypass any test with the given substring in its base directory."
         echo "Examples:"
         echo "    ./test-all.sh #Run all tests in the <testsuite>/validation_tests directory"
         echo "    ./test-all.sh /path/to/test/directory #Run all tests in the specified directory"
@@ -101,6 +105,9 @@ iterate_directories() {
 	    #set -x
             for d in */ ; do
 		if [ ! -z $skip_to ] && [[ $d < $skip_to ]]; then
+			continue
+		fi
+		if [ ! -z $skip_if ] &&[[ `basename $d` == *"$skip_if"*  ]]; then
 			continue
 		fi
 		if [ ! -z "$test_only" ] && echo "$test_only" | grep -vw -P "(?<![\w-])`basename $d`(?![\w-])" >/dev/null; then
