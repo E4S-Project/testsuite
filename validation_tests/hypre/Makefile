@@ -16,12 +16,12 @@ LDFLAGS = -L$(ADIOS2_LIB_PATH) -ladios2_cxx11
 
 
 #CC        = mpixlc
-CC        = mpicc
+#CC        = mpicc
 #CC        = mpiicc
 #CC         = cc
 
 #CXX       = mpixlC
-CXX       = mpic++
+#CXX       = mpic++
 #CXX       = mpiicc
 #CXX        = CC
 
