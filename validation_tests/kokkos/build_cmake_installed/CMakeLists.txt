@@ -8,12 +8,11 @@ project(Example CXX Fortran)
 
 # Look for an installed Kokkos
 find_package(Kokkos REQUIRED)
-
 add_executable(example cmake_example.cpp foo.f)
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(example PROPERTIES LINKER_LANGUAGE Fortran)
 endif()
-
+target_compile_options(example PRIVATE -fpie)
 # This is the only thing required to set up compiler/linker flags
 target_link_libraries(example Kokkos::kokkos)
 
