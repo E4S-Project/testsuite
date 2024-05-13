@@ -247,9 +247,9 @@ LIBRARIES :=
 
 # Gencode arguments
 ifeq ($(TARGET_ARCH),$(filter $(TARGET_ARCH),armv7l aarch64))
-SMS ?=  50 52 60 61 70 72 75 80 86 87 89 90 90a  #30 35 37
+SMS ?=  50 52 60 61 70 72 75 80 86 87 89 90 #90a  #30 35 37
 else
-SMS ?=  50 52 60 61 70 75 80 86 87 89 90 90a  #30 35 37
+SMS ?=  50 52 60 61 70 75 80 86 87 89 90 #90a  #30 35 37
 endif
 
 ifeq ($(SMS),)
