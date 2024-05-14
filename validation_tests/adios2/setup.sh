@@ -2,4 +2,4 @@
 
 source ../../setup.sh
 spackLoadUniqueNoX cmake
-spackLoadUnique adios2
+spackLoadUnique adios2@2.10:
