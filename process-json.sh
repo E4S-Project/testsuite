@@ -40,7 +40,7 @@ parse_json() {
 
 to_csv(){
 local json_file="$1"
-echo $json_file
+#echo $json_file
 jq -r 'map(select(.test != null)) | .[] | [.test, (.test_stages | to_entries[-1].value), if (.test_stages | to_entries[-1].value) == "fail" then (.test_stages | to_entries[-1].key) else "" end] | @csv' $json_file | tr -d '"' | tr -d '/'
 
 #csv=`jq -r 'map(select(.test != null)) | .[] | [.test, (.test_stages | to_entries[-1].value), if (.test_stages | to_entries[-1].value) == "fail" then (.test_stages | to_entries[-1].key) else "" end] | @csv' $json_file`
