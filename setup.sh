@@ -67,7 +67,7 @@ spackSetPackageRoot(){
 expinst=" -x "
 
 spackGetUniqueExplicit(){
-	#set -x
+#set -x
 	xhashes=`spack find $expinst --format {hash} $@ $TESTSUITE_VARIANT`
 	ret_val=$?
 	if [ $ret_val -ne 0 ] ; then
@@ -76,7 +76,7 @@ spackGetUniqueExplicit(){
         	return 215
   	fi
 	echo $xhashes | awk '{print $1}'
-	#unset -x
+#unset -x
 }
 
 spackLoadUnique(){

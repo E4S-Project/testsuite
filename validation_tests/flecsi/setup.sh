@@ -1,14 +1,12 @@
 #!/bin/bash
 . ../../setup.sh
 
+TESTNAME=flecsi
 export THISDIR=`basename "$PWD"`
-if [  "$THISDIR" = "flecsi-cuda" ];then
-        spackLoadUnique "flesci+cuda $TEST_CUDA_ARCH"
-elif [  "$THISDIR" = "flecsi-rocm" ];then
-        spackLoadUnique "flecsi+rocm $TEST_ROCM_ARCH"
+if [  "$THISDIR" = "$TESTNAME-cuda" ];then
+        spackLoadUnique "$TESTNAME+cuda $TEST_CUDA_ARCH"
+elif [  "$THISDIR" = "$TESTNAME-rocm" ];then
+        spackLoadUnique "$TESTNAME+rocm $TEST_ROCM_ARCH"
 else
-        spackLoadUnique flecsi~cuda~rocm
+        spackLoadUnique $TESTNAME~cuda~rocm
 fi
-
-
-spackLoadUnique flecsi 
