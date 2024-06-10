@@ -1,0 +1,91 @@
+Simple RC test
+
+V1 1 0 DC 0 SIN (0 1 1K 0 0)
+R1 1 2 1
+C1 2 0 1e-9
+X1 2 3 rc3000
+
+.subckt rc 1 2
+R 1 2 1
+C 2 0 1e-9
+.ends
+
+.subckt rc10 1 11
+X1 1 2 rc
+X2 2 3 rc
+X3 3 4 rc
+X4 4 5 rc
+X5 5 6 rc
+X6 6 7 rc
+X7 7 8 rc
+X8 8 9 rc
+X9 9 10 rc
+X10 10 11 rc
+.ends
+
+.subckt rc100 1 11
+X1 1 2 rc10
+X2 2 3 rc10
+X3 3 4 rc10
+X4 4 5 rc10
+X5 5 6 rc10
+X6 6 7 rc10
+X7 7 8 rc10
+X8 8 9 rc10
+X9 9 10 rc10
+X10 10 11 rc10
+.ends
+
+.subckt rc1000 1 11
+X1 1 2 rc100
+X2 2 3 rc100
+X3 3 4 rc100
+X4 4 5 rc100
+X5 5 6 rc100
+X6 6 7 rc100
+X7 7 8 rc100
+X8 8 9 rc100
+X9 9 10 rc100
+X10 10 11 rc100
+.ends
+
+.subckt rc10000 1 11
+X1 1 2 rc1000
+X2 2 3 rc1000
+X3 3 4 rc1000
+X4 4 5 rc1000
+X5 5 6 rc1000
+X6 6 7 rc1000
+X7 7 8 rc1000
+X8 8 9 rc1000
+X9 9 10 rc1000
+X10 10 11 rc1000
+.ends
+
+.subckt rc3000 1 4
+X1 1 2 rc1000
+X2 2 3 rc1000
+X3 3 4 rc1000
+.ends
+
+.subckt rc100000 1 11
+X1 1 2 rc10000
+X2 2 3 rc10000
+X3 3 4 rc10000
+X4 4 5 rc10000
+X5 5 6 rc10000
+X6 6 7 rc10000
+X7 7 8 rc10000
+X8 8 9 rc10000
+X9 9 10 rc10000
+X10 10 11 rc10000
+.ends
+
+.tran 0.1u 1
+*.options nonlin nox=0
+*.options nonlin-tran nox=0
+.print tran V(2)
+*COMP {v(2)+1.0}
+.end 
+
+
