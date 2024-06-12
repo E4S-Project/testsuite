@@ -2,7 +2,7 @@
 . ./setup.sh
 #spack load umpire 
 set -x
-./a.out
+./build/bin/malloc
 
 
 

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm -f ./a.out *.o
+rm -rf ./build
 
 
