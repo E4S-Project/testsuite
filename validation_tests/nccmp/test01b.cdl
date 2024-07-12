@@ -1,0 +1,35 @@
+netcdf test1b {
+
+dimensions:
+    dim1 = 1, dim2 = 2, dim3 = 1,         rec = unlimited ; 
+        
+variables:
+    double data1(dim1, dim2);       // test values
+    double data2(dim1, dim3);       // test dim. length
+
+    long data4(dim2);               // test dim. existance
+    double recdata(rec, dim1);      // test values
+    long rec(rec);                  // test var type
+
+    // variable attributes
+
+    data1:long_name = "test data_";  // test length
+    data1:valid_range = -2, 1;       // test values
+    rec:_FillValue = 0   ;           // test type
+    rec:scale_factor = 1. ;
+
+    // global attributes:
+    :history = "HIS1" ;     
+    :author = "remik_";     // test length
+    :date = 0.06152004;     // test type
+
+    :lab = "none";          // test values
+    
+data:
+   data1   = 1, -2 ;
+   data2   = 7 ;
+
+   data4   = 11, 12;
+   recdata = 3, -4 ;
+   rec     = 5, 6 ;
+}
