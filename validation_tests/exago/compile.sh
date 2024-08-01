@@ -3,4 +3,4 @@
 set -x
 set -e
 
-"No compile required"  
+echo "No compile required"  
