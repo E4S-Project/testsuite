@@ -1,9 +1,0 @@
-NEK_SOURCE_ROOT=/spack/opt/spack/linux-ubuntu22.04-x86_64/gcc-11.4.0/nek5000-19.0-2wqmvu3d5zh5hyftxvh4v2ypxprshocl/bin/Nek5000
-FC=/usr/local/mpich/install/mpich/bin/mpif77
-FFLAGS= -std=legacy
-FCPP=-cpp
-FR8=-fdefault-real-8 -fdefault-double-8
-FF77=-std=legacy
-CC=/usr/local/mpich/install/mpich/bin/mpicc
-CFLAGS=
-PPLIST= MPI UNDERSCORE GLOBAL_LONG_LONG TIMER
