@@ -2,5 +2,5 @@
 . ./setup.sh
 set -x
 set -e
-wannier90.x copper 
+timeout 3m wannier90.x copper 
 cat *.wout

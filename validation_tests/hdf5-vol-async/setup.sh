@@ -2,7 +2,7 @@
 . ../../setup.sh
 THISDIR=`basename "$PWD"`
 spackLoadUnique $THISDIR
-set -x
+#set -x
 export HDF5_DIR=$HDF5_ROOT
 
 export ABT_DIR=$ARGOBOTS_ROOT

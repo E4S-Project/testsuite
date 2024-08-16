@@ -1,0 +1,6 @@
+spack:
+  # add package specs to the `specs` list
+  specs:
+  - zlib ^gmake@4.3
+  - tcl
+  view: true
