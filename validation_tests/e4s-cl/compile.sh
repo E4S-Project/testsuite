@@ -3,4 +3,4 @@
 set -x
 set -e
 
-echo "No compilation needed"  
+${TEST_CXX_MPI} ./hello.cpp

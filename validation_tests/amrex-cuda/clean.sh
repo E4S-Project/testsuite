@@ -5,4 +5,4 @@ rm -rf Amr Basic Blueprint EB \
        Particles SDC SENSEI SWFFT \
        cmake CMakeLists.txt build \
        plt* plot* amrex-tutorials \
-       SUNDIALS heFFTe FFTW
+       SUNDIALS heFFTe FFTW amrex-tutorials MPMD

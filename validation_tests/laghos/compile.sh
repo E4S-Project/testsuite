@@ -3,4 +3,4 @@
 set -x
 set -e
 
-"No compile required for laghos"  
+echo "No compile required for laghos"  
