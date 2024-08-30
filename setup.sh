@@ -106,7 +106,10 @@ spackLoadUnique(){
    #FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
    #HASHDEX=${#FIND_ARRAY1[@]}-2
    HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
-   echo "$@ $TESTSUITE_VARIANT: $HASH"
+   
+   #if [ $print_json = true ]; then
+   #echo "$@ $TESTSUITE_VARIANT: $HASH"
+   #fi
    export E4S_TEST_HASH=$HASH
    ARCH_IFS=$IFS
    FIND_BLOB2=`spack find $dArg /$HASH`
