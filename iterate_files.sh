@@ -12,21 +12,21 @@ fi
 
 # Check to see if this directory has clean, compile and run scripts.
 # If so, set a flag so we don't recurse further.
-cwd=`pwd` 
+cwd=$PWD 
 _ret=0
 
 if [ $print_json = true ]; then
     printf "{\"test\": \"$testdir\",  \"test_stages\": {"
 else
     echo "==="
-    echo "$(basename "$cwd")"
+    echo "$(basename "$testdir")"
 fi
 unset E4S_TEST_SETUP
 export SPACK_LOAD_RESULT=0
 source $cwd/setup.sh 
 _ret=$SPACK_LOAD_RESULT
 export E4S_TEST_SETUP=1
-E4S_LOG_SUFFIX="$(basename $cwd)"_"$E4S_TEST_HASH"_"$testtime".log
+E4S_LOG_SUFFIX="$(basename $testdir)"_"$E4S_TEST_HASH"_"$testtime".log
 #echo $E4S_LOG_SUFFIX >&2
 #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
         if [ $_ret -eq 215 ] ; then
@@ -52,7 +52,7 @@ if [ -e "$cwd/clean.sh" ] ; then
     if [ $print_json = true ]; then
         printf "\"clean\":"
     else
-            echo "Cleaning $cwd" >&2
+            echo "Cleaning $testdir" >&2
         fi
     ./clean.sh >& ./clean-"$E4S_LOG_SUFFIX"
     _ret=$?

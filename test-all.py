@@ -6,6 +6,9 @@ import datetime
 import time
 import multiprocessing
 
+
+#ASSUMPTIONS: THAT TESTSUITE IS IN THE HOEM DIRECTORY
+
 # Initialize global variables
 final_ret = 0
 print_json = False
@@ -18,18 +21,20 @@ skip_if = ""
 testtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 # Function to execute shell scripts and handle errors
-def run_command(command):
+def run_command(command, timeout=600):
     """ Run a shell command and return the output and status code """
     #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
     output = result.stdout.decode().strip()
     return result.returncode, output
 
-def async_run_command(command,cwd):
+def async_run_command(command,current_dir_with_symlinks, timeout=600):
     """ Run a shell command and return the output and status code """
     #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    os.chdir(cwd)
-    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    os.chdir(current_dir_with_symlinks)
+    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
+    os.environ['testdir']=current_dir_with_symlinks
+    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
     output = result.stdout.decode().strip()
     return result.returncode, output
 
@@ -71,28 +76,33 @@ def iterate_directories(testdir):
 
 # Function to iterate through directories recursively
 def parallel_iterate_directories(testdir, Processes=4):
+    global print_json
+    final_ret = 0
     results = []
     pool = multiprocessing.Pool(processes=Processes)
 
-    final_ret = 0
-    os.environ['testdir']=os.path.basename(testdir)
-    original_dir = os.getcwd()
-    
     if not os.path.isdir(testdir):
-        return final_ret
+        raise NotADirectoryError(f"{testdir} is not a directory")
 
+    testdir = os.path.abspath(testdir)
+    os.environ['testdir']=os.path.basename(testdir)
+    
     # Use a stack to simulate recursion
     stack = [testdir]
 
     while stack:
-        current_dir = stack.pop(0)
-        os.chdir(current_dir) 
-        current_dir = os.getcwd()
+        current_dir_with_symlinks = stack.pop(0)
+        os.chdir(current_dir_with_symlinks)
+        current_dir = os.getcwd() #I do this o get the full path, but it doesnt have the symlinks in it, hence why I keep current dir with symlinks
+
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
-            results.append(pool.apply_async(async_run_command,  ('~/testsuite/iterate_files.sh', current_dir)))
+            results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+            #Call it with symlinks so that the .sh scripts know which test to run
         else:
-            results.append("===\n" + os.path.basename(current_dir))
+            if print_json == False:
+                results.append("===\n" + os.path.basename(current_dir))
+
             files = sorted(os.listdir("."))
             # Iterate through subdirectories
             for d in files:
@@ -108,11 +118,17 @@ def parallel_iterate_directories(testdir, Processes=4):
 
 
     for r in results:
-        if type(r) != type(""):
-            print(r.get()[1])
+        if type(r) != type(""): #If there is some error it needs to be passed along here
+            print(r.get()[1],end="" if print_json else "\n")
+            if r.get()[0] != 0:
+                final_ret += 1
         else:
             print(r)
+
+    if print_json == False:
+        print("Total number of failed tests: %d" % final_ret)
     return final_ret
+
 # Main function to parse arguments and execute the script
 def main():
     global print_json, print_logs, basedir, e4s_print_color, skip_to, test_only, skip_if
@@ -149,25 +165,9 @@ def main():
     # Call the main directory iteration function
     parallel_iterate_directories(basedir)
 
- #   results = []
-  #  directories = sorted(os.listdir(basedir))
-    #print(directories)
-
-   # pool = multiprocessing.Pool(processes=4)
-  #  for i, d in enumerate(directories):
-      #  path = os.path.join(basedir,d)
-     #   results.append(pool.apply_async(iterate_directories, (path,)))
-    #    #results.append(pool.apply_async(temp, (i,)))
-   #     
-  #  pool.close()
-    
-    # Collect results and print in order
-   # for result in results:
-    #    result.get()
-
     # End JSON output if needed
     if print_json:
-        print("{}]",end="")
+        print("]",end="")
 
     # Exit with the final return code
     sys.exit(final_ret)
