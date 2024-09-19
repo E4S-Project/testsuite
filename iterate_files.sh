@@ -17,6 +17,9 @@ _ret=0
 
 if [ $print_json = true ]; then
     printf "{\"test\": \"$testdir\",  \"test_stages\": {"
+else
+    echo "==="
+    echo "$(basename "$cwd")"
 fi
 unset E4S_TEST_SETUP
 export SPACK_LOAD_RESULT=0
