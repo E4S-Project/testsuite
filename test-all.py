@@ -38,48 +38,25 @@ def async_run_command(command,current_dir_with_symlinks, timeout=600):
     output = result.stdout.decode().strip()
     return result.returncode, output
 
+def salloc_async_run_command(command,current_dir_with_symlinks, timeout=600):
+    """ Run a shell command in a node and return the output and status code """
+    #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    os.chdir(current_dir_with_symlinks)
+    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
+    os.environ['testdir']=current_dir_with_symlinks
+    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
+    output = result.stdout.decode().strip()
+    return result.returncode, output
 
-# Function to iterate through directories recursively
-def iterate_directories(testdir):
-    final_ret = 0
-    return_string = ""
-    original_dir = os.getcwd()
-    if os.path.isdir(testdir):
-        os.chdir(testdir)
-        os.environ['testdir']=os.path.basename(testdir)
-        cwd = os.getcwd()
-        if print_json != True:
-            return_string += "===\n" + testdir + "\n"
-
-        # Check if there is a run.sh script to execute
-        if os.path.exists(os.path.join(cwd, "run.sh")):
-            ret_code, itout = run_command('~/testsuite/iterate_files.sh')
-            return_string += itout
-            print(return_string)
-            if ret_code != 0:
-                final_ret += 1
-        else:
-            print(return_string)
-            files = sorted(os.listdir("."))
-            # Iterate through subdirectories
-            for d in files:
-                if os.path.isdir(d):
-                    if skip_to and d < skip_to:
-                        continue
-                    if skip_if and skip_if in d:
-                        continue
-                    if test_only and os.path.basename(d) in test_only:
-                        continue
-                    iterate_directories(d)
-        os.chdir("..")
-    return final_ret
-
-# Function to iterate through directories recursively
-def parallel_iterate_directories(testdir, Processes=4):
+# Function to iterate through directories in a parallel non-recursive manner
+def iterate_directories(testdir, Processes=4, salloc=False, salloc_flags=""):
     global print_json
     final_ret = 0
     results = []
     pool = multiprocessing.Pool(processes=Processes)
+
+    salloc_flags="Stuff"
+
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
@@ -93,11 +70,14 @@ def parallel_iterate_directories(testdir, Processes=4):
     while stack:
         current_dir_with_symlinks = stack.pop(0)
         os.chdir(current_dir_with_symlinks)
-        current_dir = os.getcwd() #I do this o get the full path, but it doesnt have the symlinks in it, hence why I keep current dir with symlinks
+        current_dir = os.getcwd() #I do this to get the full path, but it doesnt have the symlinks in it, hence why I keep current dir with symlinks
 
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
-            results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+            if salloc == True:
+                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+            else:
+                results.append(pool.apply_async(salloc_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
@@ -163,7 +143,7 @@ def main():
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
 
     # Call the main directory iteration function
-    parallel_iterate_directories(basedir)
+    iterate_directories(basedir)
 
     # End JSON output if needed
     if print_json:
