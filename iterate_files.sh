@@ -142,7 +142,7 @@ if [ -e "$cwd/clean.sh" ] ; then
        if [ $print_json = true ]; then
                  printf "\"fail\"}},"
                else
-                  echo "Run ${bold}failed${normal}" >&2
+                 echo "Run ${bold}failed${normal}" >&2
            fi
          exit $_ret
        fi

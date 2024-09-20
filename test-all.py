@@ -5,23 +5,12 @@ import subprocess
 import datetime
 import time
 import multiprocessing
+import math
 
 
 #ASSUMPTIONS: THAT TESTSUITE IS IN THE HOEM DIRECTORY
 
 # Initialize global variables
-final_ret = 0
-print_json = False
-print_logs = False
-basedir = 'validation_tests'
-e4s_print_color = True
-skip_to = ""
-test_only = ""
-skip_if = ""
-slurm = False
-slurm_flags = ""
-testtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-
 # Function to execute shell scripts and handle errors
 def run_command(command, timeout=600):
     """ Run a shell command and return the output and status code """
@@ -30,41 +19,75 @@ def run_command(command, timeout=600):
     output = result.stdout.decode().strip()
     return result.returncode, output
 
-def async_run_command(command,current_dir_with_symlinks, timeout=600):
-    """ Run a shell command and return the output and status code """
+def async_run_command(command, current_dir_with_symlinks, timeout=600):
+    """Run a shell command and return the output and status code, handle timeouts."""
+    
+    # Change to the specified directory and update environment variables
     os.chdir(current_dir_with_symlinks)
-    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
-    os.environ['testdir']=current_dir_with_symlinks
-    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
-    output = result.stdout.decode().strip()
-    return result.returncode, output
+    os.environ['PWD'] = current_dir_with_symlinks  # Update the working directory in the environment
+    os.environ['testdir'] = current_dir_with_symlinks
 
-def srun_async_run_command(command,current_dir_with_symlinks, timeout=600):
+    try:
+        # Run the command with a timeout
+        result = subprocess.run(
+            command, 
+            shell=True, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT, 
+            timeout=timeout
+        )
+        output = result.stdout.decode().strip()
+        return result.returncode, output
+
+    except subprocess.TimeoutExpired as e:
+        # If the process times out, return the partial output and a timeout indicator
+        output = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
+        failed_step = output.split("\n")[-1].split()[0]
+        return -1, f"{output}\n{failed_step} Timed out "
+
+def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=600):
     """ Run a shell command in a node and return the output and status code """
-    srun_flags=f"--exclusive -N 1 -t {timeout}" #Timeout is handled in srun instead of of subproc.run
+    srun_flags=f"--exclusive -N 1 -t {math.ceil(timeout/60)} -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
     os.environ['testdir']=current_dir_with_symlinks
-    srun_command = f"srun {srun_flags} {os.environ['slurm_flags']} {command}"
-    #print(srun_command)
+    srun_command = f"srun {srun_flags} {slurm_flags} {command}"
+
     result = subprocess.run(srun_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     output = result.stdout.decode().strip()
+
+    #Srun typically adds some strings in the output,  -Q option gets rid of ones like "srun: job 322 queued and waiting for resources"
+    #While the string proccesing below handles if the job failed due to a timeout, since I handle the timeout in srun
+    # because then I don't have to worry about the complexities of machine wakeup times and whatnot
+    if "srun: error" in output:
+        output = output[:output.find("srun: error")]
+    if "SLURMPMD" in output:
+        output = output[:output.find("SLURMPMD")]
+
+
     return result.returncode, output
 
 # Function to iterate through directories in a parallel non-recursive manner
-def iterate_directories(testdir, processes=4):
+def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=600):
     final_ret = 0
-    results = []
+    results = [] #This maintains the order of prints and aynchronous job calls.
+                 #It contains jobs through the results.append... lines below
+                 #And it contains strings that get printed in order. See the results for loop below for more clarification
     pool = multiprocessing.Pool(processes=processes)
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
 
-    testdir = os.path.abspath(testdir)
+    testdir = os.path.abspath(testdir)               #Note everything should be done with full paths,
+                                                     #and only reduced to a basename later
     os.environ['testdir']=os.path.basename(testdir)
     
     # Use a stack to simulate recursion
     stack = [testdir]
+
+    # Begin JSON output if needed
+    if print_json:
+        print("[",end="")
 
     while stack:
         current_dir_with_symlinks = stack.pop(0)
@@ -74,9 +97,9 @@ def iterate_directories(testdir, processes=4):
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
             if slurm == False:
-                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, timeout)))
             else:
-                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, slurm_flags, timeout)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
@@ -96,21 +119,30 @@ def iterate_directories(testdir, processes=4):
                     stack.append(os.path.join(current_dir, d))
 
 
-    for r in results:
-        if type(r) != type(""): #If there is some error it needs to be passed along here
-            print(r.get()[1],end="" if print_json else "\n")
-            if r.get()[0] != 0:
+    for r in results: #If r is a string, print it, if r is not a string, it represents a 
+                      #results from an asynchronous job call, and thus process its output
+
+        if type(r) != type(""): 
+            return_tuple = r.get()
+            return_string = return_tuple[1]
+            if r == results[-1] and print_json: #Final return value has a ',' at the end of it lol
+                return_string = return_string[:-1]
+            print(return_string,end="" if print_json else "\n")
+            if return_tuple[0] != 0:
                 final_ret += 1
         else:
             print(r)
 
-    if print_json == False:
+    # End JSON output if needed
+    if print_json:
+        print("]",end="")
+    else:
         print("Total number of failed tests: %d" % final_ret)
+
     return final_ret
 
 # Main function to parse arguments and execute the script
 def main():
-    global print_json, print_logs, basedir, e4s_print_color, skip_to, test_only, skip_if, slurm, slurm_flags
 
     # Argument parsing
     parser = argparse.ArgumentParser(description='Run all tests in the specified directory.')
@@ -125,35 +157,34 @@ def main():
     parser.add_argument('--slurm', action='store_true', help='Enable SLURM mode')
     parser.add_argument('--slurm_flags', type=str, help="Optional flags for slurm, such as the account code")
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
+    parser.add_argument('--timeout', type=int, default=600, help='Timeout value in seconds for each test, default is 600')
     args = parser.parse_args()
 
-    # Apply arguments to global variables
     basedir = args.directory
+    
+    #These get set as environment variables for iterate_files.sh and setup.sh scripts
     print_json = args.json
     print_logs = args.print_logs
     e4s_print_color = args.e4s_print_color
+    os.environ['print_logs'] = str(print_logs).lower()
+    os.environ['print_json'] = str(print_json).lower()
+    os.environ['e4s_print_color'] = str(e4s_print_color).lower()
+ 
+
+    #These control which tests are ran
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
     test_only = args.test_only or ""
+    timeout = args.timeout
+
+    #These are for the multiprocessing/slurm functionality
     slurm_flags = args.slurm_flags or ""
     slurm = args.slurm 
     processes = args.processes
 
-    # Begin JSON output if needed
-    if print_json:
-        print("[",end="")
-
-    os.environ['print_logs'] = str(print_logs).lower()
-    os.environ['print_json'] = str(print_json).lower()
-    os.environ['e4s_print_color'] = str(e4s_print_color).lower()
-    os.environ["slurm_flags"] = str(slurm_flags)
 
     # Call the main directory iteration function
-    iterate_directories(basedir, processes=processes)
-
-    # End JSON output if needed
-    if print_json:
-        print("]",end="")
+    final_ret = iterate_directories(basedir, processes=processes, slurm=slurm, slurm_flags=slurm_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout)
 
     # Exit with the final return code
     sys.exit(final_ret)
