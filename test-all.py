@@ -39,23 +39,23 @@ def async_run_command(command,current_dir_with_symlinks, timeout=600):
     output = result.stdout.decode().strip()
     return result.returncode, output
 
-def salloc_async_run_command(command,current_dir_with_symlinks, timeout=600):
+def srun_async_run_command(command,current_dir_with_symlinks, timeout=600):
     """ Run a shell command in a node and return the output and status code """
-    salloc_flags=f"--exclusive -N 1 -t {timeout}" #Timeout is handled in salloc instead of of subproc.run
+    srun_flags=f"--exclusive -N 1 -t {timeout}" #Timeout is handled in srun instead of of subproc.run
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
     os.environ['testdir']=current_dir_with_symlinks
-    salloc_command = f"salloc {salloc_flags} {os.environ['slurm_flags']} {command}"
-    print(salloc_command)
-    result = subprocess.run(salloc_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    srun_command = f"srun {srun_flags} {os.environ['slurm_flags']} {command}"
+    #print(srun_command)
+    result = subprocess.run(srun_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     output = result.stdout.decode().strip()
     return result.returncode, output
 
 # Function to iterate through directories in a parallel non-recursive manner
-def iterate_directories(testdir, Processes=4):
+def iterate_directories(testdir, processes=4):
     final_ret = 0
     results = []
-    pool = multiprocessing.Pool(processes=Processes)
+    pool = multiprocessing.Pool(processes=processes)
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
@@ -76,8 +76,7 @@ def iterate_directories(testdir, Processes=4):
             if slurm == False:
                 results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
             else:
-                print("here")
-                results.append(pool.apply_async(salloc_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
+                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
@@ -125,6 +124,7 @@ def main():
     parser.add_argument('--test-only', type=str, help='Run only specified tests.')
     parser.add_argument('--slurm', action='store_true', help='Enable SLURM mode')
     parser.add_argument('--slurm_flags', type=str, help="Optional flags for slurm, such as the account code")
+    parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
     args = parser.parse_args()
 
     # Apply arguments to global variables
@@ -137,6 +137,7 @@ def main():
     test_only = args.test_only or ""
     slurm_flags = args.slurm_flags or ""
     slurm = args.slurm 
+    processes = args.processes
 
     # Begin JSON output if needed
     if print_json:
@@ -148,7 +149,7 @@ def main():
     os.environ["slurm_flags"] = str(slurm_flags)
 
     # Call the main directory iteration function
-    iterate_directories(basedir)
+    iterate_directories(basedir, processes=processes)
 
     # End JSON output if needed
     if print_json:
