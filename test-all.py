@@ -18,19 +18,20 @@ e4s_print_color = True
 skip_to = ""
 test_only = ""
 skip_if = ""
+slurm = False
+slurm_flags = ""
 testtime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 # Function to execute shell scripts and handle errors
 def run_command(command, timeout=600):
     """ Run a shell command and return the output and status code """
-    #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    #result = subprocess.run(command, shell=True)# This will not capture output
     result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
     output = result.stdout.decode().strip()
     return result.returncode, output
 
 def async_run_command(command,current_dir_with_symlinks, timeout=600):
     """ Run a shell command and return the output and status code """
-    #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
     os.environ['testdir']=current_dir_with_symlinks
@@ -40,23 +41,21 @@ def async_run_command(command,current_dir_with_symlinks, timeout=600):
 
 def salloc_async_run_command(command,current_dir_with_symlinks, timeout=600):
     """ Run a shell command in a node and return the output and status code """
-    #result = subprocess.run(command, shell=True)#,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    salloc_flags=f"--exclusive -N 1 -t {timeout}" #Timeout is handled in salloc instead of of subproc.run
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
     os.environ['testdir']=current_dir_with_symlinks
-    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
+    salloc_command = f"salloc {salloc_flags} {os.environ['slurm_flags']} {command}"
+    print(salloc_command)
+    result = subprocess.run(salloc_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     output = result.stdout.decode().strip()
     return result.returncode, output
 
 # Function to iterate through directories in a parallel non-recursive manner
-def iterate_directories(testdir, Processes=4, salloc=False, salloc_flags=""):
-    global print_json
+def iterate_directories(testdir, Processes=4):
     final_ret = 0
     results = []
     pool = multiprocessing.Pool(processes=Processes)
-
-    salloc_flags="Stuff"
-
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
@@ -74,9 +73,10 @@ def iterate_directories(testdir, Processes=4, salloc=False, salloc_flags=""):
 
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
-            if salloc == True:
+            if slurm == False:
                 results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
             else:
+                print("here")
                 results.append(pool.apply_async(salloc_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
@@ -111,7 +111,7 @@ def iterate_directories(testdir, Processes=4, salloc=False, salloc_flags=""):
 
 # Main function to parse arguments and execute the script
 def main():
-    global print_json, print_logs, basedir, e4s_print_color, skip_to, test_only, skip_if
+    global print_json, print_logs, basedir, e4s_print_color, skip_to, test_only, skip_if, slurm, slurm_flags
 
     # Argument parsing
     parser = argparse.ArgumentParser(description='Run all tests in the specified directory.')
@@ -123,6 +123,8 @@ def main():
     parser.add_argument('--skip-to', type=str, help='Skip to specified test.')
     parser.add_argument('--skip-if', type=str, help='Skip tests with the given substring in the directory name.')
     parser.add_argument('--test-only', type=str, help='Run only specified tests.')
+    parser.add_argument('--slurm', action='store_true', help='Enable SLURM mode')
+    parser.add_argument('--slurm_flags', type=str, help="Optional flags for slurm, such as the account code")
     args = parser.parse_args()
 
     # Apply arguments to global variables
@@ -133,6 +135,8 @@ def main():
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
     test_only = args.test_only or ""
+    slurm_flags = args.slurm_flags or ""
+    slurm = args.slurm 
 
     # Begin JSON output if needed
     if print_json:
@@ -141,6 +145,7 @@ def main():
     os.environ['print_logs'] = str(print_logs).lower()
     os.environ['print_json'] = str(print_json).lower()
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
+    os.environ["slurm_flags"] = str(slurm_flags)
 
     # Call the main directory iteration function
     iterate_directories(basedir)
