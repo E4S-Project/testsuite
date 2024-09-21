@@ -16,7 +16,7 @@ cwd=$PWD
 _ret=0
 
 if [ $print_json = true ]; then
-    printf "{\"test\": \"$testdir\",  \"test_stages\": {"
+    printf "{\"test\": \"$testdir\", \"test_stages\": {"
 else
     echo "==="
     echo "$(basename "$testdir")"
@@ -147,7 +147,7 @@ if [ -e "$cwd/clean.sh" ] ; then
          exit $_ret
        fi
    if [ $print_json = true ]; then
-            printf "\"pass\"}},"
+            printf "\"pass\"}}, "
       else
     
    echo "${green}Success${normal}" >&2

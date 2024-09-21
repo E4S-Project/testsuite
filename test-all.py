@@ -19,7 +19,7 @@ def run_command(command, timeout=600):
     output = result.stdout.decode().strip()
     return result.returncode, output
 
-def async_run_command(command, current_dir_with_symlinks, timeout=600):
+def async_run_command(command, current_dir_with_symlinks, timeout=600, print_json=False):
     """Run a shell command and return the output and status code, handle timeouts."""
     
     # Change to the specified directory and update environment variables
@@ -42,10 +42,13 @@ def async_run_command(command, current_dir_with_symlinks, timeout=600):
     except subprocess.TimeoutExpired as e:
         # If the process times out, return the partial output and a timeout indicator
         output = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
-        failed_step = output.split("\n")[-1].split()[0]
-        return -1, f"{output}\n{failed_step} Timed out "
+        if print_json:
+            return -1, output + '"timeout"}}, '
+        else:
+            failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
+            return -1, f"{output}\n{failed_step} Timed out "
 
-def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=600):
+def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=600, print_json=False):
     """ Run a shell command in a node and return the output and status code """
     srun_flags=f"--exclusive -N 1 -t {math.ceil(timeout/60)} -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
     os.chdir(current_dir_with_symlinks)
@@ -56,15 +59,22 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
     result = subprocess.run(srun_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     output = result.stdout.decode().strip()
 
-    #Srun typically adds some strings in the output,  -Q option gets rid of ones like "srun: job 322 queued and waiting for resources"
-    #While the string proccesing below handles if the job failed due to a timeout, since I handle the timeout in srun
-    # because then I don't have to worry about the complexities of machine wakeup times and whatnot
-    if "srun: error" in output:
-        output = output[:output.find("srun: error")]
-    if "SLURMPMD" in output:
-        output = output[:output.find("SLURMPMD")]
-
-
+    #Handling output because it there was a timeout/json it is different
+    if print_json: #json mode
+        if "slurmstepd" in output: #If it times out in json mode
+            output = output[0:output.find("srun: error")+1] #Get rid of anyline with an srun error in it
+            output = output[output.find("TIME LIMIT ***\n")+len("TIME LIMIT ***\n"):-1] #Get rid of slurmstepd line
+            output += '"timeout"}}, '
+        elif "srun: error" in output: #json mode no timeout
+            output = output[0:output.find("srun: error")]
+    else:
+        if "slurmstepd" in output: #If it times out in standard mode
+            output = output[:output.find("srun: error")-1] #Get rid of anyline with an srun error in it
+            output = output[:output.find("slurmstepd")-1] #Get rid of slurmstepd line
+            failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
+            output += f"\n{failed_step} Timed out "
+        elif "srun: error" in output: #If the output failed we need to remove the srun line
+            output = output[0:output.find("srun: error")-1]
     return result.returncode, output
 
 # Function to iterate through directories in a parallel non-recursive manner
@@ -97,9 +107,9 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
             if slurm == False:
-                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, timeout)))
+                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, timeout, print_json)))
             else:
-                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, slurm_flags, timeout)))
+                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, slurm_flags, timeout, print_json)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
@@ -125,8 +135,8 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
         if type(r) != type(""): 
             return_tuple = r.get()
             return_string = return_tuple[1]
-            if r == results[-1] and print_json: #Final return value has a ',' at the end of it lol
-                return_string = return_string[:-1]
+            if r == results[-1] and print_json: #Final return value has a ', ' at the end of it lol
+                return_string = return_string[:-2]
             print(return_string,end="" if print_json else "\n")
             if return_tuple[0] != 0:
                 final_ret += 1
@@ -135,7 +145,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
 
     # End JSON output if needed
     if print_json:
-        print("]",end="")
+        print("]")
     else:
         print("Total number of failed tests: %d" % final_ret)
 
