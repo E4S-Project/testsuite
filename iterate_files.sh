@@ -16,7 +16,7 @@ cwd=$PWD
 _ret=0
 
 if [ $print_json = true ]; then
-    printf "{\"test\": \"$testdir\", \"test_stages\": {"
+    echo "{\"test\": \"$testdir\", \"test_stages\": {"
 else
     echo "==="
     echo "$(basename "$testdir")"
@@ -50,7 +50,7 @@ E4S_LOG_SUFFIX="$(basename $testdir)"_"$E4S_TEST_HASH"_"$testtime".log
 
 if [ -e "$cwd/clean.sh" ] ; then
     if [ $print_json = true ]; then
-        printf "\"clean\":"
+        echo "\"clean\":"
     else
             echo "Cleaning $testdir" >&2
         fi
@@ -80,13 +80,13 @@ if [ -e "$cwd/clean.sh" ] ; then
       fi
  
  if [ $print_json = true ]; then
-                 printf "\"pass\","
+                 echo "\"pass\","
      fi
  fi
 
  if [ -e "$cwd/compile.sh" ] ; then
      if [ $print_json = true ]; then
-         printf "\"compile\":"
+         echo "\"compile\":"
      else
          echo "Compiling $cwd" >&2
      fi
@@ -114,12 +114,12 @@ if [ -e "$cwd/clean.sh" ] ; then
          exit $_ret
       fi
   if [ $print_json = true ]; then
-                 printf "\"pass\","
+                 echo "\"pass\","
       fi
   fi
 
   if [ $print_json = true ]; then
-        printf "\"run\":"
+        echo "\"run\":"
   else
     echo "Running $cwd" >&2
   fi
@@ -140,14 +140,14 @@ if [ -e "$cwd/clean.sh" ] ; then
        fi
        if [ $_ret -ne 0 ] ; then
        if [ $print_json = true ]; then
-                 printf "\"fail\"}},"
+                 echo "\"fail\"}},"
                else
                  echo "Run ${bold}failed${normal}" >&2
            fi
          exit $_ret
        fi
    if [ $print_json = true ]; then
-            printf "\"pass\"}}, "
+            echo "\"pass\"}}, "
       else
     
    echo "${green}Success${normal}" >&2

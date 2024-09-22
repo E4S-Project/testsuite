@@ -37,20 +37,24 @@ def async_run_command(command, current_dir_with_symlinks, timeout=600, print_jso
             timeout=timeout
         )
         output = result.stdout.decode().strip()
+        if print_json:
+            output = output.replace("\n","")
         return result.returncode, output
 
     except subprocess.TimeoutExpired as e:
         # If the process times out, return the partial output and a timeout indicator
         output = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
         if print_json:
-            return -1, output + '"timeout"}}, '
+            output = output.replace("\n","")
+            return -1, output + '"timeout"}},'
         else:
             failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
             return -1, f"{output}\n{failed_step} Timed out "
 
 def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=600, print_json=False):
     """ Run a shell command in a node and return the output and status code """
-    srun_flags=f"--exclusive -N 1 -t {math.ceil(timeout/60)} -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
+    #srun_flags=f"--exclusive -N 1 -t {math.ceil(timeout/60)} -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
+    srun_flags=f"--exclusive -N 1 -t 0:1 -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
     os.environ['testdir']=current_dir_with_symlinks
@@ -59,22 +63,36 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
     result = subprocess.run(srun_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     output = result.stdout.decode().strip()
 
-    #Handling output because it there was a timeout/json it is different
-    if print_json: #json mode
-        if "slurmstepd" in output: #If it times out in json mode
-            output = output[0:output.find("srun: error")+1] #Get rid of anyline with an srun error in it
-            output = output[output.find("TIME LIMIT ***\n")+len("TIME LIMIT ***\n"):-1] #Get rid of slurmstepd line
-            output += '"timeout"}}, '
-        elif "srun: error" in output: #json mode no timeout
-            output = output[0:output.find("srun: error")]
+    new_output = [] 
+    if "slurmstepd" in output: #Timed out
+        for line in output.split("\n"):
+            if "srun" in line:
+                pass
+            elif "slurmstepd" in line:
+                pass
+            else:
+                new_output.append(line)
+        if print_json:
+            new_output.append('"timeout"}},')
+        else:
+            failed_step = new_output[-1].split()[0] #Gets the last step that it failed at
+            new_output.append(f"{failed_step} Timed out ")
+
+    elif "srun: error" in output: #Failed run
+        new_output = []
+        for line in output.split("\n"):
+            if "srun" in line:
+                pass
+            else:
+                new_output.append(line)
     else:
-        if "slurmstepd" in output: #If it times out in standard mode
-            output = output[:output.find("srun: error")-1] #Get rid of anyline with an srun error in it
-            output = output[:output.find("slurmstepd")-1] #Get rid of slurmstepd line
-            failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
-            output += f"\n{failed_step} Timed out "
-        elif "srun: error" in output: #If the output failed we need to remove the srun line
-            output = output[0:output.find("srun: error")-1]
+        new_output = output.split("\n")
+
+    if print_json:
+        output = "".join(new_output)
+    else:
+        output = "\n".join(new_output)
+
     return result.returncode, output
 
 # Function to iterate through directories in a parallel non-recursive manner
@@ -136,7 +154,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
             return_tuple = r.get()
             return_string = return_tuple[1]
             if r == results[-1] and print_json: #Final return value has a ', ' at the end of it lol
-                return_string = return_string[:-2]
+                return_string = return_string[:-1]
             print(return_string,end="" if print_json else "\n")
             if return_tuple[0] != 0:
                 final_ret += 1
