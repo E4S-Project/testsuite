@@ -2,6 +2,8 @@ import subprocess
 import filecmp
 import os
 
+# This and test-of-all-test.py are used to test the output of test-all.py
+
 # Define test cases with their corresponding output files
 tests = {
     "000": "python test-all.py valTest/",

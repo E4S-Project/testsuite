@@ -1,1 +1,0 @@
-[{"test": "/home/ubuntu/testsuite/timeTest/adios", "test_stages": {"clean":"pass","compile":"pass","run":"pass"}},{"test": "/home/ubuntu/testsuite/timeTest/adios2", "test_stages": {"compile":"pass","run":"fail"}},{"test": "/home/ubuntu/testsuite/timeTest/amrex-cuda", "test_stages": {"clean":"fail"}}]

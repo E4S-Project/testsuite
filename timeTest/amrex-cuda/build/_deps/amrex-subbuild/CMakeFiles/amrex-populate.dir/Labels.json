@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/amrex-populate"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/amrex-populate.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/amrex-populate-complete.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-build.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-configure.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-download.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-install.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-patch.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-test.rule"
+		},
+		{
+			"file" : "/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/amrex-populate-prefix/src/amrex-populate-stamp/amrex-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"amrex-populate"
+		],
+		"name" : "amrex-populate"
+	}
+}

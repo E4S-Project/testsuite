@@ -1,0 +1,3 @@
+/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/amrex-populate.dir
+/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/edit_cache.dir
+/home/ubuntu/testsuite/validation_tests/amrex-cuda/build/_deps/amrex-subbuild/CMakeFiles/rebuild_cache.dir

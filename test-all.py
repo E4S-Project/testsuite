@@ -6,36 +6,49 @@ import datetime
 import time
 import multiprocessing
 import math
+import signal
 
 
-#ASSUMPTIONS: THAT TESTSUITE IS IN THE HOEM DIRECTORY
+#This program searches through directories in a non-recursive manner. Upon finding
+# a subdirectory containing run.sh, it adds it to the worker queue. Each worker
+# proccess then calls iterate_files.sh, which calls setup.sh, clean.sh compile.sh and run.sh.
+# Outputs are either printed to the screen in a standard manner or in a json form, --json.
+# Options for a timeout time are given, with a standard time of 600 seconds.
+# Tests can be ran on a compute node given the option --slurm, and if necessary 
+# --slurm-flags="your-flags-here"
 
-# Initialize global variables
-# Function to execute shell scripts and handle errors
-def run_command(command, timeout=600):
-    """ Run a shell command and return the output and status code """
-    #result = subprocess.run(command, shell=True)# This will not capture output
-    result = subprocess.run(command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, timeout=timeout)
-    output = result.stdout.decode().strip()
-    return result.returncode, output
+#UNTESTED FEATURES: skip-to/if, test-only, print_logs
 
-def async_run_command(command, current_dir_with_symlinks, timeout=600, print_json=False):
-    """Run a shell command and return the output and status code, handle timeouts."""
-    
+
+#Notes for both functions below:
+#JSON output requires removal of "\n", hence the output.replace calls.
+#In the case of a timeout, the functions add '"timeout"}}' or '{Setup\Compile\Run} Timed out' to the output,
+#depending on whether or not it is json
+
+# Function to execute shell scripts and handle errors, asynchronously by the worker queue
+def async_run_command(command, current_dir_with_symlinks, timeout=False, print_json=False):
     # Change to the specified directory and update environment variables
     os.chdir(current_dir_with_symlinks)
-    os.environ['PWD'] = current_dir_with_symlinks  # Update the working directory in the environment
+    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
     os.environ['testdir'] = current_dir_with_symlinks
-
+    
     try:
         # Run the command with a timeout
-        result = subprocess.run(
-            command, 
-            shell=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT, 
-            timeout=timeout
-        )
+        if timeout:
+            result = subprocess.run(
+                command, 
+                shell=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.STDOUT, 
+                timeout=timeout
+            )
+        else:
+            result = subprocess.run(
+                command, 
+                shell=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.STDOUT, 
+            )
         output = result.stdout.decode().strip()
         if print_json:
             output = output.replace("\n","")
@@ -50,21 +63,49 @@ def async_run_command(command, current_dir_with_symlinks, timeout=600, print_jso
         else:
             failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
             return -1, f"{output}\n{failed_step} Timed out "
+    except KeyboardInterrupt:
+        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
+        print("\nProcess interrupted, cleaning up...")
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=600, print_json=False):
-    """ Run a shell command in a node and return the output and status code """
-    #srun_flags=f"--exclusive -N 1 -t {math.ceil(timeout/60)} -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
-    srun_flags=f"--exclusive -N 1 -t 0:1 -Q --quit-on-interrupt" #Timeout is handled in srun instead of of subproc.run, if it fails it doesn't raise an error, just returns a nonzero return code
+# Function to execute shell scripts and handle errors, asynchronously by the worker queue, on compute nodes
+def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=False, print_json=False):
+    srun_flags = None
+    if timeout:
+        minutes = timeout // 60
+        seconds = timeout % 60
+        srun_flags=f"--exclusive -N 1 -t {minutes}:{seconds} -Q --quit-on-interrupt"
+        # Timeout is handled in srun instead of of subproc.run, if it fails it doesn't
+        # raise an error, just returns an error code. Tiemout is handled in slurm so as
+        # to not have to deal with it timing out because it takes a long time to get 
+        # job allocations. 
+        # -Q quiets slurm output, and --quit-on-interrupt I think aids in cancelling
+    else:
+        srun_flags=f"--exclusive -N 1 -Q --quit-on-interrupt" 
+
     os.chdir(current_dir_with_symlinks)
-    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this
+    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as 
+                                                #setup.sh/compile.sh require this to be set
     os.environ['testdir']=current_dir_with_symlinks
     srun_command = f"srun {srun_flags} {slurm_flags} {command}"
 
-    result = subprocess.run(srun_command, shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    result = None
+    try:
+        result = subprocess.run(
+                srun_command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+        )
+    except KeyboardInterrupt:
+        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
+        print("\nProcess interrupted, cleaning up...")
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     output = result.stdout.decode().strip()
 
     new_output = [] 
-    if "slurmstepd" in output: #Timed out
+    if "slurmstepd" in output: #When the srun timeout, it puts this in the output, so here I prune it and any line containing srun.
         for line in output.split("\n"):
             if "srun" in line:
                 pass
@@ -95,12 +136,14 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
 
     return result.returncode, output
 
-# Function to iterate through directories in a parallel non-recursive manner
-def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=600):
+# Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
+#Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
+#sub directory calling setup.sh, compile.sh, run.sh.
+def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=-1):
     final_ret = 0
     results = [] #This maintains the order of prints and aynchronous job calls.
                  #It contains jobs through the results.append... lines below
-                 #And it contains strings that get printed in order. See the results for loop below for more clarification
+                 #AND it contains strings that get printed in order. See the results for loop below for more clarification
     pool = multiprocessing.Pool(processes=processes)
 
     if not os.path.isdir(testdir):
@@ -146,7 +189,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
                     # Push the directory onto the stack instead of recursive call
                     stack.append(os.path.join(current_dir, d))
 
-
+    pool.close()
     for r in results: #If r is a string, print it, if r is not a string, it represents a 
                       #results from an asynchronous job call, and thus process its output
 
@@ -160,7 +203,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
                 final_ret += 1
         else:
             print(r)
-
+    pool.join()
     # End JSON output if needed
     if print_json:
         print("]")
