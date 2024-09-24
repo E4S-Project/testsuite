@@ -200,7 +200,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
             return_string = return_tuple[1]
             if r == results[-1] and print_json: #Final return value has a ', ' at the end of it lol
                 return_string = return_string[:-1]
-            print(return_string,end="" if print_json else "\n")
+            print(return_string,end="" if print_json else "\n", flush=True)
             if return_tuple[0] != 0:
                 final_ret += 1
         else:
