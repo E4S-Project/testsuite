@@ -160,6 +160,8 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     if print_json:
         print("[",end="")
 
+    iterate_files_sh = os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh')
+
     while stack:
         current_dir_with_symlinks = stack.pop(0)
         os.chdir(current_dir_with_symlinks)
@@ -168,9 +170,9 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir, "run.sh")):
             if slurm == False:
-                results.append(pool.apply_async(async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, timeout, print_json)))
+                results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json)))
             else:
-                results.append(pool.apply_async(srun_async_run_command,  (os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh'), current_dir_with_symlinks, slurm_flags, timeout, print_json)))
+                results.append(pool.apply_async(srun_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, slurm_flags, timeout, print_json)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
