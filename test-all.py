@@ -12,11 +12,11 @@ import signal
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
 # proccess then calls iterate_files.sh, which calls setup.sh, clean.sh compile.sh and run.sh.
 # Outputs are either printed to the screen in a standard manner or in a json form, --json.
-# Options for a timeout time are given, with a standard time of 600 seconds.
+# Options for a timeout time are given, with a default of no timeout.
 # Tests can be ran on a compute node given the option --slurm, and if necessary 
 # --slurm-flags="your-flags-here"
 
-#UNTESTED FEATURES: skip-to/if, test-only, print_logs
+#UNTESTED FEATURES: print_logs
 
 #NOTE: json goes through stderr and other output goes through stdout
 
@@ -32,6 +32,9 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
     os.environ['testdir'] = current_dir_with_symlinks
     
+    stdout = None
+    stderr = None
+    return_code = None
     try:
         result = None
         # Run the command with a timeout
@@ -52,24 +55,28 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
             )
         stdout = result.stdout.decode().strip()
         stderr = result.stderr.decode().strip()
+        return_code = result.returncode
         if print_json:
             stderr = stderr.replace("\n","") + "\n"
-        return result.returncode, stdout, stderr
 
+    except KeyboardInterrupt:
+        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
+        print("\nProcess interrupted, cleaning up...")
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
     except subprocess.TimeoutExpired as e:
         # If the process times out, return the partial output and a timeout indicator
         stdout = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
         stderr = e.stderr.decode().strip() if e.stderr else ""
         if print_json:
             stderr = stderr.replace("\n","")
-            return -1, stdout, stderr  + '"timeout"}},\n'
+            return_code = -1
+            stderr  += '"timeout"}},\n'
         else:
             failed_step = stdout.split("\n")[-1].split()[0] #Gets the last step that it failed at
-            return -1, f"{stdout}\n{failed_step} Timed out ", stderr
-    except KeyboardInterrupt:
-        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
-        print("\nProcess interrupted, cleaning up...")
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
+            return_code = -1
+            stdout += f"\n{failed_step} Timed out "
+
+    return return_code, stdout, stderr
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue, on compute nodes
 def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=False, print_json=False):
@@ -202,7 +209,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
                         continue
                     if skip_if and skip_if in d:
                         continue
-                    if test_only and os.path.basename(d) in test_only:
+                    if test_only and not (os.path.basename(d) in test_only):
                         continue
                     # Push the directory onto the stack instead of recursive call
                     stack.append(os.path.join(current_dir, d))
@@ -276,7 +283,11 @@ def main():
     #These control which tests are ran
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
-    test_only = args.test_only or ""
+    if args.test_only:
+        test_only=args.test_only.split()
+    else:
+        test_only = ""
+                
     timeout = int(args.timeout)
 
     #These are for the multiprocessing/slurm functionality
