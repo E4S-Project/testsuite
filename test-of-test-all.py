@@ -21,6 +21,9 @@ correct_dir = "correct_outputs"
 # Directory where the current test outputs are stored
 output_dir = "current_outputs"
 
+os.makedirs(output_dir, exist_ok=True)
+os.makedirs(correct_dir, exist_ok=True)
+
 def run_tests():
     for test_code, command in tests.items():
         output_file = os.path.join(output_dir, test_code)
