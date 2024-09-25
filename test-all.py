@@ -188,10 +188,9 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     while stack:
         current_dir_with_symlinks = stack.pop(0)
         os.chdir(current_dir_with_symlinks)
-        current_dir = os.getcwd() #I do this to get the full path, but it doesnt have the symlinks in it, hence why I keep current dir with symlinks
 
         # Check if there is a run.sh script to execute
-        if os.path.exists(os.path.join(current_dir, "run.sh")):
+        if os.path.exists(os.path.join(current_dir_with_symlinks, "run.sh")):
             if slurm == False:
                 results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json)))
             else:
@@ -199,7 +198,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
-                results.append("===\n" + os.path.basename(current_dir))
+                results.append("===\n" + os.path.basename(current_dir_with_symlinks))
 
             files = sorted(os.listdir("."))
             # Iterate through subdirectories
@@ -212,7 +211,7 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
                     if test_only and not (os.path.basename(d) in test_only):
                         continue
                     # Push the directory onto the stack instead of recursive call
-                    stack.append(os.path.join(current_dir, d))
+                    stack.append(os.path.join(current_dir_with_symlinks, d))
 
     pool.close()
     
