@@ -53,7 +53,7 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
         stdout = result.stdout.decode().strip()
         stderr = result.stderr.decode().strip()
         if print_json:
-            stderr = stderr.replace("\n","")
+            stderr = stderr.replace("\n","") + "\n"
         return result.returncode, stdout, stderr
 
     except subprocess.TimeoutExpired as e:
@@ -62,10 +62,10 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
         stderr = e.stderr.decode().strip() if e.stderr else ""
         if print_json:
             stderr = stderr.replace("\n","")
-            return -1, stdout, stderr  + '"timeout"}},'
+            return -1, stdout, stderr  + '"timeout"}},\n'
         else:
             failed_step = stdout.split("\n")[-1].split()[0] #Gets the last step that it failed at
-            return -1, f"{stdout}\n{failed_step} Timed out "
+            return -1, f"{stdout}\n{failed_step} Timed out ", stderr
     except KeyboardInterrupt:
         # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
         print("\nProcess interrupted, cleaning up...")
@@ -212,8 +212,8 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
             return_tuple = r.get()
             return_stdout = return_tuple[1]
             return_stderr = return_tuple[2]
-            if r == results[-1] and print_json: #Final json has a ',' at the end of it lol
-                return_stderr = return_stderr[:-1]
+            if r == results[-1] and print_json: #Final json has a ',\n' at the end of it
+                return_stderr = return_stderr[:-2]
             
             print(return_stdout)
             if print_json:
