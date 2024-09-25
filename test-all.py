@@ -98,46 +98,47 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
                 srun_command,
                 shell=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT
+                stderr=subprocess.PIPE
         )
     except KeyboardInterrupt:
         # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
         print("\nProcess interrupted, cleaning up...")
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    output = result.stdout.decode().strip()
+    stdout = result.stdout.decode().strip()
+    stderr = result.stderr.decode().strip()
 
-    new_output = [] 
-    if "slurmstepd" in output: #When the srun timeout, it puts this in the output, so here I prune it and any line containing srun.
-        for line in output.split("\n"):
-            if "srun" in line:
+    new_stderr_list = []
+    new_stdout_list = [] 
+    if "slurmstepd" in stderr: #Srun timeout
+        for line in stderr.split("\n"):
+            if "slurmstepd" in line: #remove this line
                 pass
-            elif "slurmstepd" in line:
+            elif "srun" in line:
                 pass
             else:
-                new_output.append(line)
+                new_stderr_list.append(line)
         if print_json:
-            new_output.append('"timeout"}},')
+            new_stderr_list.append('"timeout"}},')
+            stderr = "".join(new_stderr_list)
         else:
-            failed_step = new_output[-1].split()[0] #Gets the last step that it failed at
-            new_output.append(f"{failed_step} Timed out ")
-
-    elif "srun: error" in output: #Failed run
-        new_output = []
-        for line in output.split("\n"):
+            new_stdout_list = stdout.split("\n")
+            failed_step = new_stdout_list[-1].split()[0] #Gets the last step that it failed at
+            new_stdout_list.append(f"{failed_step} Timed out ")
+            stdout = "\n".join(new_stdout_list)
+            stderr = "\n".join(new_stderr_list)
+    elif "srun" in stderr: #Srun timeout
+        for line in stderr.split("\n"):
             if "srun" in line:
                 pass
             else:
-                new_output.append(line)
-    else:
-        new_output = output.split("\n")
+                new_stderr_list.append(line)
+        stderr = "".join(new_stderr_list)
+    elif print_json:
+        stderr = stderr.replace("\n","")
+    stderr += "\n"
 
-    if print_json:
-        output = "".join(new_output)
-    else:
-        output = "\n".join(new_output)
-
-    return result.returncode, output
+    return result.returncode, stdout, stderr
 
 # Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
@@ -159,20 +160,23 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     # Use a stack to simulate recursion
     stack = [testdir]
 
-    # Begin JSON output if needed
+    testsuite_dir = os.path.dirname(os.path.realpath(__file__)) #this is the testsuite directory
+
+    # Begin JSON output if needed, make directory if needed
+    os.makedirs(os.path.join(testsuite_dir,"json-outputs"), exist_ok=True)
     json_output_file = None
     timestamp = timestamp = datetime.datetime.now().strftime("Y%YM%mD%dH%HM%MS%S")
 
     if print_json:
         if json_name == "":
-            json_output_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),'json-outputs',f"testsuite-{timestamp}.json")
+            json_output_file = os.path.join(testsuite_dir,'json-outputs',f"testsuite-{timestamp}.json")
         elif json_name != "":
-            json_output_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),'json-outputs',f"{json_name}-{timestamp}.json")
+            json_output_file = os.path.join(testsuite_dir,'json-outputs',f"{json_name}-{timestamp}.json")
         with open(json_output_file,"a+") as file:
             file.write("[")
-            file.close()
+            file.close() #Since this program might run for a long time, close after writing to ensure no funny file business
 
-    iterate_files_sh = os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh')
+    iterate_files_sh = os.path.join(testsuite_dir,'iterate_files.sh')
 
     while stack:
         current_dir_with_symlinks = stack.pop(0)
@@ -212,11 +216,11 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
             return_tuple = r.get()
             return_stdout = return_tuple[1]
             return_stderr = return_tuple[2]
-            if r == results[-1] and print_json: #Final json has a ',\n' at the end of it
-                return_stderr = return_stderr[:-2]
             
             print(return_stdout)
             if print_json:
+                if r == results[-1]: #Final json string, remove ,\n
+                    return_stderr=return_stderr.rstrip(",\n")
                 with open(json_output_file,"a+") as file:
                     file.write(return_stderr)
                     file.close()

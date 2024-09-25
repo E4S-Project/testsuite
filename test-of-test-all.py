@@ -10,10 +10,10 @@ tests = {
     "010": "python test-all.py valTest/ --json",
     "001": "python test-all.py valTest/ --slurm",
     "011": "python test-all.py valTest/ --slurm --json",
-    "100": "python test-all.py testTime/ --timeout=10",
-    "110": "python test-all.py testTime/ --timeout=10 --json",
-    "101": "python test-all.py testTime/ --timeout=10 --slurm",
-    "111": "python test-all.py testTime/ --timeout=10 --slurm --json"
+    "100": "python test-all.py timeTest/ --timeout=10",
+    "110": "python test-all.py timeTest/ --timeout=10 --json",
+    "101": "python test-all.py timeTest/ --timeout=10 --slurm",
+    "111": "python test-all.py timeTest/ --timeout=10 --slurm --json"
 }
 
 # Directory where the correct outputs are stored
