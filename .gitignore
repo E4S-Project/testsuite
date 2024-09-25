@@ -4,6 +4,6 @@ profile.*.*.*
 .DS_Store
 *.log
 validation_tests/*/*
-current_outputs/
-correct_outputs/
+current-outputs/
+correct-outputs/
 json-outputs
