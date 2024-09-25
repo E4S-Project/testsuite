@@ -16,7 +16,7 @@ cwd=$PWD
 _ret=0
 
 if [ $print_json = true ]; then
-    echo "{\"test\": \"$testdir\", \"test_stages\": {" >&2
+	echo "{\"test\": \"$(basename "$testdir")\", \"test_stages\": {" >&2
 else
     echo "===" >&1
     echo "$(basename "$testdir")" >&1
