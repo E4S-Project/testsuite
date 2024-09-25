@@ -16,10 +16,10 @@ cwd=$PWD
 _ret=0
 
 if [ $print_json = true ]; then
-    echo "{\"test\": \"$testdir\", \"test_stages\": {"
+    echo "{\"test\": \"$testdir\", \"test_stages\": {" >&2
 else
-    echo "==="
-    echo "$(basename "$testdir")"
+    echo "===" >&1
+    echo "$(basename "$testdir")" >&1
 fi
 unset E4S_TEST_SETUP
 export SPACK_LOAD_RESULT=0
@@ -31,18 +31,18 @@ E4S_LOG_SUFFIX="$(basename $testdir)"_"$E4S_TEST_HASH"_"$testtime".log
 #echo "SPACK LOAD RESULT RETURN: $_ret" >&2
         if [ $_ret -eq 215 ] ; then
          if [ $print_json = true ]; then
-                     echo "\"setup\":\"missing\"}},"
+                     echo "\"setup\":\"missing\"}}," >&2
          else
-             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&1
              fi
          exit $_ret
      fi
      if [ $_ret -ne 0 ] ; then
 
              if [ $print_json = true ]; then
-             echo "\"setup\":\"fail\"}},"
+             echo "\"setup\":\"fail\"}}," >&2
          else
-             echo "Setup ${bold}failed${normal}" >&2
+             echo "Setup ${bold}failed${normal}" >&1
          fi
              exit $_ret
      fi
@@ -50,107 +50,107 @@ E4S_LOG_SUFFIX="$(basename $testdir)"_"$E4S_TEST_HASH"_"$testtime".log
 
 if [ -e "$cwd/clean.sh" ] ; then
     if [ $print_json = true ]; then
-        echo "\"clean\":"
+        echo "\"clean\":" >&2
     else
-            echo "Cleaning $testdir" >&2
+            echo "Cleaning $testdir" >&1
         fi
     ./clean.sh >& ./clean-"$E4S_LOG_SUFFIX"
     _ret=$?
     
     if [ $print_logs = true ]; then
-         echo "---CLEANUP LOG---" >&2
-         cat ./clean-$E4S_LOG_SUFFIX >&2
+         echo "---CLEANUP LOG---" >&1
+         cat ./clean-$E4S_LOG_SUFFIX >&1
     fi
     if [ $_ret -eq 215 ] ; then
          if [ $print_json = true ]; then
-             echo "\"missing\"}},"
+             echo "\"missing\"}}," >&2
          else
-             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&1
       fi
          exit $_ret
      fi
      if [ $_ret -ne 0 ] ; then
 
          if [ $print_json = true ]; then
-               echo "\"fail\"}},"
+               echo "\"fail\"}}," >&2
              else
-               echo "Clean ${bold}failed${normal}" >&2
+               echo "Clean ${bold}failed${normal}" >&1
              fi
              exit $_ret
       fi
  
  if [ $print_json = true ]; then
-                 echo "\"pass\","
+                 echo "\"pass\"," >&2
      fi
  fi
 
  if [ -e "$cwd/compile.sh" ] ; then
      if [ $print_json = true ]; then
-         echo "\"compile\":"
+         echo "\"compile\":" >&2
      else
-         echo "Compiling $cwd" >&2
+         echo "Compiling $cwd" >&1
      fi
         ./compile.sh >& ./compile-$E4S_LOG_SUFFIX
         _ret=$?
         if [ $print_logs = true ]; then
-             echo "---COMPILE LOG---" >&2
-             cat ./compile-$E4S_LOG_SUFFIX >&2
+             echo "---COMPILE LOG---" >&1
+             cat ./compile-$E4S_LOG_SUFFIX >&1
         fi
 
      if [ $_ret -eq 215 ] ; then
          if [ $print_json = true ]; then
-             echo "\"missing\"}},"
+             echo "\"missing\"}}," >&2
          else
-             echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+             echo "Required Spack Packages ${yellow}Not Found${normal}" >&1
          fi
          exit $_ret
      fi
      if [ $_ret -ne 0 ] ; then
      if [ $print_json = true ]; then
-                 echo "\"fail\"}},"
+                 echo "\"fail\"}}," >&2
               else
-                echo "Compile ${bold}failed${normal}" >&2
+                echo "Compile ${bold}failed${normal}" >&1
               fi
          exit $_ret
       fi
   if [ $print_json = true ]; then
-                 echo "\"pass\","
+                 echo "\"pass\"," >&2
       fi
   fi
 
   if [ $print_json = true ]; then
-        echo "\"run\":"
+        echo "\"run\":" >&2
   else
-    echo "Running $cwd" >&2
+    echo "Running $cwd" >&1
   fi
     ./run.sh >& run-$E4S_LOG_SUFFIX
     _ret=$?
     if [ $print_logs = true ]; then
          echo "---RUN LOG---"
-         cat ./run-$E4S_LOG_SUFFIX >&2
+         cat ./run-$E4S_LOG_SUFFIX >&1
     fi
 
        if [ $_ret -eq 215 ] ; then
      if [ $print_json = true ]; then
-                 echo "\"missing\"}},"
+                 echo "\"missing\"}}," >&2
          else
-         echo "Required Spack Packages ${yellow}Not Found${normal}" >&2
+         echo "Required Spack Packages ${yellow}Not Found${normal}" >&1
          fi
          exit $_ret
        fi
        if [ $_ret -ne 0 ] ; then
        if [ $print_json = true ]; then
-                 echo "\"fail\"}},"
+                 echo "\"fail\"}}," >&2
                else
-                 echo "Run ${bold}failed${normal}" >&2
+                 echo "Run ${bold}failed${normal}" >&1
            fi
          exit $_ret
        fi
    if [ $print_json = true ]; then
-            echo "\"pass\"}}, "
+            echo "\"pass\"}}, " >&2
       else
     
-   echo "${green}Success${normal}" >&2
+   echo "${green}Success${normal}" >&1
    fi
 
 

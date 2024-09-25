@@ -3,7 +3,6 @@ import sys
 import argparse
 import subprocess
 import datetime
-import time
 import multiprocessing
 import math
 import signal
@@ -19,6 +18,7 @@ import signal
 
 #UNTESTED FEATURES: skip-to/if, test-only, print_logs
 
+#NOTE: json goes through stderr and other output goes through stdout
 
 #Notes for both functions below:
 #JSON output requires removal of "\n", hence the output.replace calls.
@@ -33,36 +33,39 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
     os.environ['testdir'] = current_dir_with_symlinks
     
     try:
+        result = None
         # Run the command with a timeout
         if timeout:
             result = subprocess.run(
                 command, 
                 shell=True, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.STDOUT, 
-                timeout=timeout
+                timeout=timeout,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
         else:
             result = subprocess.run(
                 command, 
                 shell=True, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.STDOUT, 
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
-        output = result.stdout.decode().strip()
+        stdout = result.stdout.decode().strip()
+        stderr = result.stderr.decode().strip()
         if print_json:
-            output = output.replace("\n","")
-        return result.returncode, output
+            stderr = stderr.replace("\n","")
+        return result.returncode, stdout, stderr
 
     except subprocess.TimeoutExpired as e:
         # If the process times out, return the partial output and a timeout indicator
-        output = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
+        stdout = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
+        stderr = e.stderr.decode().strip() if e.stderr else ""
         if print_json:
-            output = output.replace("\n","")
-            return -1, output + '"timeout"}},'
+            stderr = stderr.replace("\n","")
+            return -1, stdout, stderr  + '"timeout"}},'
         else:
-            failed_step = output.split("\n")[-1].split()[0] #Gets the last step that it failed at
-            return -1, f"{output}\n{failed_step} Timed out "
+            failed_step = stdout.split("\n")[-1].split()[0] #Gets the last step that it failed at
+            return -1, f"{stdout}\n{failed_step} Timed out "
     except KeyboardInterrupt:
         # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
         print("\nProcess interrupted, cleaning up...")
@@ -139,7 +142,7 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
 # Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
-def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=-1):
+def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
     final_ret = 0
     results = [] #This maintains the order of prints and aynchronous job calls.
                  #It contains jobs through the results.append... lines below
@@ -157,8 +160,17 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     stack = [testdir]
 
     # Begin JSON output if needed
+    json_output_file = None
+    timestamp = timestamp = datetime.datetime.now().strftime("Y%YM%mD%dH%HM%MS%S")
+
     if print_json:
-        print("[",end="")
+        if json_name == "":
+            json_output_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),'json-outputs',f"testsuite-{timestamp}.json")
+        elif json_name != "":
+            json_output_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),'json-outputs',f"{json_name}-{timestamp}.json")
+        with open(json_output_file,"a+") as file:
+            file.write("[")
+            file.close()
 
     iterate_files_sh = os.path.join(os.path.dirname(os.path.realpath(__file__)),'iterate_files.sh')
 
@@ -192,19 +204,22 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
                     stack.append(os.path.join(current_dir, d))
 
     pool.close()
+    
     for r in results: #If r is a string, print it, if r is not a string, it represents a 
                       #results from an asynchronous job call, and thus process its output
 
         if type(r) != type(""): 
             return_tuple = r.get()
-            return_string = return_tuple[1]
-            if r == results[-1] and print_json: #Final return value has a ', ' at the end of it lol
-                return_string = return_string[:-1]
+            return_stdout = return_tuple[1]
+            return_stderr = return_tuple[2]
+            if r == results[-1] and print_json: #Final json has a ',' at the end of it lol
+                return_stderr = return_stderr[:-1]
+            
+            print(return_stdout)
             if print_json:
-                print(return_string,end="", flush= True) #If printing json I want it to all be on one line,
-                                #but python doesn't print it immediately, so I set flush = True for json
-            else:
-                print(return_string,end="\n")
+                with open(json_output_file,"a+") as file:
+                    file.write(return_stderr)
+                    file.close()
 
             if return_tuple[0] != 0:
                 final_ret += 1
@@ -213,9 +228,10 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     pool.join()
     # End JSON output if needed
     if print_json:
-        print("]")
-    else:
-        print("Total number of failed tests: %d" % final_ret)
+        with open(json_output_file,"a+") as file:
+            file.write("]")
+            file.close()
+    print("Total number of failed tests: %d" % final_ret)
 
     return final_ret
 
@@ -226,6 +242,7 @@ def main():
     parser = argparse.ArgumentParser(description='Run all tests in the specified directory.')
     parser.add_argument('directory', nargs='?', default='validation_tests', help='Test directory to use')
     parser.add_argument('--json', action='store_true', help='Print JSON output.')
+    parser.add_argument('--json-name', default="", help='Optional name for json output')
     parser.add_argument('--print-logs', action='store_true', help='Print all logs.')
     parser.add_argument('--settings', type=str, help='Path to settings file')
     parser.add_argument('--color-off', action='store_false', dest='e4s_print_color', help='Disable color output.')
@@ -235,25 +252,28 @@ def main():
     parser.add_argument('--slurm', action='store_true', help='Enable SLURM mode')
     parser.add_argument('--slurm_flags', type=str, help="Optional flags for slurm, such as the account code")
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
-    parser.add_argument('--timeout', type=int, default=600, help='Timeout value in seconds for each test, default is 600')
+    parser.add_argument('--timeout', type=int, default=0, help='Timeout value in seconds for each test, default is 0 for no timeout')
     args = parser.parse_args()
 
     basedir = args.directory
     
     #These get set as environment variables for iterate_files.sh and setup.sh scripts
     print_json = args.json
+    json_name = args.json_name
+    if (json_name != "") and args.json == False:
+        raise ValueError("--json must be set if you wish to use --json-name")
     print_logs = args.print_logs
     e4s_print_color = args.e4s_print_color
     os.environ['print_logs'] = str(print_logs).lower()
     os.environ['print_json'] = str(print_json).lower()
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
- 
+     
 
     #These control which tests are ran
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
     test_only = args.test_only or ""
-    timeout = args.timeout
+    timeout = int(args.timeout)
 
     #These are for the multiprocessing/slurm functionality
     slurm_flags = args.slurm_flags or ""
@@ -262,7 +282,7 @@ def main():
 
 
     # Call the main directory iteration function
-    final_ret = iterate_directories(basedir, processes=processes, slurm=slurm, slurm_flags=slurm_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout)
+    final_ret = iterate_directories(basedir, processes=processes, slurm=slurm, slurm_flags=slurm_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
 
     # Exit with the final return code
     sys.exit(final_ret)
