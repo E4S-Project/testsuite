@@ -117,7 +117,6 @@ spackLoadUnique(){
    #HASHDEX=${#FIND_ARRAY1[@]}-2
    HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
    
-   echo "dog" >&1 #Output the spack error I caught from before into the stdout
    echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
 
    export E4S_TEST_HASH=$HASH
