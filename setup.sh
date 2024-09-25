@@ -71,10 +71,10 @@ spackGetUniqueExplicit(){
 	xhashes=`spack find $expinst --format {hash} $@ $TESTSUITE_VARIANT`
 	ret_val=$?
 	if [ $ret_val -ne 0 ] ; then
-        	#echo "get unique Returning 215!"
-        	#export SPACK_LOAD_RESULT=215
-        	return 215
-  	fi
+		#echo "get unique Returning 215!"
+		#export SPACK_LOAD_RESULT=215
+		return 215
+	fi
 	echo $xhashes | awk '{print $1}'
 #unset -x
 }
@@ -85,10 +85,20 @@ spackLoadUnique(){
 	   return
    fi
    #SPACK_LOAD_RESULT=0
-   uniquehash=`spackGetUniqueExplicit $@`
-   ret_val=$?
+   
+
+   #Bash functions have return values, but if you want more complicated output
+   #you echo a string onto stdout. Since $(...) captures stdout, we don't want
+	   #to output the error to stdout but we also want to capture it. This captures
+	   #it in fd/3, which I can then output to stderr since in this function since
+	   #this ones stdout isn't captured.
+	   #Very complicated sorry, maybe i am wrong lol
+    uniquehash=$(spackGetUniqueExplicit "$@" 2>&1)
+    ret_val=$?
+
    if [ $ret_val -ne 0 ] ; then
         #echo "Returning 215!"
+	echo "$uniquehash" 
         export SPACK_LOAD_RESULT=215
         return 215
    fi
@@ -107,6 +117,7 @@ spackLoadUnique(){
    #HASHDEX=${#FIND_ARRAY1[@]}-2
    HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
    
+   echo "dog" >&1 #Output the spack error I caught from before into the stdout
    echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
 
    export E4S_TEST_HASH=$HASH
