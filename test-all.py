@@ -7,6 +7,7 @@ import datetime
 import multiprocessing
 import math
 import signal
+import shlex
 
 
 #This program searches through directories in a non-recursive manner. Upon finding
@@ -36,13 +37,13 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
     stdout = None
     stderr = None
     return_code = None
+    command = shlex.split(command)
     try:
         result = None
         # Run the command with a timeout
         if timeout:
             result = subprocess.run(
                 command, 
-                shell=True, 
                 timeout=timeout,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -50,7 +51,6 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
         else:
             result = subprocess.run(
                 command, 
-                shell=True, 
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
@@ -100,12 +100,12 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
     os.environ['testdir']=current_dir_with_symlinks
     os.environ['testtime'] = timestamp
     srun_command = f"srun {srun_flags} {slurm_flags} {command}"
+    srun_command = shlex.split(srun_command)
 
     result = None
     try:
         result = subprocess.run(
                 srun_command,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
         )
@@ -248,6 +248,23 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
 
     return final_ret
 
+def settings_file(settings_file_name):
+    os.environ["TESTSUITE_SETTINGS_FILE"] = settings_file_name
+    settings_lines = open(settings_file_name, 'r')
+    for line in settings_lines:
+        # Skip empty lines and comments
+        if not line or line.startswith('#'):
+            continue
+
+        # Process lines that start with 'export '
+        if line.startswith('export'):
+            # Remove 'export ' from the beginning
+            line = line[len('export'):]
+
+            # Use shlex to handle quoted strings and shell-like syntax
+            tokens = shlex.split(line, posix=True)[0].split("=")
+            os.environ[tokens[0]] = str(tokens[1])
+
 # Main function to parse arguments and execute the script
 def main():
 
@@ -257,7 +274,7 @@ def main():
     parser.add_argument('--json', action='store_true', help='Print JSON output.')
     parser.add_argument('--json-name', default="", help='Optional name for json output')
     parser.add_argument('--print-logs', action='store_true', help='Print all logs.')
-    parser.add_argument('--settings', type=str, help='Path to settings file')
+    parser.add_argument('--settings', type=str, help='Path to settings file', default="settings.sh")
     parser.add_argument('--color-off', action='store_false', dest='e4s_print_color', help='Disable color output.')
     parser.add_argument('--skip-to', type=str, help='Skip to specified test.')
     parser.add_argument('--skip-if', type=str, help='Skip tests with the given substring in the directory name.')
@@ -281,6 +298,8 @@ def main():
     os.environ['print_json'] = str(print_json).lower()
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
      
+    #Set the settings environs
+    settings_file(args.settings)
 
     #These control which tests are ran
     skip_to = args.skip_to or ""
