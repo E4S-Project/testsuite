@@ -13,7 +13,7 @@ rArg="  "
 dArg=" -dpl "
 
 spackTestRun(){
-	testOut=$(timeout 10m spack test run /${1} )
+	testOut=$(spack test run /${1} )
 	res=$?
 	echo "--- $testOut ---"
 	#echo $testOut | grep "No installed packages match spec"

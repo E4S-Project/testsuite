@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import argparse
@@ -26,12 +27,12 @@ import signal
 #depending on whether or not it is json
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue
-def async_run_command(command, current_dir_with_symlinks, timeout=False, print_json=False):
+def async_run_command(command, current_dir_with_symlinks, timeout=False, print_json=False, timestamp=""):
     # Change to the specified directory and update environment variables
     os.chdir(current_dir_with_symlinks)
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
     os.environ['testdir'] = current_dir_with_symlinks
-    
+    os.environ['testtime'] = timestamp
     stdout = None
     stderr = None
     return_code = None
@@ -44,14 +45,14 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
                 shell=True, 
                 timeout=timeout,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
         else:
             result = subprocess.run(
                 command, 
                 shell=True, 
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
             )
         stdout = result.stdout.decode().strip()
         stderr = result.stderr.decode().strip()
@@ -79,7 +80,7 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
     return return_code, stdout, stderr
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue, on compute nodes
-def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=False, print_json=False):
+def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=False, print_json=False, timestamp=""):
     srun_flags = None
     if timeout:
         minutes = timeout // 60
@@ -97,6 +98,7 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
     os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as 
                                                 #setup.sh/compile.sh require this to be set
     os.environ['testdir']=current_dir_with_symlinks
+    os.environ['testtime'] = timestamp
     srun_command = f"srun {srun_flags} {slurm_flags} {command}"
 
     result = None
@@ -172,7 +174,8 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
     # Begin JSON output if needed, make directory if needed
     os.makedirs(os.path.join(testsuite_dir,"json-outputs"), exist_ok=True)
     json_output_file = None
-    timestamp = timestamp = datetime.datetime.now().strftime("Y%YM%mD%dH%HM%MS%S")
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    os.environ['testtime'] = timestamp
 
     if print_json:
         if json_name == "":
@@ -192,9 +195,9 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir_with_symlinks, "run.sh")):
             if slurm == False:
-                results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json)))
+                results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json, timestamp)))
             else:
-                results.append(pool.apply_async(srun_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, slurm_flags, timeout, print_json)))
+                results.append(pool.apply_async(srun_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, slurm_flags, timeout, print_json, timestamp)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
