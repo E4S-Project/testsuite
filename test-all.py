@@ -249,6 +249,25 @@ def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="
 
     return final_ret
 
+def source(settings_file):
+    #The settings file needs to be put in the environment. Since settings.sh is sourced
+    #by a bash script, then when I use the cli arg, I would have to handle that cli arg
+    #in bash, which I didn't want to do, or I have to source it in python, which is 
+    #kinda ridiculous but only took like 10 minutes and was kind of fun.
+
+    #Gets the environment in the first command, then gets the env after sourcing
+    #a file. Finds the set difference. Puts them in the python processes sys environment
+    settings_file = os.path.realpath(settings_file)
+    os.environ["TESTSUITE_SETTINGS_FILE"] = settings_file
+    unsourced_command = shlex.split("bash -c 'env'")
+    sourced_command = shlex.split(f"bash -c 'source {settings_file} && env'")
+    unsourced_output = set(subprocess.run(unsourced_command, capture_output=True, check=True, text=True).stdout.split("\n"))
+    sourced_output = set(subprocess.run(sourced_command, capture_output=True, check=True, text=True).stdout.split("\n"))
+
+    difference_in_outputs = sourced_output.difference(unsourced_output)
+    for line in difference_in_outputs:
+        key, _, value = line.partition("=")
+        os.environ[key]= value
 
     # Main function to parse arguments and execute the script
 def main():
@@ -283,24 +302,6 @@ def main():
     os.environ['print_json'] = str(print_json).lower()
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
      
-    #Set the settings environs
-    os.environ["TESTSUITE_SETTINGS_FILE"] = os.path.realpath(args.settings)
-    settings_lines = open(args.settings, 'r').readlines()
-    for line in settings_lines:
-        # Skip empty lines and comments
-        if not line or line.startswith('#'):
-            continue
-
-        # Process lines that start with 'export '
-        if line.startswith('export'):
-            # Remove 'export ' from the beginning
-            line = line[len('export'):]
-
-            # Use shlex to handle quoted strings and shell-like syntax
-            tokens = shlex.split(line, posix=True)[0].split("=")
-            value = str(tokens[1]) or ""
-            os.environ[tokens[0]] = value
-
 
     #These control which tests are ran
     skip_to = args.skip_to or ""
@@ -311,6 +312,8 @@ def main():
         test_only = ""
                 
     timeout = int(args.timeout)
+
+    source(args.settings)
 
     #These are for the multiprocessing/scheduler functionality
     scheduler = args.scheduler or os.environ.get("SCHEDULER", None) or False #Sets command line precedence over settings file (which is what sets SCHEDULER)
