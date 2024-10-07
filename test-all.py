@@ -15,10 +15,8 @@ import shlex
 # proccess then calls iterate_files.sh, which calls setup.sh, clean.sh compile.sh and run.sh.
 # Outputs are either printed to the screen in a standard manner or in a json form, --json.
 # Options for a timeout time are given, with a default of no timeout.
-# Tests can be ran on a compute node given the option --slurm, and if necessary 
-# --slurm-flags="your-flags-here"
-
-#UNTESTED FEATURES: print_logs
+# Tests can be ran on a compute node given the option --scheduler, and if necessary 
+# --scheduler-flags="your-flags-here"
 
 #NOTE: json goes through stderr and other output goes through stdout
 
@@ -80,32 +78,35 @@ def async_run_command(command, current_dir_with_symlinks, timeout=False, print_j
     return return_code, stdout, stderr
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue, on compute nodes
-def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", timeout=False, print_json=False, timestamp=""):
-    srun_flags = None
+def scheduler_async_run_command(command,current_dir_with_symlinks, scheduler="", scheduler_flags="", timeout=False, print_json=False, timestamp=""):
+    os.chdir(current_dir_with_symlinks)
+    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as  setup.sh/compile.sh require this to be set
+    os.environ['testdir']=current_dir_with_symlinks
+    os.environ['testtime'] = timestamp
+
     if timeout:
         minutes = timeout // 60
         seconds = timeout % 60
-        srun_flags=f"--exclusive -N 1 -t {minutes}:{seconds} -Q --quit-on-interrupt"
-        # Timeout is handled in srun instead of of subproc.run, if it fails it doesn't
-        # raise an error, just returns an error code. Tiemout is handled in slurm so as
+        scheduler_flags=f"-t {minutes}:{seconds} {scheduler_flags}"
+        # Timeout is handled in scheduler instead of of subproc.run, if it fails it doesn't
+        # raise an error, just returns an error code. Tiemout is handled in scheduler so as
         # to not have to deal with it timing out because it takes a long time to get 
         # job allocations. 
-        # -Q quiets slurm output, and --quit-on-interrupt I think aids in cancelling
-    else:
-        srun_flags=f"--exclusive -N 1 -Q --quit-on-interrupt" 
 
-    os.chdir(current_dir_with_symlinks)
-    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as 
-                                                #setup.sh/compile.sh require this to be set
-    os.environ['testdir']=current_dir_with_symlinks
-    os.environ['testtime'] = timestamp
-    srun_command = f"srun {srun_flags} {slurm_flags} {command}"
-    srun_command = shlex.split(srun_command)
+    scheduler_command = None
+    if scheduler == "slurm":
+        scheduler_flags = f"--exclusive -N 1 -Q --quit-on-interrupt {scheduler_flags}"
+        # -Q quiets slurm output, and --quit-on-interrupt I think aids in cancelling
+        scheduler_command = f"srun {scheduler_flags} {scheduler_flags} {command}"
+    elif scheduler == "qsub":
+        pass
+
+    scheduler_command = shlex.split(scheduler_command)
 
     result = None
     try:
         result = subprocess.run(
-                srun_command,
+                scheduler_command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
         )
@@ -152,7 +153,7 @@ def srun_async_run_command(command,current_dir_with_symlinks, slurm_flags="", ti
 # Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
-def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
+def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
     final_ret = 0
     results = [] #This maintains the order of prints and aynchronous job calls.
                  #It contains jobs through the results.append... lines below
@@ -194,10 +195,10 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
 
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir_with_symlinks, "run.sh")):
-            if slurm == False:
+            if scheduler == False:
                 results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json, timestamp)))
             else:
-                results.append(pool.apply_async(srun_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, slurm_flags, timeout, print_json, timestamp)))
+                results.append(pool.apply_async(scheduler_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, scheduler, scheduler_flags, timeout, print_json, timestamp)))
             #Call it with symlinks so that the .sh scripts know which test to run
         else:
             if print_json == False:
@@ -248,24 +249,8 @@ def iterate_directories(testdir, processes=4, slurm=False, slurm_flags="", print
 
     return final_ret
 
-def settings_file(settings_file_name):
-    os.environ["TESTSUITE_SETTINGS_FILE"] = settings_file_name
-    settings_lines = open(settings_file_name, 'r')
-    for line in settings_lines:
-        # Skip empty lines and comments
-        if not line or line.startswith('#'):
-            continue
 
-        # Process lines that start with 'export '
-        if line.startswith('export'):
-            # Remove 'export ' from the beginning
-            line = line[len('export'):]
-
-            # Use shlex to handle quoted strings and shell-like syntax
-            tokens = shlex.split(line, posix=True)[0].split("=")
-            os.environ[tokens[0]] = str(tokens[1])
-
-# Main function to parse arguments and execute the script
+    # Main function to parse arguments and execute the script
 def main():
 
     # Argument parsing
@@ -279,8 +264,8 @@ def main():
     parser.add_argument('--skip-to', type=str, help='Skip to specified test.')
     parser.add_argument('--skip-if', type=str, help='Skip tests with the given substring in the directory name.')
     parser.add_argument('--test-only', type=str, help='Run only specified tests.')
-    parser.add_argument('--slurm', action='store_true', help='Enable SLURM mode')
-    parser.add_argument('--slurm_flags', type=str, help="Optional flags for slurm, such as the account code")
+    parser.add_argument('--scheduler', choices=['slurm'], help='Enable scheduler mode, which allows tests to be submitted and executed on job queues. Command line option takes precedence over settings', default="")
+    parser.add_argument('--scheduler-flags', type=str, help="Optional flags for scheduler, such as the account code")
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
     parser.add_argument('--timeout', type=int, default=0, help='Timeout value in seconds for each test, default is 0 for no timeout')
     args = parser.parse_args()
@@ -299,7 +284,23 @@ def main():
     os.environ['e4s_print_color'] = str(e4s_print_color).lower()
      
     #Set the settings environs
-    settings_file(args.settings)
+    os.environ["TESTSUITE_SETTINGS_FILE"] = os.path.realpath(args.settings)
+    settings_lines = open(args.settings, 'r').readlines()
+    for line in settings_lines:
+        # Skip empty lines and comments
+        if not line or line.startswith('#'):
+            continue
+
+        # Process lines that start with 'export '
+        if line.startswith('export'):
+            # Remove 'export ' from the beginning
+            line = line[len('export'):]
+
+            # Use shlex to handle quoted strings and shell-like syntax
+            tokens = shlex.split(line, posix=True)[0].split("=")
+            value = str(tokens[1]) or ""
+            os.environ[tokens[0]] = value
+
 
     #These control which tests are ran
     skip_to = args.skip_to or ""
@@ -311,14 +312,15 @@ def main():
                 
     timeout = int(args.timeout)
 
-    #These are for the multiprocessing/slurm functionality
-    slurm_flags = args.slurm_flags or ""
-    slurm = args.slurm 
+    #These are for the multiprocessing/scheduler functionality
+    scheduler = args.scheduler or os.environ.get("SCHEDULER", None) or False #Sets command line precedence over settings file (which is what sets SCHEDULER)
+    scheduler_flags = args.scheduler_flags or os.environ.get("SCHEDULER_FLAGS", None) or "" if scheduler else ""
+
     processes = args.processes
 
 
     # Call the main directory iteration function
-    final_ret = iterate_directories(basedir, processes=processes, slurm=slurm, slurm_flags=slurm_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
+    final_ret = iterate_directories(basedir, processes=processes, scheduler=scheduler, scheduler_flags=scheduler_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
 
     # Exit with the final return code
     sys.exit(final_ret)
