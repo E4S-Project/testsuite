@@ -86,14 +86,7 @@ spackLoadUnique(){
    fi
    #SPACK_LOAD_RESULT=0
    
-
-   #Bash functions have return values, but if you want more complicated output
-   #you echo a string onto stdout. Since $(...) captures stdout, we don't want
-	   #to output the error to stdout but we also want to capture it. This captures
-	   #it in fd/3, which I can then output to stderr since in this function since
-	   #this ones stdout isn't captured.
-	   #Very complicated sorry, maybe i am wrong lol
-    uniquehash=$(spackGetUniqueExplicit "$@" 2>&1)
+    uniquehash=$(spackGetUniqueExplicit "$@" 2>&1) #Errors go to stdout
     ret_val=$?
 
    if [ $ret_val -ne 0 ] ; then
