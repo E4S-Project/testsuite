@@ -13,6 +13,8 @@ export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="8"
 export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
+#export SCHEDULER=slurm #Acceptable values are: slurm
+#export SCHEDULER_CMD_FLAGS=
 #export TEST_ROCM_ARCH="amdgpu_target=gfx908"
 #export TEST_CUDA_ARCH="cuda_arch=80"
 #export TESTSUITE_VARIANT="%gcc"
