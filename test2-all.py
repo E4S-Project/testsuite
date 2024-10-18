@@ -11,6 +11,7 @@ import shlex
 from multiprocessing import Process
 from multiprocessing.connection import wait
 import time
+import select
 
 #This program searches through directories in a non-recursive manner. Upon finding
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
@@ -35,12 +36,12 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
     while (queue.qsize() > 0): # here
         worker_pipe = queue.get() #here
         current_dir_with_symlinks = worker_pipe.recv()
-        worker_pipe.send(current_dir_with_symlinks + "\n")
         os.chdir(current_dir_with_symlinks)
         os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
         os.environ['testdir'] = current_dir_with_symlinks
-
-        log_suffix = f"{os.path.basename(current_dir_with_symlinks)}_{timestamp}.log"
+        
+        test_name = os.path.basename(current_dir_with_symlinks)
+        log_suffix = f"{test_name}_{timestamp}.log"
 
         # Paths to individual log files
         setup_log = f"./setup-{log_suffix}"
@@ -49,51 +50,84 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
         run_log = f"./run-{log_suffix}"
 
         # Build a single command to run all stages sequentially, logging output to separate files
+        
         stages = [
-            f'echo "-----Setup-----"     && echo "-----Setup-----"   >&2    && ./setup.sh',
-            f'echo "-----Cleaning-----"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log}' if os.path.exists('./clean.sh') else '',
-            f'echo "-----Compiling-----" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log}' if os.path.exists('./compile.sh') else '',
-            f'echo "-----Running-----"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log}'
+            f'echo "===\n{test_name}\nSetting up {current_dir_with_symlinks}" && echo "-----Setup-----"   >&2    && ./setup.sh',
+            f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log}' if os.path.exists('./clean.sh') else '',
+            f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log}' if os.path.exists('./compile.sh') else '',
+            f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log}'
         ]
         
         # Filter out any empty stages
         command =  ' && '.join([stage for stage in stages if stage])
-        
-
-        
+        start_time = time.time()
         result = subprocess.Popen(
             command, 
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             shell=True,
-            text=True,
+            text=True
         )
+        os.set_blocking(result.stdout.fileno(),False)
+        completed_stages = []
+        failure = " Failed"
         while result.poll() == None:
-            worker_pipe.send(result.stdout.readline())
-        worker_pipe.send(result.stdout.read())
-        worker_pipe.send("-----Return Code-----="+str(result.returncode)+"\n")
+            most_recent_line = result.stdout.readline().strip()
+            if "Setting up" in most_recent_line:
+                completed_stages.append("Setup")
+            elif "Cleaning" in most_recent_line:
+                completed_stages.append("Clean")
+            elif "Compiling" in most_recent_line:
+                completed_stages.append("Compile")
+            elif "Running" in most_recent_line:
+                completed_stages.append("Run")
+            if most_recent_line:
+                worker_pipe.send(most_recent_line)
+            if timeout and ((time.time() - start_time) > timeout):
+                result.terminate()
+                result.wait()
+                failure = " Timed out"
+
+        return_code = result.returncode
+        if return_code == None:
+            print("Return code wasn't set by terminate")
+        if return_code != 0:
+            if completed_stages:
+                worker_pipe.send(completed_stages[-1] + failure)
+            else:
+                worker_pipe.send("Test Failed")
+        else:
+            worker_pipe.send("Success")
+        completed_stages.append(result.returncode)
+        worker_pipe.send(completed_stages) #Send basically the json list.
         worker_pipe.close()
     return -1
 
 def print_results(results):
-    for r in results: #If r is a string, print it, if r is not a string, it represents a 
-                      #results from an asynchronous job call, and thus process its output
-
+    final_ret = 0
+    json = []
+    for r in results: #If r is a string, print it, if r is not a string, it is a pipe represent output from a process.
         if type(r) != type(""):
+            test_name = r.recv()
+            print(test_name)
             while True:
                 ready = wait([r], .1) #Block only temporarily 
                 if ready: #Pipe is closed or a message is ready or both
                     try:
                         msg = r.recv() #This should complete if the pipe has any data
-                        print(msg, end="")
+                        if isinstance(msg, str):
+                            print(msg)
+                        elif isinstance(msg, list):
+                            json.append(msg)
+                            break
                     except EOFError: #If the pipe has no data and is closed
-            #            print("Pipe has been closed")
+                        print("Pipe has been closed")
                         break
                 else:
                     pass
-
         else:
             print(r)
+    return final_ret, json
 
 # Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
@@ -168,8 +202,7 @@ def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="
         Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, timestamp)))
         Processes[i].start()
     
-
-    print_results(results)
+    final_ret, json = print_results(results)
     # End JSON output if needed
     for process in Processes:
         process.join()
