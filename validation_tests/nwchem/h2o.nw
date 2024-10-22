@@ -1,0 +1,27 @@
+start h2o_freq  
+charge 1  
+geometry units angstroms  
+ O       0.0  0.0  0.0  
+ H       0.0  0.0  1.0  
+ H       0.0  1.0  0.0  
+end  
+basis  
+ H library sto-3g  
+ O library sto-3g  
+end  
+scf  
+ uhf; doublet  
+ print low  
+end  
+title "H2O+ : STO-3G UHF geometry optimization"  
+task scf optimize  
+basis  
+ H library 6-31g**  
+ O library 6-31g**  
+end  
+title "H2O+ : 6-31g** UMP2 geometry optimization"  
+task mp2 optimize  
+mp2; print none; end  
+scf; print none; end  
+title "H2O+ : 6-31g** UMP2 frequencies"  
+task mp2 freq
