@@ -5,201 +5,183 @@ import argparse
 import subprocess
 import datetime
 import multiprocessing
-import math
-import signal
 import shlex
+from multiprocessing import Process
+from multiprocessing.connection import wait
+import time
+import json
 
+red = '\033[01m\033[31m'
+green = '\033[01m\033[32m'
+reset = '\033[0m'
 
 #This program searches through directories in a non-recursive manner. Upon finding
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
-# proccess then calls iterate_files.sh, which calls setup.sh, clean.sh compile.sh and run.sh.
+# proccess then calls setup.sh, clean.sh compile.sh and run.sh.
 # Outputs are either printed to the screen in a standard manner or in a json form, --json.
-# Options for a timeout time are given, with a default of no timeout.
-# Tests can be ran on a compute node given the option --scheduler, and if necessary 
-# --scheduler-flags="your-flags-here"
-
-#NOTE: json goes through stderr and other output goes through stdout
-
-#Notes for both functions below:
-#JSON output requires removal of "\n", hence the output.replace calls.
-#In the case of a timeout, the functions add '"timeout"}}' or '{Setup\Compile\Run} Timed out' to the output,
-#depending on whether or not it is json
+# Options for a timeout time are given, with a default of 600 seconds.
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue
-def async_run_command(command, current_dir_with_symlinks, timeout=False, print_json=False, timestamp=""):
-    # Change to the specified directory and update environment variables
-    os.chdir(current_dir_with_symlinks)
-    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
-    os.environ['testdir'] = current_dir_with_symlinks
-    os.environ['testtime'] = timestamp
-    stdout = None
-    stderr = None
-    return_code = None
-    command = shlex.split(command)
-    try:
-        result = None
-        # Run the command with a timeout
-        if timeout:
-            result = subprocess.run(
-                command, 
-                timeout=timeout,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        else:
-            result = subprocess.run(
-                command, 
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        stdout = result.stdout.decode().strip()
-        stderr = result.stderr.decode().strip()
-        return_code = result.returncode
-        if print_json:
-            stderr = stderr.replace("\n","") + "\n"
+def async_worker(queue, timeout=False, print_json=False, timestamp=""):
+    while (queue.qsize() > 0): 
+        #Change to the specified directory and update environment variables
+        worker_pipe = queue.get() #Get the pipe
+        current_dir_with_symlinks = worker_pipe.recv() #Get the test name
+        os.chdir(current_dir_with_symlinks) 
+        os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as setup.sh/compile.sh require this to be set
+        
+        test_name = os.path.basename(current_dir_with_symlinks)
+        log_suffix = f"{test_name}_{timestamp}.log"
 
-    except KeyboardInterrupt:
-        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
-        print("\nProcess interrupted, cleaning up...")
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-    except subprocess.TimeoutExpired as e:
-        # If the process times out, return the partial output and a timeout indicator
-        stdout = e.stdout.decode().strip() if e.stdout else ""  # Get any output so far
-        stderr = e.stderr.decode().strip() if e.stderr else ""
-        if print_json:
-            stderr = stderr.replace("\n","")
-            return_code = -1
-            stderr  += '"timeout"}},\n'
-        else:
-            failed_step = stdout.split("\n")[-1].split()[0] #Gets the last step that it failed at
-            return_code = -1
-            stdout += f"\n{failed_step} Timed out "
+        # Paths to individual log files
+        setup_log = f"./setup-{log_suffix}"
+        clean_log = f"./clean-{log_suffix}"
+        compile_log = f"./compile-{log_suffix}"
+        run_log = f"./run-{log_suffix}"
 
-    return return_code, stdout, stderr
+        clean_bool = os.path.exists('./clean.sh')
+        compile_bool = os.path.exists('./compile.sh')
 
-# Function to execute shell scripts and handle errors, asynchronously by the worker queue, on compute nodes
-def scheduler_async_run_command(command,current_dir_with_symlinks, scheduler="", scheduler_flags="", timeout=False, print_json=False, timestamp=""):
-    os.chdir(current_dir_with_symlinks)
-    os.environ['PWD']=current_dir_with_symlinks #chdir doesn't change this and scripts such as  setup.sh/compile.sh require this to be set
-    os.environ['testdir']=current_dir_with_symlinks
-    os.environ['testtime'] = timestamp
+        # Build a single command to run all stages sequentially, logging output to separate files
+        stages = [
+            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && ./setup.sh && echo "Setup completed"',
+            f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log} && echo "Clean completed"' if clean_bool else '',
+            f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} && echo "Compile completed"' if compile_bool else '',
+            f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log} && echo "Run completed"'
+        ]
+         
+        # Filter out any empty stages
+        command =  ' && '.join([stage for stage in stages if stage])
 
-    if timeout:
-        minutes = timeout // 60
-        seconds = timeout % 60
-        scheduler_flags=f"-t {minutes}:{seconds} {scheduler_flags}"
-        # Timeout is handled in scheduler instead of of subproc.run, if it fails it doesn't
-        # raise an error, just returns an error code. Tiemout is handled in scheduler so as
-        # to not have to deal with it timing out because it takes a long time to get 
-        # job allocations. 
+        start_time = time.time()
+        timed_out = False
 
-    scheduler_command = None
-    if scheduler == "slurm":
-        scheduler_flags = f"--exclusive -N 1 -Q --quit-on-interrupt {scheduler_flags}"
-        # -Q quiets slurm output, and --quit-on-interrupt I think aids in cancelling
-        scheduler_command = f"srun {scheduler_flags} {scheduler_flags} {command}"
-    elif scheduler == "qsub":
-        pass
-
-    scheduler_command = shlex.split(scheduler_command)
-
-    result = None
-    try:
-        result = subprocess.run(
-                scheduler_command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+        result = subprocess.Popen(
+            command, 
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            shell=True,
+            text=True
         )
-    except KeyboardInterrupt:
-        # This will catch Control-C and make sure the terminal is reset properly after handling the interrupt
-        print("\nProcess interrupted, cleaning up...")
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    stdout = result.stdout.decode().strip()
-    stderr = result.stderr.decode().strip()
+        #This sets stdout to be nonblocking, so it doesn't block on rev()
+        os.set_blocking(result.stdout.fileno(),False)
+        completed_stages = {"setup":""}
+        while result.poll() == None: #While result is running
+            most_recent_line = result.stdout.readline().strip()
+            if "Setup completed" in most_recent_line:
+                completed_stages.pop("setup") #Only include setup in json if it didn't complete
+            elif "Cleaning" in most_recent_line:
+                completed_stages["clean"] = ""
+            elif "Clean completed" in most_recent_line:
+                completed_stages["clean"] = "pass"
+            elif "Compiling" in most_recent_line:
+                completed_stages["compile"] = ""
+            elif "Compile completed" in most_recent_line:
+                completed_stages["compile"] = "pass"
+            elif "Running" in most_recent_line:
+                completed_stages["run"] = ""
+            elif "Run completed" in most_recent_line:
+                completed_stages["run"] = "pass"
+            if "completed" in most_recent_line:
+                most_recent_line = ""
 
-    new_stderr_list = []
-    new_stdout_list = [] 
-    if "slurmstepd" in stderr: #Srun timeout
-        for line in stderr.split("\n"):
-            if "slurmstepd" in line: #remove this line
-                pass
-            elif "srun" in line:
-                pass
-            else:
-                new_stderr_list.append(line)
-        if print_json:
-            new_stderr_list.append('"timeout"}},')
-            stderr = "".join(new_stderr_list)
+            if most_recent_line:
+                worker_pipe.send(most_recent_line)
+            if timeout and ((time.time() - start_time) > timeout): #If one of the scripts is taking too long
+                timed_out = True
+                result.terminate()
+                result.wait()
+
+        return_code = result.wait()
+
+        final_stage = next(reversed(completed_stages.keys()))
+        if return_code == None:
+            print("Return code wasn't set by terminate, this shoudln't print")
+        elif return_code == 215: 
+            completed_stages[final_stage]="missing"
+            worker_pipe.send(final_stage.capitalize() + f"{red} Failed{reset}")
+        elif return_code != 0:
+            completed_stages[final_stage]="fail"
+            failure = " Timed out" if timed_out else " Failed"
+            worker_pipe.send(final_stage.capitalize() + f"{red}{failure}{reset}")
         else:
-            new_stdout_list = stdout.split("\n")
-            failed_step = new_stdout_list[-1].split()[0] #Gets the last step that it failed at
-            new_stdout_list.append(f"{failed_step} Timed out ")
-            stdout = "\n".join(new_stdout_list)
-            stderr = "\n".join(new_stderr_list)
-    elif "srun" in stderr: #Srun timeout
-        for line in stderr.split("\n"):
-            if "srun" in line:
-                pass
-            else:
-                new_stderr_list.append(line)
-        stderr = "".join(new_stderr_list)
-    elif print_json:
-        stderr = stderr.replace("\n","")
-    stderr += "\n"
+            worker_pipe.send(f"{green}Success{reset}")
+        worker_pipe.send([completed_stages,return_code])
+        worker_pipe.close()
+    return 0
 
-    return result.returncode, stdout, stderr
+def print_results(results):
+    final_ret = 0
+    json = []
+    for r in results: #If r is a string, print it, if r is not a string, it is a pipe represent output from a process.
+        if type(r) != type(""):
+            print("===")
+            test_name = r.recv()
+            print(test_name)
+            while True:
+                ready = wait([r], .1) #Block only temporarily 
+                if ready: #Pipe is closed or a message is ready or both
+                    try:
+                        msg = r.recv() #This should complete if the pipe has any data
+                        if isinstance(msg, str):
+                            print(msg)
+                        elif isinstance(msg, list):
+                            completed_stages, return_code = msg
+                            final_ret += int(return_code != 0)
+                            json.append({"test":test_name, "test_stages":completed_stages})
+                            break
+                    except EOFError: #If the pipe has no data and is closed
+                        print("Pipe has been closed")
+                        break
+                else:
+                    pass
+        else:
+            print(r)
+    return final_ret, json
 
-# Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
+#Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
 def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
     final_ret = 0
-    results = [] #This maintains the order of prints and aynchronous job calls.
-                 #It contains jobs through the results.append... lines below
-                 #AND it contains strings that get printed in order. See the results for loop below for more clarification
-    pool = multiprocessing.Pool(processes=processes)
+    results = [] #This maintains the order of prints and the job pipes.
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
 
     testdir = os.path.abspath(testdir)               #Note everything should be done with full paths,
-                                                     #and only reduced to a basename later
-    os.environ['testdir']=os.path.basename(testdir)
-    
-    # Use a stack to simulate recursion
+                                                     #and only reduced to a basename later 
+
+    # Use a stack to search through the directories
     stack = [testdir]
 
     testsuite_dir = os.path.dirname(os.path.realpath(__file__)) #this is the testsuite directory
 
-    # Begin JSON output if needed, make directory if needed
-    os.makedirs(os.path.join(testsuite_dir,"json-outputs"), exist_ok=True)
-    json_output_file = None
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    os.environ['testtime'] = timestamp
+    manager = multiprocessing.Manager()
+    queue = manager.Queue()
 
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
+    # Begin JSON output if needed, make directory if needed
+    json_output_file = None
     if print_json:
+        os.makedirs(os.path.join(testsuite_dir,"json-outputs"), exist_ok=True)
         if json_name == "":
             json_output_file = os.path.join(testsuite_dir,'json-outputs',f"testsuite-{timestamp}.json")
         elif json_name != "":
             json_output_file = os.path.join(testsuite_dir,'json-outputs',f"{json_name}-{timestamp}.json")
-        with open(json_output_file,"a+") as file:
-            file.write("[")
-            file.close() #Since this program might run for a long time, close after writing to ensure no funny file business
 
-    iterate_files_sh = os.path.join(testsuite_dir,'iterate_files.sh')
-
-    while stack:
+    while stack: #Search through the directories 
         current_dir_with_symlinks = stack.pop(0)
         os.chdir(current_dir_with_symlinks)
 
         # Check if there is a run.sh script to execute
         if os.path.exists(os.path.join(current_dir_with_symlinks, "run.sh")):
-            if scheduler == False:
-                results.append(pool.apply_async(async_run_command,  (iterate_files_sh, current_dir_with_symlinks, timeout, print_json, timestamp)))
-            else:
-                results.append(pool.apply_async(scheduler_async_run_command,  (iterate_files_sh, current_dir_with_symlinks, scheduler, scheduler_flags, timeout, print_json, timestamp)))
-            #Call it with symlinks so that the .sh scripts know which test to run
+            main_pipe, worker_pipe = multiprocessing.Pipe()
+            main_pipe.send(current_dir_with_symlinks)
+            queue.put(worker_pipe)
+            results.append(main_pipe)
         else:
             if print_json == False:
                 results.append("===\n" + os.path.basename(current_dir_with_symlinks))
@@ -214,62 +196,26 @@ def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="
                         continue
                     if test_only and not (os.path.basename(d) in test_only):
                         continue
-                    # Push the directory onto the stack instead of recursive call
                     stack.append(os.path.join(current_dir_with_symlinks, d))
 
-    pool.close()
+    Processes = []
+    for i in range(processes):
+        Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, timestamp)))
+        Processes[i].start()
     
-    for r in results: #If r is a string, print it, if r is not a string, it represents a 
-                      #results from an asynchronous job call, and thus process its output
+    final_ret, json_results = print_results(results)
 
-        if type(r) != type(""): 
-            return_tuple = r.get()
-            return_stdout = return_tuple[1]
-            return_stderr = return_tuple[2]
-            
-            print(return_stdout)
-            if print_json:
-                if r == results[-1]: #Final json string, remove ,\n
-                    return_stderr=return_stderr.rstrip(",\n")
-                with open(json_output_file,"a+") as file:
-                    file.write(return_stderr)
-                    file.close()
+    for process in Processes:
+        process.join()
 
-            if return_tuple[0] != 0:
-                final_ret += 1
-        else:
-            print(r)
-    pool.join()
-    # End JSON output if needed
     if print_json:
         with open(json_output_file,"a+") as file:
-            file.write("]")
-            file.close()
+            json.dump(json_results, file)
+
     print("Total number of failed tests: %d" % final_ret)
 
     return final_ret
 
-def source(settings_file):
-    #The settings file needs to be put in the environment. Since settings.sh is sourced
-    #by a bash script, then when I use the cli arg, I would have to handle that cli arg
-    #in bash, which I didn't want to do, or I have to source it in python, which is 
-    #kinda ridiculous but only took like 10 minutes and was kind of fun.
-
-    #Gets the environment in the first command, then gets the env after sourcing
-    #a file. Finds the set difference. Puts them in the python processes sys environment
-    settings_file = os.path.realpath(settings_file)
-    os.environ["TESTSUITE_SETTINGS_FILE"] = settings_file
-    unsourced_command = shlex.split("bash -c 'env'")
-    sourced_command = shlex.split(f"bash -c 'source {settings_file} && env'")
-    unsourced_output = set(subprocess.run(unsourced_command, capture_output=True, check=True, text=True).stdout.split("\n"))
-    sourced_output = set(subprocess.run(sourced_command, capture_output=True, check=True, text=True).stdout.split("\n"))
-
-    difference_in_outputs = sourced_output.difference(unsourced_output)
-    for line in difference_in_outputs:
-        key, _, value = line.partition("=")
-        os.environ[key]= value
-
-    # Main function to parse arguments and execute the script
 def main():
 
     # Argument parsing
@@ -286,7 +232,7 @@ def main():
     parser.add_argument('--scheduler', choices=['slurm'], help='Enable scheduler mode, which allows tests to be submitted and executed on job queues. Command line option takes precedence over settings', default="")
     parser.add_argument('--scheduler-flags', type=str, help="Optional flags for scheduler, such as the account code")
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
-    parser.add_argument('--timeout', type=int, default=0, help='Timeout value in seconds for each test, default is 0 for no timeout')
+    parser.add_argument('--timeout', type=int, default=300, help='Timeout value in seconds for each test, default is 300, 0 for no timeout')
     args = parser.parse_args()
 
     basedir = args.directory
@@ -312,8 +258,6 @@ def main():
         test_only = ""
                 
     timeout = int(args.timeout)
-
-    source(args.settings)
 
     #These are for the multiprocessing/scheduler functionality
     scheduler = args.scheduler or os.environ.get("SCHEDULER", None) or False #Sets command line precedence over settings file (which is what sets SCHEDULER)
