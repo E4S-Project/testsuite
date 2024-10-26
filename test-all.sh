@@ -12,6 +12,6 @@ for arg in "$@"; do
     		fi
   	fi
 done
-source "$settings_file"
+source $settings_file
 source setup.sh
 ./test-all.py "$@"
