@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import signal
 import argparse
 import subprocess
 import datetime
@@ -62,8 +63,9 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             shell=True,
-            text=True
-        )
+            text=True,
+            start_new_session=True
+            )
 
         #This sets stdout to be nonblocking, so it doesn't block on rev()
         os.set_blocking(result.stdout.fileno(),False)
@@ -91,7 +93,7 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
                 worker_pipe.send(most_recent_line)
             if timeout and ((time.time() - start_time) > timeout): #If one of the scripts is taking too long
                 timed_out = True
-                result.terminate()
+                os.killpg(os.getpgid(result.pid), signal.SIGTERM)
                 result.wait()
 
         return_code = result.wait()
