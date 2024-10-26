@@ -11,11 +11,12 @@ from multiprocessing.connection import wait
 import time
 import json
 
-red = '\033[01m\033[31m'
-green = '\033[01m\033[32m'
-reset = '\033[0m'
+def red(string):
+    return '\033[01m\033[31m'+string+'\033[0m'
+def green(string):
+    return '\033[01m\033[32m'+string+'\033[0m'
 
-#This program searches through directories in a non-recursive manner. Upon finding
+#This program searches through directories. Upon finding
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
 # proccess then calls setup.sh, clean.sh compile.sh and run.sh.
 # Outputs are either printed to the screen in a standard manner or in a json form, --json.
@@ -100,13 +101,13 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
             print("Return code wasn't set by terminate, this shoudln't print")
         elif return_code == 215: 
             completed_stages[final_stage]="missing"
-            worker_pipe.send(final_stage.capitalize() + f"{red} Failed{reset}")
+            worker_pipe.send(final_stage.capitalize() + red(" Failed"))
         elif return_code != 0:
             completed_stages[final_stage]="fail"
             failure = " Timed out" if timed_out else " Failed"
-            worker_pipe.send(final_stage.capitalize() + f"{red}{failure}{reset}")
+            worker_pipe.send(final_stage.capitalize() + red(failure))
         else:
-            worker_pipe.send(f"{green}Success{reset}")
+            worker_pipe.send(green("Success"))
         worker_pipe.send([completed_stages,return_code])
         worker_pipe.close()
     return 0
@@ -132,7 +133,7 @@ def print_results(results):
                             json.append({"test":test_name, "test_stages":completed_stages})
                             break
                     except EOFError: #If the pipe has no data and is closed
-                        print("Pipe has been closed")
+                        #print("Pipe has been closed")
                         break
                 else:
                     pass
@@ -143,26 +144,20 @@ def print_results(results):
 #Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
-def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="", print_json=False, print_logs=False, e4s_print_color=True, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
+def iterate_directories(testdir, processes=4, print_json=False, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
     final_ret = 0
     results = [] #This maintains the order of prints and the job pipes.
 
     if not os.path.isdir(testdir):
         raise NotADirectoryError(f"{testdir} is not a directory")
 
-    testdir = os.path.abspath(testdir)               #Note everything should be done with full paths,
-                                                     #and only reduced to a basename later 
-
-    # Use a stack to search through the directories
-    stack = [testdir]
-
-    testsuite_dir = os.path.dirname(os.path.realpath(__file__)) #this is the testsuite directory
+    testdir = os.path.abspath(testdir)#Directory to be tested. Note everything should be done with full paths
+    testsuite_dir = os.path.dirname(os.path.realpath(__file__)) #/testsuite/
 
     manager = multiprocessing.Manager()
     queue = manager.Queue()
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-
     # Begin JSON output if needed, make directory if needed
     json_output_file = None
     if print_json:
@@ -172,7 +167,9 @@ def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="
         elif json_name != "":
             json_output_file = os.path.join(testsuite_dir,'json-outputs',f"{json_name}-{timestamp}.json")
 
-    while stack: #Search through the directories 
+    # Use a stack to search through the directories
+    stack = [testdir]
+    while stack:
         current_dir_with_symlinks = stack.pop(0)
         os.chdir(current_dir_with_symlinks)
 
@@ -183,8 +180,7 @@ def iterate_directories(testdir, processes=4, scheduler=False, scheduler_flags="
             queue.put(worker_pipe)
             results.append(main_pipe)
         else:
-            if print_json == False:
-                results.append("===\n" + os.path.basename(current_dir_with_symlinks))
+            results.append("===\n" + os.path.basename(current_dir_with_symlinks))
 
             files = sorted(os.listdir("."))
             # Iterate through subdirectories
@@ -223,32 +219,21 @@ def main():
     parser.add_argument('directory', nargs='?', default='validation_tests', help='Test directory to use')
     parser.add_argument('--json', action='store_true', help='Print JSON output.')
     parser.add_argument('--json-name', default="", help='Optional name for json output')
-    parser.add_argument('--print-logs', action='store_true', help='Print all logs.')
     parser.add_argument('--settings', type=str, help='Path to settings file', default="settings.sh")
-    parser.add_argument('--color-off', action='store_false', dest='e4s_print_color', help='Disable color output.')
     parser.add_argument('--skip-to', type=str, help='Skip to specified test.')
     parser.add_argument('--skip-if', type=str, help='Skip tests with the given substring in the directory name.')
     parser.add_argument('--test-only', type=str, help='Run only specified tests.')
-    parser.add_argument('--scheduler', choices=['slurm'], help='Enable scheduler mode, which allows tests to be submitted and executed on job queues. Command line option takes precedence over settings', default="")
-    parser.add_argument('--scheduler-flags', type=str, help="Optional flags for scheduler, such as the account code")
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
-    parser.add_argument('--timeout', type=int, default=300, help='Timeout value in seconds for each test, default is 300, 0 for no timeout')
+    parser.add_argument('--timeout', type=int, default=600, help='Timeout value in seconds for each test, default is 600')
     args = parser.parse_args()
 
     basedir = args.directory
     
-    #These get set as environment variables for iterate_files.sh and setup.sh scripts
     print_json = args.json
     json_name = args.json_name
     if (json_name != "") and args.json == False:
         raise ValueError("--json must be set if you wish to use --json-name")
-    print_logs = args.print_logs
-    e4s_print_color = args.e4s_print_color
-    os.environ['print_logs'] = str(print_logs).lower()
-    os.environ['print_json'] = str(print_json).lower()
-    os.environ['e4s_print_color'] = str(e4s_print_color).lower()
      
-
     #These control which tests are ran
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
@@ -256,18 +241,12 @@ def main():
         test_only=args.test_only.split()
     else:
         test_only = ""
-                
+    
     timeout = int(args.timeout)
-
-    #These are for the multiprocessing/scheduler functionality
-    scheduler = args.scheduler or os.environ.get("SCHEDULER", None) or False #Sets command line precedence over settings file (which is what sets SCHEDULER)
-    scheduler_flags = args.scheduler_flags or os.environ.get("SCHEDULER_FLAGS", None) or "" if scheduler else ""
-
     processes = args.processes
 
-
     # Call the main directory iteration function
-    final_ret = iterate_directories(basedir, processes=processes, scheduler=scheduler, scheduler_flags=scheduler_flags, print_json=print_json, print_logs=print_logs, e4s_print_color=e4s_print_color, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
+    final_ret = iterate_directories(basedir, processes=processes, print_json=print_json, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
 
     # Exit with the final return code
     sys.exit(final_ret)
