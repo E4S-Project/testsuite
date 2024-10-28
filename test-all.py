@@ -12,11 +12,6 @@ from multiprocessing.connection import wait
 import time
 import json
 
-def red(string):
-    return '\033[01m\033[31m'+string+'\033[0m'
-def green(string):
-    return '\033[01m\033[32m'+string+'\033[0m'
-
 #This program searches through directories. Upon finding
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
 # proccess then calls setup.sh, clean.sh compile.sh and run.sh.
@@ -24,7 +19,18 @@ def green(string):
 # Options for a timeout time are given, with a default of 600 seconds.
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue
-def async_worker(queue, timeout=False, print_json=False, timestamp=""):
+def async_worker(queue, timeout=False, print_json=False, print_logs=False, print_color=True, timestamp=""):
+    def red(string):
+        if print_color:
+            return '\033[01m\033[31m'+string+'\033[0m'
+        else:
+            return string
+    def green(string):
+        if print_color:
+            return '\033[01m\033[32m'+string+'\033[0m'
+        else:
+            return string
+
     while (queue.qsize() > 0): 
         #Change to the specified directory and update environment variables
         worker_pipe = queue.get() #Get the pipe
@@ -45,7 +51,7 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
 
         # Build a single command to run all stages sequentially, logging output to separate files
         stages = [
-            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && source setup.sh && echo "Setup completed"',
+            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && ./setup.sh && echo "Setup completed"',
             f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log} && echo "Clean completed"' if clean_bool else '',
             f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} && echo "Compile completed"' if compile_bool else '',
             f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log} && echo "Run completed"'
@@ -145,7 +151,7 @@ def print_results(results):
 #Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
-def iterate_directories(testdir, processes=4, print_json=False, skip_to="",skip_if="",test_only="",timeout=False, json_name=""):
+def iterate_directories(testdir, processes=4, print_json=False, print_logs=False, print_color=True, skip_to="",skip_if="",test_only="", timeout=False, json_name=""):
     final_ret = 0
     results = [] #This maintains the order of prints and the job pipes.
 
@@ -197,7 +203,7 @@ def iterate_directories(testdir, processes=4, print_json=False, skip_to="",skip_
 
     Processes = []
     for i in range(processes):
-        Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, timestamp)))
+        Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, print_logs, print_color, timestamp)))
         Processes[i].start()
     
     final_ret, json_results = print_results(results)
@@ -227,6 +233,8 @@ def main():
     parser.add_argument('--test-only', type=str, help='Run only specified tests.')
     parser.add_argument('--processes', type=int, default=4, help='Run tests on multiple proccesses, default is 4')
     parser.add_argument('--timeout', type=int, default=600, help='Timeout value in seconds for each test, default is 600')
+    parser.add_argument('--print-logs', action='store_true', help='Print all logs.')
+    parser.add_argument('--color-off', action='store_false', dest='print_color', help='Disable color output.')
     args = parser.parse_args()
 
     basedir = args.directory
@@ -236,6 +244,11 @@ def main():
     if (json_name != "") and args.json == False:
         raise ValueError("--json must be set if you wish to use --json-name")
      
+    print_logs = args.print_logs
+    print_color = args.print_color
+    timeout = int(args.timeout)
+    processes = args.processes
+
     #These control which tests are ran
     skip_to = args.skip_to or ""
     skip_if = args.skip_if or ""
@@ -243,12 +256,9 @@ def main():
         test_only=args.test_only.split()
     else:
         test_only = ""
-    
-    timeout = int(args.timeout)
-    processes = args.processes
 
     # Call the main directory iteration function
-    final_ret = iterate_directories(basedir, processes=processes, print_json=print_json, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
+    final_ret = iterate_directories(basedir, processes=processes, print_json=print_json, print_logs=print_logs, print_color=print_color,skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
 
     # Exit with the final return code
     sys.exit(final_ret)
