@@ -83,14 +83,23 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, print
                 completed_stages["clean"] = ""
             elif "Clean completed" in most_recent_line:
                 completed_stages["clean"] = "pass"
+                if print_logs:
+                    with open(clean_log, "r") as log:
+                        worker_pipe.send(log.read())
             elif "Compiling" in most_recent_line:
                 completed_stages["compile"] = ""
             elif "Compile completed" in most_recent_line:
                 completed_stages["compile"] = "pass"
+                if print_logs:
+                    with open(compile_log, "r") as log:
+                        worker_pipe.send(log.read())
             elif "Running" in most_recent_line:
                 completed_stages["run"] = ""
             elif "Run completed" in most_recent_line:
                 completed_stages["run"] = "pass"
+                if print_logs:
+                    with open(run_log, "r") as log:
+                        worker_pipe.send(log.read())
             if "completed" in most_recent_line:
                 most_recent_line = ""
 
