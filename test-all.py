@@ -36,7 +36,6 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
         log_suffix = f"{test_name}_{timestamp}.log"
 
         # Paths to individual log files
-        setup_log = f"./setup-{log_suffix}"
         clean_log = f"./clean-{log_suffix}"
         compile_log = f"./compile-{log_suffix}"
         run_log = f"./run-{log_suffix}"
@@ -46,7 +45,7 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
 
         # Build a single command to run all stages sequentially, logging output to separate files
         stages = [
-            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && ./setup.sh && echo "Setup completed"',
+            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && source setup.sh && echo "Setup completed"',
             f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log} && echo "Clean completed"' if clean_bool else '',
             f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} && echo "Compile completed"' if compile_bool else '',
             f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log} && echo "Run completed"'
@@ -103,7 +102,7 @@ def async_worker(queue, timeout=False, print_json=False, timestamp=""):
             print("Return code wasn't set by terminate, this shoudln't print")
         elif return_code == 215: 
             completed_stages[final_stage]="missing"
-            worker_pipe.send(final_stage.capitalize() + red(" Failed"))
+            worker_pipe.send(final_stage.capitalize() + red(" Missing"))
         elif return_code != 0:
             completed_stages[final_stage]="fail"
             failure = " Timed out" if timed_out else " Failed"
@@ -208,7 +207,8 @@ def iterate_directories(testdir, processes=4, print_json=False, skip_to="",skip_
 
     if print_json:
         with open(json_output_file,"a+") as file:
-            json.dump(json_results, file)
+            string = json.dumps(json_results)
+            file.write(string.replace('}}, {"test"','}},\n {"test"'))
 
     print("Total number of failed tests: %d" % final_ret)
 
