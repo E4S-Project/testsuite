@@ -2,3 +2,8 @@
 *.out
 profile.*.*.*
 .DS_Store
+*.log
+validation_tests/*/*
+current-outputs/
+correct-outputs/
+json-outputs

@@ -13,7 +13,7 @@ rArg="  "
 dArg=" -dpl "
 
 spackTestRun(){
-	testOut=$(timeout 10m spack test run /${1} )
+	testOut=$(spack test run /${1} 2>/dev/null)
 	res=$?
 	echo "--- $testOut ---"
 	#echo $testOut | grep "No installed packages match spec"
@@ -71,10 +71,10 @@ spackGetUniqueExplicit(){
 	xhashes=`spack find $expinst --format {hash} $@ $TESTSUITE_VARIANT`
 	ret_val=$?
 	if [ $ret_val -ne 0 ] ; then
-        	#echo "get unique Returning 215!"
-        	#export SPACK_LOAD_RESULT=215
-        	return 215
-  	fi
+		#echo "get unique Returning 215!"
+		#export SPACK_LOAD_RESULT=215
+		return 215
+	fi
 	echo $xhashes | awk '{print $1}'
 #unset -x
 }
@@ -85,10 +85,13 @@ spackLoadUnique(){
 	   return
    fi
    #SPACK_LOAD_RESULT=0
-   uniquehash=`spackGetUniqueExplicit $@`
-   ret_val=$?
+   
+    uniquehash=$(spackGetUniqueExplicit "$@" 2>&1) #Errors go to stdout
+    ret_val=$?
+
    if [ $ret_val -ne 0 ] ; then
         #echo "Returning 215!"
+	echo "$uniquehash" 
         export SPACK_LOAD_RESULT=215
         return 215
    fi
@@ -106,7 +109,9 @@ spackLoadUnique(){
    #FIND_ARRAY1=($(spack find -l --loaded $@))  #`spack find -l --loaded $@`
    #HASHDEX=${#FIND_ARRAY1[@]}-2
    HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
-   echo "$@ $TESTSUITE_VARIANT: $HASH"
+   
+   echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
+
    export E4S_TEST_HASH=$HASH
    ARCH_IFS=$IFS
    FIND_BLOB2=`spack find $dArg /$HASH`
