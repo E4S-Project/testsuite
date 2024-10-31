@@ -12,6 +12,24 @@ from multiprocessing.connection import wait
 import time
 import json
 
+print_color=True
+def red(string):
+    if print_color:
+        return '\033[01m\033[31m'+string+'\033[0m'
+    else:
+        return string
+def green(string):
+    if print_color:
+        return '\033[01m\033[32m'+string+'\033[0m'
+    else:
+        return string
+def yellow(string):
+    if print_color:
+        return '\033[01m\033[33m'+string+'\033[0m'
+    else:
+        return string
+
+
 #This program searches through directories. Upon finding
 # a subdirectory containing run.sh, it adds it to the worker queue. Each worker
 # proccess then calls setup.sh, clean.sh compile.sh and run.sh.
@@ -19,18 +37,7 @@ import json
 # Options for a timeout time are given, with a default of 600 seconds.
 
 # Function to execute shell scripts and handle errors, asynchronously by the worker queue
-def async_worker(queue, timeout=False, print_json=False, print_logs=False, print_color=True, timestamp=""):
-    def red(string):
-        if print_color:
-            return '\033[01m\033[31m'+string+'\033[0m'
-        else:
-            return string
-    def green(string):
-        if print_color:
-            return '\033[01m\033[32m'+string+'\033[0m'
-        else:
-            return string
-
+def async_worker(queue, timeout=False, print_json=False, print_logs=False, timestamp=""):
     while (queue.qsize() > 0): 
         #Change to the specified directory and update environment variables
         worker_pipe = queue.get() #Get the pipe
@@ -83,23 +90,14 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, print
                 completed_stages["clean"] = ""
             elif "Clean completed" in most_recent_line:
                 completed_stages["clean"] = "pass"
-                if print_logs:
-                    with open(clean_log, "r") as log:
-                        worker_pipe.send(log.read())
             elif "Compiling" in most_recent_line:
                 completed_stages["compile"] = ""
             elif "Compile completed" in most_recent_line:
                 completed_stages["compile"] = "pass"
-                if print_logs:
-                    with open(compile_log, "r") as log:
-                        worker_pipe.send(log.read())
             elif "Running" in most_recent_line:
                 completed_stages["run"] = ""
             elif "Run completed" in most_recent_line:
                 completed_stages["run"] = "pass"
-                if print_logs:
-                    with open(run_log, "r") as log:
-                        worker_pipe.send(log.read())
             if "completed" in most_recent_line:
                 most_recent_line = ""
 
@@ -117,7 +115,7 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, print
             print("Return code wasn't set by terminate, this shoudln't print")
         elif return_code == 215: 
             completed_stages[final_stage]="missing"
-            worker_pipe.send(final_stage.capitalize() + red(" Missing"))
+            worker_pipe.send(final_stage.capitalize() + yellow(" Missing"))
         elif return_code != 0:
             completed_stages[final_stage]="fail"
             failure = " Timed out" if timed_out else " Failed"
@@ -130,6 +128,8 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, print
 
 def print_results(results):
     final_ret = 0
+    skipped = 0
+    success = 0
     json = []
     for r in results: #If r is a string, print it, if r is not a string, it is a pipe represent output from a process.
         if type(r) != type(""):
@@ -145,7 +145,9 @@ def print_results(results):
                             print(msg)
                         elif isinstance(msg, list):
                             completed_stages, return_code = msg
-                            final_ret += int(return_code != 0)
+                            skipped += int(return_code == 215)
+                            final_ret += int(return_code != 215 and return_code != 0)
+                            success += int(return_code == 0)
                             json.append({"test":test_name, "test_stages":completed_stages})
                             break
                     except EOFError: #If the pipe has no data and is closed
@@ -155,12 +157,12 @@ def print_results(results):
                     pass
         else:
             print(r)
-    return final_ret, json
+    return final_ret, skipped, success, json
 
 #Function to iterate through directories in a non-recursive manner, adding calls to iterate_files.sh to a worker queue.
 #Given a directory, this finds all sub directories that contain a run.sh, and then the worker processes go through each 
 #sub directory calling setup.sh, compile.sh, run.sh.
-def iterate_directories(testdir, processes=4, print_json=False, print_logs=False, print_color=True, skip_to="",skip_if="",test_only="", timeout=False, json_name=""):
+def iterate_directories(testdir, processes=4, print_json=False, print_logs=False, skip_to="",skip_if="",test_only="", timeout=False, json_name=""):
     final_ret = 0
     results = [] #This maintains the order of prints and the job pipes.
 
@@ -212,10 +214,10 @@ def iterate_directories(testdir, processes=4, print_json=False, print_logs=False
 
     Processes = []
     for i in range(processes):
-        Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, print_logs, print_color, timestamp)))
+        Processes.append(Process(target=async_worker, args=(queue, timeout, print_json, print_logs, timestamp)))
         Processes[i].start()
     
-    final_ret, json_results = print_results(results)
+    final_ret, skipped, success, json_results = print_results(results)
 
     for process in Processes:
         process.join()
@@ -225,7 +227,10 @@ def iterate_directories(testdir, processes=4, print_json=False, print_logs=False
             string = json.dumps(json_results)
             file.write(string.replace('}}, {"test"','}},\n {"test"'))
 
-    print("Total number of failed tests: %d" % final_ret)
+    print(green("Total number of successful tests: %d" % success))
+    print(yellow("Total number of skipped tests: %d" % skipped))
+    print(red("Total number of failed tests: %d" % final_ret))
+
 
     return final_ret
 
@@ -254,6 +259,7 @@ def main():
         raise ValueError("--json must be set if you wish to use --json-name")
      
     print_logs = args.print_logs
+    global print_color
     print_color = args.print_color
     timeout = int(args.timeout)
     processes = args.processes
@@ -267,7 +273,7 @@ def main():
         test_only = ""
 
     # Call the main directory iteration function
-    final_ret = iterate_directories(basedir, processes=processes, print_json=print_json, print_logs=print_logs, print_color=print_color,skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
+    final_ret = iterate_directories(basedir, processes=processes, print_json=print_json, print_logs=print_logs, skip_to=skip_to, skip_if=skip_if, test_only=test_only, timeout=timeout, json_name=json_name)
 
     # Exit with the final return code
     sys.exit(final_ret)
