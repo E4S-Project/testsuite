@@ -3,4 +3,4 @@
 set -x
 set -e
 
-"Echo no compilation required" 
+echo "no compilation required" 
