@@ -1,3 +1,5 @@
+#!/bin/bash
+
 . ../../setup.sh
 TESTNAME=mfem
 TESTVERSION=
