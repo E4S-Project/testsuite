@@ -1,4 +1,2 @@
 #!/bin/bash
-cd petsc/build
-./clean.sh
-cd ..
+rm -rf ./build

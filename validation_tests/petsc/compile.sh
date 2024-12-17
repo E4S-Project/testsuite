@@ -1,6 +1,9 @@
 #!/bin/bash
 . ./setup.sh
-
-cd petsc/build
-./compile.sh
-cd ..
+set -x
+set -e
+mkdir -p build
+cd build
+cmake ..
+#-DAXOM_DIR=$AXOM_ROOT -Dumpire_DIR=$UMPIRE_ROOT/lib/cmake/umpire ..
+make
