@@ -59,9 +59,9 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
         # Build a single command to run all stages sequentially, logging output to separate files
         stages = [
             f'echo "{test_name}" && echo "-----Setup-----"   >&2    && ./setup.sh && echo "Setup completed"',
-            f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log} && echo "Clean completed"' if clean_bool else '',
-            f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} && echo "Compile completed"' if compile_bool else '',
-            f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log} && echo "Run completed"'
+            f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log}   2>&1 && echo "Clean completed"'   if clean_bool   else '',
+            f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} 2>&1 && echo "Compile completed"' if compile_bool else '',
+            f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log}     2>&1 && echo "Run completed"'
         ]
          
         # Filter out any empty stages
@@ -117,13 +117,14 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
             completed_stages[final_stage]="missing"
             worker_pipe.send(final_stage.capitalize() + yellow(" Missing"))
         elif return_code != 0:
-            completed_stages[final_stage]="fail"
-            failure = " Timed out" if timed_out else " Failed"
-            worker_pipe.send(final_stage.capitalize() + red(failure))
+            fail_code = "timeout" if timed_out else "fail"
+            fail_message = " Timed out" if timed_out else " Failed"
+            completed_stages[final_stage]=fail_code
+            worker_pipe.send(final_stage.capitalize() + red(fail_message))
         else:
             worker_pipe.send(green("Success"))
         worker_pipe.send([completed_stages,return_code])
-        worker_pipe.close()
+        #worker_pipe.close()
     return 0
 
 def print_results(results):
