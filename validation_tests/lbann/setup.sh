@@ -1,6 +1,5 @@
 #!/bin/bash
 . ../../setup.sh
-set -e
 THISDIR=`basename "$PWD"`
 spackLoadUnique $THISDIR
 pythonHash=`spack find -dl /$LBANN_HASH | grep python | head -c 7`

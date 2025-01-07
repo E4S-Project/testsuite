@@ -3,6 +3,6 @@
 . ../../setup.sh
 
 spackLoadUnique cuda
-cuda_ret=$?
+#cuda_ret=$?
 export CUDA_PATH=$CUDA_ROOT
-exit $cuda_ret
+#exit $cuda_ret

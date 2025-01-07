@@ -13,7 +13,8 @@ rArg="  "
 dArg=" -dpl "
 
 spackTestRun(){
-	testOut=$(spack test run /${1} 2>/dev/null)
+	#set -x
+	testOut=$(spack test run /${1}) # 2>/dev/null)
 	res=$?
 	echo "--- $testOut ---"
 	#echo $testOut | grep "No installed packages match spec"
@@ -72,7 +73,7 @@ spackGetUniqueExplicit(){
 	ret_val=$?
 	if [ $ret_val -ne 0 ] ; then
 		#echo "get unique Returning 215!"
-		#export SPACK_LOAD_RESULT=215
+		export SPACK_LOAD_RESULT=215
 		return 215
 	fi
 	echo $xhashes | awk '{print $1}'
@@ -144,3 +145,4 @@ spackLoadUniqueNoR(){
 	dArg=" -dpl "
 	return $_ret
 }
+

@@ -58,7 +58,7 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
 
         # Build a single command to run all stages sequentially, logging output to separate files
         stages = [
-            f'echo "{test_name}" && echo "-----Setup-----"   >&2    && ./setup.sh && echo "Setup completed"',
+            f'echo "{test_name}" && echo "-----Setup-----"   >&2                              && ./setup.sh                 &&  echo "Setup completed"',
             f'echo "Cleaning {current_dir_with_symlinks}"  && echo "-----Cleaning-----" >&2   && ./clean.sh   > {clean_log} && echo "Clean completed"' if clean_bool else '',
             f'echo "Compiling {current_dir_with_symlinks}" && echo "-----Compiling-----" >&2  && ./compile.sh > {compile_log} && echo "Compile completed"' if compile_bool else '',
             f'echo "Running {current_dir_with_symlinks}"   && echo "-----Running-----" >&2    && ./run.sh     > {run_log} && echo "Run completed"'
@@ -82,6 +82,7 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
         #This sets stdout to be nonblocking, so it doesn't block on rev()
         os.set_blocking(result.stdout.fileno(),False)
         completed_stages = {"setup":""}
+        notFound=False
         while result.poll() == None: #While result is running
             most_recent_line = result.stdout.readline().strip()
             if "Setup completed" in most_recent_line:
@@ -98,8 +99,13 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
                 completed_stages["run"] = ""
             elif "Run completed" in most_recent_line:
                 completed_stages["run"] = "pass"
-            if "completed" in most_recent_line:
+            elif "completed" in most_recent_line:
                 most_recent_line = ""
+            if "Error: No package matches the query" in most_recent_line:
+                most_recent_line=""
+                notFound=True
+                os.killpg(os.getpgid(result.pid), signal.SIGTERM)
+                result.wait()
 
             if most_recent_line:
                 worker_pipe.send(most_recent_line)
@@ -113,12 +119,13 @@ def async_worker(queue, timeout=False, print_json=False, print_logs=False, times
         final_stage = next(reversed(completed_stages.keys()))
         if return_code == None:
             print("Return code wasn't set by terminate, this shoudln't print")
-        elif return_code == 215: 
+        elif return_code == 215 or notFound: 
+            return_code = 215
             completed_stages[final_stage]="missing"
             worker_pipe.send(final_stage.capitalize() + yellow(" Missing"))
         elif return_code != 0:
             completed_stages[final_stage]="fail"
-            failure = " Timed out" if timed_out else " Failed"
+            failure = " Timed out" if timed_out else " Failed ("+str(return_code)+")"
             worker_pipe.send(final_stage.capitalize() + red(failure))
         else:
             worker_pipe.send(green("Success"))
