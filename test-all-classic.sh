@@ -128,7 +128,7 @@ iterate_files() {
     local _ret
 
     if [ $print_json = true ]; then
-        printf "{\"test\": \"$testdir\",  \"test_stages\": {"
+        printf "{\"test\": \"${testdir%/}\",  \"test_stages\": {"
     fi
     unset E4S_TEST_SETUP
     export SPACK_LOAD_RESULT=0
