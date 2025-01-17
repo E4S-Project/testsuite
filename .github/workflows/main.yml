@@ -1,0 +1,22 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Pull Docker image
+        run: docker pull ecpe4s/e4s-cuda
+
+      - name: Run tests in Docker container
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            ecpe4s/e4s-cuda \
+            python test-all.sh
