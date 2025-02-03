@@ -63,6 +63,8 @@ spackSetPackageRoot(){
         if [[ ! -d ${SPAC_LOC}/lib64 ]]; then
           export ${SPAC_NAM}_LIB_PATH=${SPAC_LOC}/lib
         fi
+	LIBPATHVAR=${SPAC_NAM}_LIB_PATH
+	export LD_LIBRARY_PATH=${!LIBPATHVAR}:$LD_LIBRARY_PATH
 }
 
 expinst=" -x "
