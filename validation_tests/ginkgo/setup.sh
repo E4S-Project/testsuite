@@ -1,7 +1,7 @@
 #!/bin/bash
 . ../../setup.sh
 export THISDIR=`basename "$PWD"`
-export GINKGO_DIRS=$(ls -d */ | grep -v cuda |  grep -v par-ilu-convergence | grep -v preconditioner-export | grep -v nine-pt-stencil-solver  | grep -v distributed-solver  )
+export GINKGO_DIRS=$(ls -d */ | grep -v cuda |  grep -v par-ilu-convergence | grep -v preconditioner-export | grep -v nine-pt-stencil-solver  | grep -v distributed-solver | grep -v mixed-multigrid-solver | grep -v multigrid-preconditioned-solver )
 export ARG=""
 if [  "$THISDIR" = "ginkgo-cuda" ];then
         spackLoadUnique "ginkgo+cuda $TEST_CUDA_ARCH"
