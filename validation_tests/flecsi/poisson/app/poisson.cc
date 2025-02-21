@@ -9,24 +9,23 @@
 #include "state.hh"
 
 #include <flecsi/execution.hh>
-#include <flecsi/flog.hh>
+//#include <flecsi/flog.hh>
 
 int
 main(int argc, char ** argv) {
   flecsi::util::annotation::rguard<main_region> main_guard;
 
-  auto status = flecsi::initialize(argc, argv);
-  status = poisson::control::check_status(status);
-
-  if(status != flecsi::run::status::success) {
-    return status < flecsi::run::status::clean ? 0 : status;
-  }
-
-  flecsi::flog::add_output_stream("clog", std::clog, true);
-
-  status = flecsi::start(poisson::control::execute);
-
-  flecsi::finalize();
-
-  return status;
+  flecsi::getopt()(argc, argv);
+  const flecsi::run::dependencies_guard dg;
+  flecsi::run::config cfg;
+#if FLECSI_BACKEND == FLECSI_BACKEND_legion
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  cfg.legion = {"", "-ll:gpu", "1"};
+#elif defined(KOKKOS_ENABLE_OPENMP)
+  cfg.legion = {"", "-ll:ocpu", "1", "-ll:onuma", "0"};
+#endif
+#endif
+  const flecsi::runtime run(cfg);
+//  flecsi::flog::add_output_stream("clog", std::clog, true);
+  return run.control<poisson::control>();
 } // main

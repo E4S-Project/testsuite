@@ -6,8 +6,8 @@
 #include "tasks/smooth.hh"
 
 #include <flecsi/execution.hh>
-#include <flecsi/flog.hh>
-#include <flecsi/util/annotation.hh>
+//#include <flecsi/flog.hh>
+//#include <flecsi/utilities.hh>
 
 using namespace flecsi;
 
@@ -46,8 +46,8 @@ poisson::action::solve(control_policy & cp) {
     auto residual =
       reduce<task::diff, exec::fold::sum>(cp.m, fd(cp.m), Aud(cp.m));
     err = std::sqrt(residual.get());
-    flog(info) << "residual: " << err << " (" << ita << " iterations)"
-               << std::endl;
-    flog::flush();
+  //  flog(info) << "residual: " << err << " (" << ita << " iterations)"
+  //             << std::endl;
+  //  flog::flush();
   } while(err > error_tol.value() && ita < max_iterations.value());
 } // solve

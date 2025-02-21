@@ -12,6 +12,8 @@ inline const field<double>::definition<mesh, mesh::vertices> fd;
 inline const field<double>::definition<mesh, mesh::vertices> sd;
 inline const field<double>::definition<mesh, mesh::vertices> Aud;
 
+inline mesh::slot m;
+
 } // namespace poisson
 
 #endif
