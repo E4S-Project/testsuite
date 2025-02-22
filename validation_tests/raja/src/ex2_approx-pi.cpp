@@ -33,10 +33,13 @@
 
 /*
   CUDA_BLOCK_SIZE - specifies the number of threads in a CUDA thread block
-*/
+
+                    Uncomment to use when filling in exercises.
+
 #if defined(RAJA_ENABLE_CUDA)
 const int CUDA_BLOCK_SIZE = 256;
 #endif
+*/
 
 int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 {
@@ -78,8 +81,19 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
   std::cout << "\n Running RAJA sequential pi approximation...\n";
 
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the pi approximation kernel using a RAJA::forall
+  ///           method with RAJA::seq_exec execution policy type and a 
+  ///           RAJA::ReduceSum object with RAJA::seq_reduce policy type
+  ///           to accumulate the sum.
+  ///
+  /// NOTE: We've done this one for you to help you get started...
+  ///
+
   using EXEC_POL1   = RAJA::seq_exec;
-  using REDUCE_POL1 = RAJA::seq_reduce; 
+  using REDUCE_POL1 = RAJA::seq_reduce;
 
   RAJA::ReduceSum< REDUCE_POL1, double > seq_pi(0.0);
 
@@ -87,7 +101,7 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
       double x = (double(i) + 0.5) * dx;
       seq_pi += dx / (1.0 + x * x);
   });
-  double seq_pi_val = seq_pi.get() * 4.0;
+  double seq_pi_val = seq_pi.get() * 4.0; 
 
   std::cout << "\tpi = " << std::setprecision(prec) 
             << seq_pi_val << std::endl;
@@ -124,16 +138,17 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
   std::cout << "\n Running RAJA OpenMP pi approximation...\n";
 
-  using EXEC_POL2   = RAJA::omp_parallel_for_exec;
-  using REDUCE_POL2 = RAJA::omp_reduce;
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the pi approximation kernel using a RAJA::forall
+  ///           method with RAJA::omp_parallel_for_exec execution policy type 
+  ///           and a RAJA::ReduceSum object with RAJA::omp_reduce policy type
+  ///           to accumulate the sum.
+  /// 
 
-  RAJA::ReduceSum< REDUCE_POL2, double > omp_pi(0.0);
 
-  RAJA::forall< EXEC_POL2 >(RAJA::RangeSegment(0, N), [=](int i) {
-      double x = (double(i) + 0.5) * dx;
-      omp_pi += dx / (1.0 + x * x);
-  });
-  double omp_pi_val = omp_pi.get() * 4.0;
+  double omp_pi_val = 0.0;
 
   std::cout << "\tpi = " << std::setprecision(prec)
             << omp_pi_val << std::endl;
@@ -149,16 +164,17 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
   std::cout << "\n Running RAJA CUDA pi approximation...\n";
 
-  using EXEC_POL3   = RAJA::cuda_exec<CUDA_BLOCK_SIZE>;
-  using REDUCE_POL3 = RAJA::cuda_reduce;
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the pi approximation kernel using a RAJA::forall
+  ///           method with RAJA::cuda_exec execution policy type and a 
+  ///           RAJA::ReduceSum object with RAJA::cuda_reduce policy type
+  ///           to accumulate the sum.
+  /// 
 
-  RAJA::ReduceSum< REDUCE_POL3, double > cuda_pi(0.0);
 
-  RAJA::forall< EXEC_POL3 >(RAJA::RangeSegment(0, N), [=] RAJA_DEVICE (int i) {
-      double x = (double(i) + 0.5) * dx;
-      cuda_pi += dx / (1.0 + x * x);
-  });
-  double cuda_pi_val = cuda_pi.get() * 4.0;
+  double cuda_pi_val = 0.0;
 
   std::cout << "\tpi = " << std::setprecision(prec)
             << cuda_pi_val << std::endl;
