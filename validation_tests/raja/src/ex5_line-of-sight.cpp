@@ -24,30 +24,30 @@
  *
  *  Given an observation point X on a terrain map, and a set of points
  *  {Y0, Y1, Y2, ...} along a ray starting at X, find which points on the
- *  terrain at Y0, Y1, etc. are visible from the point at X. A point is
- *  visible from the point at X if and only if there is no other point on the
- *  terrain that blocks its view from the point at X. More precisely,
- *  a point on the terrain at Y is visible from the point at X if and only if
- *  no other point on the terrain between X and Y has a greater vertical angle
+ *  terrain at Y0, Y1, etc. are visible from the point at X. A point is 
+ *  visible from the point at X if and only if there is no other point on the 
+ *  terrain that blocks its view from the point at X. More precisely, 
+ *  a point on the terrain at Y is visible from the point at X if and only if 
+ *  no other point on the terrain between X and Y has a greater vertical angle 
  *  from the point at X than the point at Y. So although a point at Y may
- *  be at a higher altitude than all other points on the terrain between Y
+ *  be at a higher altitude than all other points on the terrain between Y 
  *  and X, the point at Y may not be visible from the point at X.
  *
- *  Let 'altX' be the altidue at point X. Suppose we have a vector 'dist'
- *  such that dist[i] is the horizontal distance between X and Yi, and a
- *  vector 'alt' such that alt[i] is the altitude at point Yi. To solve
- *  the line of sight problem, we compute an angle vector 'ang', where
+ *  Let 'altX' be the altidue at point X. Suppose we have a vector 'dist' 
+ *  such that dist[i] is the horizontal distance between X and Yi, and a 
+ *  vector 'alt' such that alt[i] is the altitude at point Yi. To solve 
+ *  the line of sight problem, we compute an angle vector 'ang', where 
  *  ang[i] = arctan( (alt[i] - altX)/(dist[i]). Next, we perform a "max"
- *  scan on the vector 'ang' to form the vector 'ang_max'. Then, the point
+ *  scan on the vector 'ang' to form the vector 'ang_max'. Then, the point 
  *  at Yi is visible from the point at X if ang[i] >= ang_max[i]. Otherwise,
  *  the point at Yi is not visible.
  *
  *  This file contains a C-style sequential implementation of the solution to
- *  the line-of-sight problem. Where indicated by comments, you will fill in
+ *  the line-of-sight problem. Where indicated by comments, you will fill in 
  *  sequential and OpenMP versions of the algorithm using a RAJA scan operation
  *  to compute the 'ang_max' vector and a RAJA forall method to determine which
- *  points are/are not visible. If you have access to an NVIDIA GPU and a CUDA
- *  compiler, fill in the RAJA CUDA version of the algorithm also.
+ *  points are/are not visible. If you have access to an NVIDIA GPU and a CUDA 
+ *  compiler, fill in the RAJA CUDA version of the algorithm also. 
  *
  *  RAJA features you will use:
  *    - inclusive scan operations with 'max' operator
@@ -59,10 +59,13 @@
 
 /*
   CUDA_BLOCK_SIZE - specifies the number of threads in a CUDA thread block
-*/
+
+                    Uncomment to use when filling in exercises.
+
 #if defined(RAJA_ENABLE_CUDA)
 const int CUDA_BLOCK_SIZE = 256;
 #endif
+*/
 
 //
 // Functions to check results and print arrays.
@@ -93,17 +96,17 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
   int* visible = memoryManager::allocate<int>(N);
   int* visible_ref = memoryManager::allocate<int>(N);
 
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < N; ++i) { 
     dist[i] = static_cast<double>(i+1);
     double alt_fact = alt_max * ( (i+1) % 5 == 0 ? i*10 : i+1 );
-    alt[i] = alt_fact *
+    alt[i] = alt_fact * 
              static_cast<double>( rand() ) / static_cast<double>( RAND_MAX );
   }
 
   //
   // Set angle array
-  //
-  for (int i = 0; i < N; ++i) {
+  // 
+  for (int i = 0; i < N; ++i) { 
     ang[i] = atan2( alt[i], dist[i] );       // set angle in radians
   }
 
@@ -146,20 +149,16 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
   std::memset(visible, 0, N * sizeof(int));
   num_visible = 0;
 
-  using EXEC_POL1 = RAJA::seq_exec;
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the line-of-sight algorithm using RAJA constructs.
+  ///           First, use a 'max' RAJA::inclusive_scan on the angle vector 
+  ///           with RAJA::seq_exec execution policy. Then, use a RAJA::forall
+  ///           template with the same execution policy to determine which
+  ///           points are visible.
+  ///
 
-  RAJA::inclusive_scan< EXEC_POL1 >(RAJA::make_span(ang, N),
-                                    RAJA::make_span(ang_max, N),
-                                    RAJA::operators::maximum<double>{} );
-
-
-  RAJA::forall< EXEC_POL1 >(RAJA::RangeSegment(0, N), [=] (int i) {
-    if ( ang[i] >= ang_max[i] ) {
-       visible[i] = 1;
-    } else {
-       visible[i] = 0;
-    }
-  });
 
   num_visible = checkResult(visible, visible_ref, N);
   std::cout << "\n\t num visible points = " << num_visible << "\n\n";
@@ -178,19 +177,16 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
   std::memset(visible, 0, N * sizeof(int));
   num_visible = 0;
 
-  using EXEC_POL2 = RAJA::omp_parallel_for_exec;
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the line-of-sight algorithm using RAJA constructs.
+  ///           First, use a 'max' RAJA::inclusive_scan on the angle vector 
+  ///           with RAJA::omp_parallel_for_exec execution policy. Then, use 
+  ///           a RAJA::forall template with the same execution policy to 
+  ///           determine which points are visible.
+  ///
 
-  RAJA::inclusive_scan< EXEC_POL2 >(RAJA::make_span(ang, N),
-                                    RAJA::make_span(ang_max, N),
-                                    RAJA::operators::maximum<double>{} );
-
-  RAJA::forall< EXEC_POL2 >(RAJA::RangeSegment(0, N), [=] (int i) {
-    if ( ang[i] >= ang_max[i] ) {
-       visible[i] = 1;
-    } else {
-       visible[i] = 0;
-    }
-  });
 
   num_visible = checkResult(visible, visible_ref, N);
   std::cout << "\n\t num visible points = " << num_visible << "\n\n";
@@ -211,19 +207,16 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
   std::memset(visible, 0, N * sizeof(int));
   num_visible = 0;
 
-  using EXEC_POL3 = RAJA::cuda_exec<CUDA_BLOCK_SIZE>;
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE: Implement the line-of-sight algorithm using RAJA constructs.
+  ///           First, use a 'max' RAJA::inclusive_scan on the angle vector 
+  ///           with RAJA::cuda_exec execution policy. Then, use a 
+  ///           RAJA::forall template with the same execution policy to 
+  ///           determine which points are visible.
+  ///
 
-  RAJA::inclusive_scan< EXEC_POL3 >(RAJA::make_span(ang, N),
-                                    RAJA::make_span(ang_max, N),
-                                    RAJA::operators::maximum<double>{} );
-
-  RAJA::forall< EXEC_POL3 >(RAJA::RangeSegment(0, N), [=] RAJA_DEVICE (int i) {
-    if ( ang[i] >= ang_max[i] ) {
-       visible[i] = 1;
-    } else {
-       visible[i] = 0;
-    }
-  });
 
   num_visible = checkResult(visible, visible_ref, N);
   std::cout << "\n\t num visible points = " << num_visible << "\n\n";

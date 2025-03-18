@@ -84,17 +84,17 @@
  *  left corner of the halo region, which extends to (3, 2).
  *
  *  This file contains two C-style sequential implementations of stencil 
- *  computation. One has column indexing as stride-1 with the outer loop 
- *  traversing the rows ('i' loop variable) and the inner loop traversing the 
- *  columns ('j' loop variable). The other has row indexing as stride-1 and
- *  reverses the order of the loops. This shows that a C-style implementation 
- *  requires two different implementations, one for each loop order, since the
- *  array offset arithmetic is different in the two cases. Where indicated 
- *  by comments, you will fill in versions using two-dimensional RAJA Views
- *  with offset layouts. One loop ordering requires permutations, while the
- *  other does not. If done properly, you will see that both RAJA versions
- *  have identical inner loop bodies, which is not the case for the C-style
- *  variants.
+ *  computation. One (Part a) has column indexing as stride-1 with the outer 
+ *  loop traversing the rows ('i' loop variable) and the inner loop traversing 
+ *  the columns ('j' loop variable). The other (Part B) has row indexing as 
+ *  stride-1 and reverses the order of the loops. This shows that a C-style 
+ *  implementation requires two different implementations, one for each loop 
+ *  order, since the array offset arithmetic is different in the two cases. 
+ *  Where indicated by comments, you will fill in versions using 
+ *  two-dimensional RAJA Views with offset layouts. One loop ordering requires 
+ *  permutations, while the other does not. If done properly, you will see 
+ *  that both RAJA versions have identical inner loop bodies, which is not the 
+ *  case for the C-style variants.
  *
  *  Note that you will use the same for-loop patterns as the C-style loops. 
  *  In a later exercise, we will show you how to use RAJA's nested loop
@@ -131,8 +131,6 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 //
 // Define number of rows and columns of cells in the 2D mesh.
 //
-  const int DIM = 2;
-
   const int Nr_int = 5; 
   const int Nc_int = 8;
 
@@ -151,7 +149,9 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
 
 //----------------------------------------------------------------------------//
-// First variant of stencil computation with column indexing as stride-1.
+// Part A:
+// 
+// Variant of stencil computation with column indexing as stride-1.
 //----------------------------------------------------------------------------//
 
   std::memset(B, 0, tot_cells * sizeof(int));
@@ -200,26 +200,26 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
   std::memset(A, 0, int_cells * sizeof(int));
 
-  //
-  // Create offset Layout and Views for data access. Note that only
-  // the input array access requires an offset since the loops iterate over
-  // the interior (i, j) indices. We can use the default layout for the 
-  // output array. Also, since the 'j' index (rightmost) is stride-1, 
-  // we don't need a permutation for this case.
-  //
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE (Part A): 
+  ///
+  ///   Fill in the stencil computation below where you use RAJA::View 
+  ///   objects for accessing entries in the A and B arrays. You will use
+  ///   a RAJA::OffsetLayout for the B array and a RAJA::Layout for the
+  ///   A array. The B array access requires an offset since the loops 
+  //    iterate over the interior (i, j) indices. 
+  ///
+  ///   For this part (A) of the exercise, the column (j-loop) indexing 
+  ///   has stride 1.
+  ///
 
-  RAJA::OffsetLayout<DIM> B_layout =
-      RAJA::make_offset_layout<DIM>({{-1, -1}}, {{Nc_tot-1, Nr_tot-1}});
-
-  RAJA::View<int, RAJA::OffsetLayout<DIM>> Bview(B, B_layout);
-  RAJA::View<int, RAJA::Layout<DIM>> Aview(A, Nc_int, Nr_int);
 
   for (int i = 0; i < Nc_int; ++i) {
     for (int j = 0; j < Nr_int; ++j) {
 
-      Aview(i, j) = Bview(i, j) +                           // C
-                    Bview(i - 1, j) + Bview(i + 1, j) +     // W, E
-                    Bview(i, j - 1) + Bview(i, j + 1);      // S, N
+      // fill in the loop body
 
     }
   }
@@ -229,7 +229,9 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
 
 //----------------------------------------------------------------------------//
-// Second variant of stencil computation with row indexing as stride-1.
+// Part B:
+// 
+// Variant of stencil computation with row indexing as stride-1.
 //----------------------------------------------------------------------------//
 
   std::memset(B, 0, tot_cells * sizeof(int));
@@ -278,36 +280,27 @@ int main(int RAJA_UNUSED_ARG(argc), char** RAJA_UNUSED_ARG(argv[]))
 
   std::memset(A, 0, int_cells * sizeof(int));
 
-  //
-  // Create offset Layout and Views for data access. Note that only
-  // the input array access requires an offset since the loops iterate over
-  // the interior (i, j) indices. Since the 'i' index (leftmost) is stride-1,
-  // we use permuted layouts for this case.
-  //
-  // Note that the inner loop body is the same here as the RAJA version above,
-  // except for the changed View names, which can be abstracted in an
-  // application.
-  //
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE (Part B): 
+  ///
+  ///   Fill in the stencil computation below where you use RAJA::View 
+  ///   objects for accessing entries in the A and B arrays. You will use
+  ///   a RAJA::OffsetLayout for the B array and a RAJA::Layout for the
+  ///   A array. The B array access requires an offset since the loops 
+  //    iterate over the interior (i, j) indices.
+  ///
+  ///   For this part (A) of the exercise, the row (i-loop) indexing 
+  ///   has stride 1. Thus, layouts for the A and B arrays require 
+  ///   the same permutation.
+  ///
 
-  std::array<RAJA::idx_t, DIM> perm {{1, 0}};  // 'i' index (position zero0) 
-                                               // is stride-1 
-
-  RAJA::OffsetLayout<DIM> pB_layout =
-    RAJA::make_permuted_offset_layout( {{-1, -1}}, {{Nc_tot-1, Nr_tot-1}},
-                                       perm );
-
-  RAJA::Layout<DIM> pA_layout = 
-      RAJA::make_permuted_layout( {{Nc_int, Nr_int}}, perm );
-
-  RAJA::View<int, RAJA::OffsetLayout<DIM>> pBview(B, pB_layout);
-  RAJA::View<int, RAJA::Layout<DIM>> pAview(A, pA_layout);
 
   for (int j = 0; j < Nr_int; ++j) {
     for (int i = 0; i < Nc_int; ++i) {
 
-      pAview(i, j) = pBview(i, j) +                            // C
-                     pBview(i - 1, j) + pBview(i + 1, j) +     // W, E
-                     pBview(i, j - 1) + pBview(i, j + 1);      // S, N
+      // fill in the loop body
 
     }
   }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . ./setup.sh
-if [ $e4s_print_color = true -a  -n "$TERM" ];
+if [ "$e4s_print_color" = true -a  -n "$TERM" ];
 then
 RED='\033[0;31m'
 GREEN='\033[0;32m'

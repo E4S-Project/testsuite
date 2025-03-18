@@ -177,8 +177,10 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
   // tile_fixed statements. Iterations inside a RAJA loop is given by their
   // global iteration number.
   //
+#if 0  // needed for exercises, but if-def'd out to quiet compiler warnings.
   RAJA::RangeSegment row_Range(0, N_r);
   RAJA::RangeSegment col_Range(0, N_c);
+#endif
 
   // Next,  we define a RAJA local array type.
   // The array type is templated on
@@ -201,12 +203,11 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
   std::cout << "\n Running RAJA - sequential matrix transpose example ...\n";
   std::memset(At, 0, N_r * N_c * sizeof(int));
 
+#if 0
   using SEQ_EXEC_POL =
     RAJA::KernelPolicy<
-      RAJA::statement::Tile<1, RAJA::tile_fixed<TILE_SZ>,
-                               RAJA::seq_exec,
-        RAJA::statement::Tile<0, RAJA::tile_fixed<TILE_SZ>,
-                                 RAJA::seq_exec,
+      // Fill in sequential outer loop tiling execution statements....
+      // (sequential  outer row loop, sequential inner column loop)...
 
           RAJA::statement::InitLocalMem<RAJA::cpu_tile_mem, RAJA::ParamList<2>,
 
@@ -231,6 +232,19 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
       >
     >;
 
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE:
+  ///
+  ///   Implement the matrix tranpose kernel using the RAJA kernel API
+  ///   and the kernel policy above. You will need to fill in outer
+  ///   loop tiling execution statements where indicted above. Then,
+  ///   fill in the second lambda expression in the kernel below, which
+  ///   reads a matrix transpose extry from the local array and writes
+  ///   it to the transpose matrix.
+  ///
+
   RAJA::kernel_param<SEQ_EXEC_POL>( RAJA::make_tuple(col_Range, row_Range),
 
     RAJA::make_tuple((int)0, (int)0, RAJA_Tile),
@@ -241,11 +255,11 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
 
     },
 
-    [=](int col, int row, int tcol, int trow, TILE_MEM RAJA_Tile) {
+    // Fill in lambda expression to read matrix transpose entry from
+    // local tile array and write it to the transpose matrix.
 
-      Atview(col, row) = RAJA_Tile(trow, tcol);
-
-  });
+  );
+#endif
 
   checkResult<int>(Atview, N_c, N_r);
   // printResult<int>(Atview, N_c, N_r);
@@ -253,16 +267,14 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
 //--------------------------------------------------------------------------//
 #if defined(RAJA_ENABLE_OPENMP)
   std::cout << "\n Running RAJA - OpenMP (parallel outer loop) matrix "
-               "transpose example ...\n";
-
+               "transpose example with local array...\n";
   std::memset(At, 0, N_r * N_c * sizeof(int));
 
+#if 0
   using OPENMP_EXEC_POL =
   RAJA::KernelPolicy<
-    RAJA::statement::Tile<1, RAJA::tile_fixed<TILE_SZ>,
-                             RAJA::omp_parallel_for_exec,
-      RAJA::statement::Tile<0, RAJA::tile_fixed<TILE_SZ>,
-                               RAJA::seq_exec,
+    // Fill in the outer loop tiling execttion statements
+    // (OpenMP outer row loop, sequential inner column loop)...
 
         RAJA::statement::InitLocalMem<RAJA::cpu_tile_mem, RAJA::ParamList<2>,
 
@@ -286,21 +298,33 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
     >
    >;
 
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE:
+  ///
+  ///   Implement the matrix tranpose kernel using the RAJA kernel API
+  ///   and the kernel policy above. You will need to fill in outer
+  ///   loop tiling execution statements where indicted above. Then,
+  ///   fill in the first lambda expression in the kernel below, which
+  ///   writes an input matrix extry to the local array.
+  ///
+
   RAJA::kernel_param<OPENMP_EXEC_POL>( RAJA::make_tuple(col_Range, row_Range),
 
-      RAJA::make_tuple((int)0, (int)0, RAJA_Tile),
+    RAJA::make_tuple((int)0, (int)0, RAJA_Tile),
 
-      [=](int col, int row, int tcol, int trow, TILE_MEM& RAJA_Tile) {
+    // Fill in lambda expression to write input matrix entry
+    // to local tile array.
 
-        RAJA_Tile(trow, tcol) = Aview(row, col);
+    [=](int col, int row, int tcol, int trow, TILE_MEM RAJA_Tile) {
 
-      },
+      Atview(col, row) = RAJA_Tile(trow, tcol);
 
-      [=](int col, int row, int tcol, int trow, TILE_MEM RAJA_Tile) {
+    }
 
-        Atview(col, row) = RAJA_Tile(trow, tcol);
-
-      });
+  );
+#endif
 
   checkResult<int>(Atview, N_c, N_r);
   // printResult<int>(Atview, N_c, N_r);
@@ -314,13 +338,12 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
 
   std::memset(At, 0, N_r * N_c * sizeof(int));
 
+#if 0
   using CUDA_EXEC_POL =
   RAJA::KernelPolicy<
     RAJA::statement::CudaKernel<
-      RAJA::statement::Tile<1, RAJA::tile_fixed<TILE_SZ>,
-                               RAJA::cuda_block_y_loop,
-        RAJA::statement::Tile<0, RAJA::tile_fixed<TILE_SZ>,
-                                 RAJA::cuda_block_x_loop,
+      // Fill in the outer loop tiling execttion statements
+      // (cuda block-y outer row loop, cuda block-x inner column loop)...
 
           RAJA::statement::InitLocalMem<RAJA::cuda_shared_mem, RAJA::ParamList<2>,
 
@@ -349,22 +372,33 @@ int main(int RAJA_UNUSED_ARG(argc), char **RAJA_UNUSED_ARG(argv[]))
     >
   >;
 
+  ///
+  /// TODO...
+  ///
+  /// EXERCISE:
+  ///
+  ///   Implement the matrix tranpose kernel using the RAJA kernel API
+  ///   and the kernel policy above. You will need to fill in outer
+  ///   loop tiling execution statements where indicted above. Then,
+  ///   fill in the second lambda expression in the kernel below, which
+  ///   reads a matrix transpose extry from the local array and writes
+  ///   it to the transpose matrix.
 
   RAJA::kernel_param<CUDA_EXEC_POL>( RAJA::make_tuple(col_Range, row_Range),
 
-      RAJA::make_tuple((int)0, (int)0, RAJA_Tile),
+    RAJA::make_tuple((int)0, (int)0, RAJA_Tile),
 
-      [=] RAJA_DEVICE (int col, int row, int tcol, int trow, TILE_MEM& RAJA_Tile) {
+    [=] RAJA_DEVICE(int col, int row, int tcol, int trow, TILE_MEM& RAJA_Tile) {
 
-        RAJA_Tile(trow, tcol) = Aview(row, col);
+      RAJA_Tile(trow, tcol) = Aview(row, col);
 
-      },
+    },
 
-      [=] RAJA_DEVICE(int col, int row, int tcol, int trow, TILE_MEM RAJA_Tile) {
+    // Fill in lambda expression to read matrix transpose entry from
+    // local tile array and write it to the transpose matrix.
 
-        Atview(col, row) = RAJA_Tile(trow, tcol);
-
-      });
+  );
+#endif
 
   checkResult<int>(Atview, N_c, N_r);
   // printResult<int>(Atview, N_c, N_r);
