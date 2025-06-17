@@ -3,4 +3,4 @@
 #spack load openblas threads=none
 #spack load superlu 
 set -x
-./build/c_sample
+./build/superlu5x5
