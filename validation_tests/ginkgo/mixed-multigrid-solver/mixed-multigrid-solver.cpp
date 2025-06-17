@@ -1,44 +1,14 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <string>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 int main(int argc, char* argv[])
@@ -69,13 +39,12 @@ int main(int argc, char* argv[])
             {"omp", [] { return gko::OmpExecutor::create(); }},
             {"cuda",
              [] {
-                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
-                                                  true);
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
              }},
             {"hip",
              [] {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
-                                                 true);
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
              }},
             {"dpcpp",
              [] {
@@ -101,18 +70,18 @@ int main(int argc, char* argv[])
     }
     auto x = vec::create(exec);
     auto b = vec::create(exec);
-    x->copy_from(host_x.get());
-    b->copy_from(host_b.get());
+    x->copy_from(host_x);
+    b->copy_from(host_b);
 
     // Calculate initial residual by overwriting b
     auto one = gko::initialize<vec>({1.0}, exec);
     auto neg_one = gko::initialize<vec>({-1.0}, exec);
     auto initres = gko::initialize<vec>({0.0}, exec);
-    A->apply(lend(one), lend(x), lend(neg_one), lend(b));
-    b->compute_norm2(lend(initres));
+    A->apply(one, x, neg_one, b);
+    b->compute_norm2(initres);
 
     // copy b again
-    b->copy_from(host_b.get());
+    b->copy_from(host_b);
 
     // Prepare the stopping criteria
     const gko::remove_complex<ValueType> tolerance = 1e-12;
@@ -123,25 +92,18 @@ int main(int argc, char* argv[])
                                    .with_reduction_factor(tolerance)
                                    .on(exec));
 
-    std::shared_ptr<const gko::log::Convergence<ValueType>> logger =
-        gko::log::Convergence<ValueType>::create();
-    iter_stop->add_logger(logger);
-    tol_stop->add_logger(logger);
-
     // Create smoother factory (ir with bj)
     auto smoother_gen = gko::share(
         ir::build()
-            .with_solver(bj::build().with_max_block_size(1u).on(exec))
+            .with_solver(bj::build().with_max_block_size(1u))
             .with_relaxation_factor(static_cast<ValueType>(0.9))
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(1u).on(exec))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(1u))
             .on(exec));
     auto smoother_gen2 = gko::share(
         ir2::build()
-            .with_solver(bj2::build().with_max_block_size(1u).on(exec))
+            .with_solver(bj2::build().with_max_block_size(1u))
             .with_relaxation_factor(static_cast<MixedType>(0.9))
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(1u).on(exec))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(1u))
             .on(exec));
     // Create RestrictProlong factory
     auto mg_level_gen =
@@ -151,17 +113,15 @@ int main(int argc, char* argv[])
     // Create CoarsesSolver factory
     auto coarsest_solver_gen = gko::share(
         ir::build()
-            .with_solver(bj::build().with_max_block_size(1u).on(exec))
+            .with_solver(bj::build().with_max_block_size(1u))
             .with_relaxation_factor(static_cast<ValueType>(0.9))
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(4u).on(exec))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(4u))
             .on(exec));
     auto coarsest_solver_gen2 = gko::share(
         ir2::build()
-            .with_solver(bj2::build().with_max_block_size(1u).on(exec))
+            .with_solver(bj2::build().with_max_block_size(1u))
             .with_relaxation_factor(static_cast<MixedType>(0.9))
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(4u).on(exec))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(4u))
             .on(exec));
     // Create multigrid factory
     std::shared_ptr<gko::LinOpFactory> multigrid_gen;
@@ -206,25 +166,30 @@ int main(int argc, char* argv[])
     gen_time +=
         std::chrono::duration_cast<std::chrono::nanoseconds>(gen_toc - gen_tic);
 
+    // Add logger
+    std::shared_ptr<const gko::log::Convergence<ValueType>> logger =
+        gko::log::Convergence<ValueType>::create();
+    solver->add_logger(logger);
 
     // Solve system
     exec->synchronize();
     std::chrono::nanoseconds time(0);
     auto tic = std::chrono::steady_clock::now();
-    solver->apply(lend(b), lend(x));
+    solver->apply(b, x);
     exec->synchronize();
     auto toc = std::chrono::steady_clock::now();
     time += std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic);
 
-    // Calculate residual
+    // Calculate residual explicitly, because the residual is not
+    // available inside of the multigrid solver
     auto res = gko::initialize<vec>({0.0}, exec);
-    A->apply(lend(one), lend(x), lend(neg_one), lend(b));
-    b->compute_norm2(lend(res));
+    A->apply(one, x, neg_one, b);
+    b->compute_norm2(res);
 
     std::cout << "Initial residual norm sqrt(r^T r): \n";
-    write(std::cout, lend(initres));
+    write(std::cout, initres);
     std::cout << "Final residual norm sqrt(r^T r): \n";
-    write(std::cout, lend(res));
+    write(std::cout, res);
 
     // Print solver statistics
     std::cout << "Multigrid iteration count:     "
@@ -233,7 +198,7 @@ int main(int argc, char* argv[])
               << static_cast<double>(gen_time.count()) / 1000000.0 << std::endl;
     std::cout << "Multigrid execution time [ms]: "
               << static_cast<double>(time.count()) / 1000000.0 << std::endl;
-    std::cout << "Multigrid execution time per iteraion[ms]: "
+    std::cout << "Multigrid execution time per iteration[ms]: "
               << static_cast<double>(time.count()) / 1000000.0 /
                      logger->get_num_iterations()
               << std::endl;

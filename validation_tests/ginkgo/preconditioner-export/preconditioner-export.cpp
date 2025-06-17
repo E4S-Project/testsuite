@@ -1,38 +1,6 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <fstream>
 #include <functional>
@@ -40,6 +8,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <memory>
 #include <string>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
@@ -61,7 +31,8 @@ const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
                }}};
 
 
-void output(const gko::WritableToMatrixData<double, int>* mtx, std::string name)
+void output(gko::ptr_param<const gko::WritableToMatrixData<double, int>> mtx,
+            std::string name)
 {
     std::ofstream stream{name};
     std::cerr << "Writing " << name << std::endl;
@@ -130,56 +101,62 @@ int main(int argc, char* argv[])
     // handle different preconditioners
     if (precond == "jacobi") {
         // jacobi: max_block_size, accuracy, storage_optimization
-        auto factory = gko::preconditioner::Jacobi<>::build().on(exec);
+        auto factory_parameter = gko::preconditioner::Jacobi<>::build();
         if (argc >= 5) {
-            factory->get_parameters().max_block_size = std::stoi(argv[4]);
+            factory_parameter.with_max_block_size(
+                static_cast<gko::uint32>(std::stoi(argv[4])));
         }
         if (argc >= 6) {
-            factory->get_parameters().accuracy = std::stod(argv[5]);
+            factory_parameter.with_accuracy(std::stod(argv[5]));
         }
         if (argc >= 7) {
-            factory->get_parameters().storage_optimization =
+            factory_parameter.with_storage_optimization(
                 std::string{argv[6]} == "auto"
                     ? gko::precision_reduction::autodetect()
-                    : gko::precision_reduction(0, std::stoi(argv[6]));
+                    : gko::precision_reduction(0, std::stoi(argv[6])));
         }
+        auto factory = factory_parameter.on(exec);
         auto jacobi = try_generate([&] { return factory->generate(mtx); });
-        output(jacobi.get(), matrix + ".jacobi" + output_suffix);
+        output(jacobi, matrix + ".jacobi" + output_suffix);
     } else if (precond == "ilu") {
         // ilu: no parameters
         auto ilu = gko::as<gko::Composition<>>(try_generate([&] {
             return gko::factorization::Ilu<>::build().on(exec)->generate(mtx);
         }));
-        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[0].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[0]),
                matrix + ".ilu-l");
-        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[1].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[1]),
                matrix + ".ilu-u");
     } else if (precond == "parilu") {
         // parilu: iterations
-        auto factory = gko::factorization::ParIlu<>::build().on(exec);
+        auto factory_parameter = gko::factorization::ParIlu<>::build();
         if (argc >= 5) {
-            factory->get_parameters().iterations = std::stoi(argv[4]);
+            factory_parameter.with_iterations(
+                static_cast<gko::size_type>(std::stoi(argv[4])));
         }
+        auto factory = factory_parameter.on(exec);
         auto ilu = gko::as<gko::Composition<>>(
             try_generate([&] { return factory->generate(mtx); }));
-        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[0].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[0]),
                matrix + ".parilu" + output_suffix + "-l");
-        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[1].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilu->get_operators()[1]),
                matrix + ".parilu" + output_suffix + "-u");
     } else if (precond == "parilut") {
         // parilut: iterations, fill-in limit
-        auto factory = gko::factorization::ParIlut<>::build().on(exec);
+        auto factory_parameter = gko::factorization::ParIlut<>::build();
         if (argc >= 5) {
-            factory->get_parameters().iterations = std::stoi(argv[4]);
+            factory_parameter.with_iterations(
+                static_cast<gko::size_type>(std::stoi(argv[4])));
         }
         if (argc >= 6) {
-            factory->get_parameters().fill_in_limit = std::stod(argv[5]);
+            factory_parameter.with_fill_in_limit(std::stod(argv[5]));
         }
+        auto factory = factory_parameter.on(exec);
         auto ilut = gko::as<gko::Composition<>>(
             try_generate([&] { return factory->generate(mtx); }));
-        output(gko::as<gko::matrix::Csr<>>(ilut->get_operators()[0].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilut->get_operators()[0]),
                matrix + ".parilut" + output_suffix + "-l");
-        output(gko::as<gko::matrix::Csr<>>(ilut->get_operators()[1].get()),
+        output(gko::as<gko::matrix::Csr<>>(ilut->get_operators()[1]),
                matrix + ".parilut" + output_suffix + "-u");
     } else if (precond == "ilu-isai") {
         // ilu-isai: sparsity power
@@ -192,75 +169,71 @@ int main(int argc, char* argv[])
         auto factory =
             gko::preconditioner::Ilu<gko::preconditioner::LowerIsai<>,
                                      gko::preconditioner::UpperIsai<>>::build()
-                .with_factorization_factory(fact_factory)
-                .with_l_solver_factory(gko::preconditioner::LowerIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
-                .with_u_solver_factory(gko::preconditioner::UpperIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
+                .with_factorization(fact_factory)
+                .with_l_solver(gko::preconditioner::LowerIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
+                .with_u_solver(gko::preconditioner::UpperIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
                 .on(exec);
         auto ilu_isai = try_generate([&] { return factory->generate(mtx); });
-        output(ilu_isai->get_l_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_l_solver()->get_approximate_inverse(),
                matrix + ".ilu-isai" + output_suffix + "-l");
-        output(ilu_isai->get_u_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_u_solver()->get_approximate_inverse(),
                matrix + ".ilu-isai" + output_suffix + "-u");
     } else if (precond == "parilu-isai") {
         // parilu-isai: iterations, sparsity power
-        auto fact_factory =
-            gko::share(gko::factorization::ParIlu<>::build().on(exec));
+        auto fact_parameter = gko::factorization::ParIlu<>::build();
         int sparsity_power = 1;
         if (argc >= 5) {
-            fact_factory->get_parameters().iterations = std::stoi(argv[4]);
+            fact_parameter.with_iterations(
+                static_cast<gko::size_type>(std::stoi(argv[4])));
         }
         if (argc >= 6) {
             sparsity_power = std::stoi(argv[5]);
         }
+        auto fact_factory = gko::share(fact_parameter.on(exec));
         auto factory =
             gko::preconditioner::Ilu<gko::preconditioner::LowerIsai<>,
                                      gko::preconditioner::UpperIsai<>>::build()
-                .with_factorization_factory(fact_factory)
-                .with_l_solver_factory(gko::preconditioner::LowerIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
-                .with_u_solver_factory(gko::preconditioner::UpperIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
+                .with_factorization(fact_factory)
+                .with_l_solver(gko::preconditioner::LowerIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
+                .with_u_solver(gko::preconditioner::UpperIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
                 .on(exec);
         auto ilu_isai = try_generate([&] { return factory->generate(mtx); });
-        output(ilu_isai->get_l_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_l_solver()->get_approximate_inverse(),
                matrix + ".parilu-isai" + output_suffix + "-l");
-        output(ilu_isai->get_u_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_u_solver()->get_approximate_inverse(),
                matrix + ".parilu-isai" + output_suffix + "-u");
     } else if (precond == "parilut-isai") {
         // parilut-isai: iterations, fill-in limit, sparsity power
-        auto fact_factory =
-            gko::share(gko::factorization::ParIlut<>::build().on(exec));
+        auto fact_parameter = gko::factorization::ParIlut<>::build();
         int sparsity_power = 1;
         if (argc >= 5) {
-            fact_factory->get_parameters().iterations = std::stoi(argv[4]);
+            fact_parameter.with_iterations(
+                static_cast<gko::size_type>(std::stoi(argv[4])));
         }
         if (argc >= 6) {
-            fact_factory->get_parameters().fill_in_limit = std::stod(argv[5]);
+            fact_parameter.with_fill_in_limit(std::stod(argv[5]));
         }
         if (argc >= 7) {
             sparsity_power = std::stoi(argv[6]);
         }
+        auto fact_factory = gko::share(fact_parameter.on(exec));
         auto factory =
             gko::preconditioner::Ilu<gko::preconditioner::LowerIsai<>,
                                      gko::preconditioner::UpperIsai<>>::build()
-                .with_factorization_factory(fact_factory)
-                .with_l_solver_factory(gko::preconditioner::LowerIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
-                .with_u_solver_factory(gko::preconditioner::UpperIsai<>::build()
-                                           .with_sparsity_power(sparsity_power)
-                                           .on(exec))
+                .with_factorization(fact_factory)
+                .with_l_solver(gko::preconditioner::LowerIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
+                .with_u_solver(gko::preconditioner::UpperIsai<>::build()
+                                   .with_sparsity_power(sparsity_power))
                 .on(exec);
         auto ilu_isai = try_generate([&] { return factory->generate(mtx); });
-        output(ilu_isai->get_l_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_l_solver()->get_approximate_inverse(),
                matrix + ".parilut-isai" + output_suffix + "-l");
-        output(ilu_isai->get_u_solver()->get_approximate_inverse().get(),
+        output(ilu_isai->get_u_solver()->get_approximate_inverse(),
                matrix + ".parilut-isai" + output_suffix + "-u");
     }
 }

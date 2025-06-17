@@ -1,38 +1,6 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <fstream>
 #include <functional>
@@ -40,6 +8,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <memory>
 #include <string>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 const std::map<std::string, std::function<std::shared_ptr<gko::Executor>()>>
@@ -82,8 +52,8 @@ double compute_ilu_residual_norm(
     gko::matrix_data<ValueType, IndexType> mtx_data;
     residual->write(residual_data);
     mtx->write(mtx_data);
-    residual_data.ensure_row_major_order();
-    mtx_data.ensure_row_major_order();
+    residual_data.sort_row_major();
+    mtx_data.sort_row_major();
     auto it = mtx_data.nonzeros.begin();
     double residual_norm{};
     for (auto entry : residual_data.nonzeros) {
@@ -133,52 +103,36 @@ int main(int argc, char* argv[])
                                                                  exec);
     }));
 
-    std::shared_ptr<gko::LinOpFactory> factory;
-    std::function<void(int)> set_iterations;
-    if (precond == "parilu") {
-        factory =
-            gko::factorization::ParIlu<ValueType, IndexType>::build().on(exec);
-        set_iterations = [&](int it) {
-            gko::as<gko::factorization::ParIlu<ValueType, IndexType>::Factory>(
-                factory)
-                ->get_parameters()
-                .iterations = it;
-        };
-    } else if (precond == "paric") {
-        factory =
-            gko::factorization::ParIc<ValueType, IndexType>::build().on(exec);
-        set_iterations = [&](int it) {
-            gko::as<gko::factorization::ParIc<ValueType, IndexType>::Factory>(
-                factory)
-                ->get_parameters()
-                .iterations = it;
-        };
-    } else if (precond == "parilut") {
-        factory = gko::factorization::ParIlut<ValueType, IndexType>::build()
-                      .with_fill_in_limit(limit)
-                      .on(exec);
-        set_iterations = [&](int it) {
-            gko::as<gko::factorization::ParIlut<ValueType, IndexType>::Factory>(
-                factory)
-                ->get_parameters()
-                .iterations = it;
-        };
-    } else if (precond == "parict") {
-        factory = gko::factorization::ParIct<ValueType, IndexType>::build()
-                      .with_fill_in_limit(limit)
-                      .on(exec);
-        set_iterations = [&](int it) {
-            gko::as<gko::factorization::ParIct<ValueType, IndexType>::Factory>(
-                factory)
-                ->get_parameters()
-                .iterations = it;
-        };
-    }
+    auto factory_generator =
+        [&](gko::size_type iteration) -> std::shared_ptr<gko::LinOpFactory> {
+        if (precond == "parilu") {
+            return gko::factorization::ParIlu<ValueType, IndexType>::build()
+                .with_iterations(iteration)
+                .on(exec);
+        } else if (precond == "paric") {
+            return gko::factorization::ParIc<ValueType, IndexType>::build()
+                .with_iterations(iteration)
+                .on(exec);
+        } else if (precond == "parilut") {
+            return gko::factorization::ParIlut<ValueType, IndexType>::build()
+                .with_fill_in_limit(limit)
+                .with_iterations(iteration)
+                .on(exec);
+        } else if (precond == "parict") {
+            return gko::factorization::ParIct<ValueType, IndexType>::build()
+                .with_fill_in_limit(limit)
+                .with_iterations(iteration)
+                .on(exec);
+        } else {
+            GKO_NOT_IMPLEMENTED;
+        }
+    };
+
     auto one = gko::initialize<gko::matrix::Dense<ValueType>>({1.0}, exec);
     auto minus_one =
         gko::initialize<gko::matrix::Dense<ValueType>>({-1.0}, exec);
     for (int it = 1; it <= max_iterations; ++it) {
-        set_iterations(it);
+        auto factory = factory_generator(it);
         std::cout << it << ';';
         std::vector<long> times;
         std::vector<double> residuals;
@@ -189,14 +143,13 @@ int main(int argc, char* argv[])
             exec->synchronize();
             auto toc = std::chrono::high_resolution_clock::now();
             auto residual = gko::clone(exec, mtx);
-            result->get_operators()[0]->apply(lend(one),
-                                              lend(result->get_operators()[1]),
-                                              lend(minus_one), lend(residual));
+            result->get_operators()[0]->apply(one, result->get_operators()[1],
+                                              minus_one, residual);
             times.push_back(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic)
                     .count());
             residuals.push_back(
-                compute_ilu_residual_norm(lend(residual), lend(mtx)));
+                compute_ilu_residual_norm(residual.get(), mtx.get()));
         }
         for (auto el : times) {
             std::cout << el << ';';

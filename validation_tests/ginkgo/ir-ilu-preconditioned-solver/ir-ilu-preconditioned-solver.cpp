@@ -1,44 +1,14 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 int main(int argc, char* argv[])
@@ -71,13 +41,12 @@ int main(int argc, char* argv[])
             {"omp", [] { return gko::OmpExecutor::create(); }},
             {"cuda",
              [] {
-                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
-                                                  true);
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
              }},
             {"hip",
              [] {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
-                                                 true);
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
              }},
             {"dpcpp",
              [] {
@@ -120,18 +89,16 @@ int main(int argc, char* argv[])
     auto trisolve_factory =
         ir::build()
             .with_solver(bj_factory)
-            .with_criteria(
-                gko::stop::Iteration::build().with_max_iters(sweeps).on(exec))
+            .with_criteria(gko::stop::Iteration::build().with_max_iters(sweeps))
             .on(exec);
 
     // Generate an ILU preconditioner factory by setting lower and upper
     // triangular solver - in this case the previously defined iterative
     // refinement method.
-    auto ilu_pre_factory =
-        gko::preconditioner::Ilu<ir, ir>::build()
-            .with_l_solver_factory(gko::clone(trisolve_factory))
-            .with_u_solver_factory(gko::clone(trisolve_factory))
-            .on(exec);
+    auto ilu_pre_factory = gko::preconditioner::Ilu<ir, ir>::build()
+                               .with_l_solver(gko::clone(trisolve_factory))
+                               .with_u_solver(gko::clone(trisolve_factory))
+                               .on(exec);
 
     // Use incomplete factors to generate ILU preconditioner
     auto ilu_preconditioner = gko::share(ilu_pre_factory->generate(par_ilu));
@@ -143,11 +110,6 @@ int main(int argc, char* argv[])
     auto tol_stop = gko::share(gko::stop::ResidualNorm<ValueType>::build()
                                    .with_reduction_factor(reduction_factor)
                                    .on(exec));
-
-    std::shared_ptr<const gko::log::Convergence<ValueType>> logger =
-        gko::log::Convergence<ValueType>::create();
-    iter_stop->add_logger(logger);
-    tol_stop->add_logger(logger);
 
     // Use preconditioner inside GMRES solver factory
     // Generating a solver factory tied to a specific preconditioner makes sense
@@ -162,15 +124,20 @@ int main(int argc, char* argv[])
     // Generate preconditioned solver for a specific target system
     auto ilu_gmres = ilu_gmres_factory->generate(A);
 
+    // Add logger
+    std::shared_ptr<const gko::log::Convergence<ValueType>> logger =
+        gko::log::Convergence<ValueType>::create();
+    ilu_gmres->add_logger(logger);
+
     // Warmup run
-    ilu_gmres->apply(lend(b), lend(x));
+    ilu_gmres->apply(b, x);
 
     // Solve system 100 times and take the average time.
     std::chrono::nanoseconds time(0);
     for (int i = 0; i < 100; i++) {
-        x->copy_from(lend(clone_x));
+        x->copy_from(clone_x);
         auto tic = std::chrono::high_resolution_clock::now();
-        ilu_gmres->apply(lend(b), lend(x));
+        ilu_gmres->apply(b, x);
         auto toc = std::chrono::high_resolution_clock::now();
         time += std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic);
     }
@@ -179,19 +146,15 @@ int main(int argc, char* argv[])
 
     // Print solution
     std::cout << "Solution (x):\n";
-    write(std::cout, gko::lend(x));
+    write(std::cout, x);
 
-    // Calculate residual
-    auto one = gko::initialize<vec>({1.0}, exec);
-    auto neg_one = gko::initialize<vec>({-1.0}, exec);
-    auto res = gko::initialize<real_vec>({0.0}, exec);
-    A->apply(gko::lend(one), gko::lend(x), gko::lend(neg_one), gko::lend(b));
-    b->compute_norm2(gko::lend(res));
+    // Get residual
+    auto res = gko::as<vec>(logger->get_residual_norm());
 
     std::cout << "GMRES iteration count:     " << logger->get_num_iterations()
               << "\n";
     std::cout << "GMRES execution time [ms]: "
               << static_cast<double>(time.count()) / 100000000.0 << "\n";
     std::cout << "Residual norm sqrt(r^T r):\n";
-    write(std::cout, gko::lend(res));
+    write(std::cout, res);
 }

@@ -1,44 +1,14 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <string>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 int main(int argc, char* argv[])
@@ -76,13 +46,12 @@ int main(int argc, char* argv[])
             {"omp", [] { return gko::OmpExecutor::create(); }},
             {"cuda",
              [] {
-                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
-                                                  true);
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
              }},
             {"hip",
              [] {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
-                                                 true);
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
              }},
             {"dpcpp",
              [] {
@@ -109,28 +78,26 @@ int main(int argc, char* argv[])
     auto one = gko::initialize<vec>({1.0}, exec);
     auto neg_one = gko::initialize<vec>({-1.0}, exec);
     auto initres_vec = gko::initialize<real_vec>({0.0}, exec);
-    A->apply(lend(one), lend(x), lend(neg_one), lend(b));
-    b->compute_norm2(lend(initres_vec));
+    A->apply(one, x, neg_one, b);
+    b->compute_norm2(initres_vec);
 
     // Build lower-precision system matrix and residual
     auto solver_A = solver_mtx::create(exec);
     auto inner_residual = solver_vec::create(exec);
     auto outer_residual = vec::create(exec);
-    A->convert_to(lend(solver_A));
-    b->convert_to(lend(outer_residual));
+    A->convert_to(solver_A);
+    b->convert_to(outer_residual);
 
     // restore b
-    b->copy_from(host_x.get());
+    b->copy_from(host_x);
 
     // Create inner solver
     auto inner_solver =
         cg::build()
-            .with_criteria(gko::stop::ResidualNorm<SolverType>::build()
-                               .with_reduction_factor(inner_reduction_factor)
-                               .on(exec),
-                           gko::stop::Iteration::build()
-                               .with_max_iters(max_inner_iters)
-                               .on(exec))
+            .with_criteria(
+                gko::stop::ResidualNorm<SolverType>::build()
+                    .with_reduction_factor(inner_reduction_factor),
+                gko::stop::Iteration::build().with_max_iters(max_inner_iters))
             .on(exec)
             ->generate(give(solver_A));
 
@@ -147,8 +114,8 @@ int main(int argc, char* argv[])
         ++iter;
 
         // convert residual to inner precision
-        outer_residual->convert_to(lend(inner_residual));
-        outer_residual->compute_norm2(lend(res_vec));
+        outer_residual->convert_to(inner_residual);
+        outer_residual->compute_norm2(res_vec);
         auto res = exec->copy_val_to_host(res_vec->get_const_values());
 
         // break if we exceed the number of iterations or have converged
@@ -159,31 +126,31 @@ int main(int argc, char* argv[])
         // Use the inner solver to solve
         // A * inner_solution = inner_residual
         // with residual as initial guess.
-        inner_solution->copy_from(lend(inner_residual));
-        inner_solver->apply(lend(inner_residual), lend(inner_solution));
+        inner_solution->copy_from(inner_residual);
+        inner_solver->apply(inner_residual, inner_solution);
 
         // convert inner solution to outer precision
-        inner_solution->convert_to(lend(outer_delta));
+        inner_solution->convert_to(outer_delta);
 
         // x = x + inner_solution
-        x->add_scaled(lend(one), lend(outer_delta));
+        x->add_scaled(one, outer_delta);
 
         // residual = b - A * x
-        outer_residual->copy_from(lend(b));
-        A->apply(lend(neg_one), lend(x), lend(one), lend(outer_residual));
+        outer_residual->copy_from(b);
+        A->apply(neg_one, x, one, outer_residual);
     }
 
     auto toc = std::chrono::steady_clock::now();
     time += std::chrono::duration_cast<std::chrono::nanoseconds>(toc - tic);
 
     // Calculate residual
-    A->apply(lend(one), lend(x), lend(neg_one), lend(b));
-    b->compute_norm2(lend(res_vec));
+    A->apply(one, x, neg_one, b);
+    b->compute_norm2(res_vec);
 
     std::cout << "Initial residual norm sqrt(r^T r):\n";
-    write(std::cout, lend(initres_vec));
+    write(std::cout, initres_vec);
     std::cout << "Final residual norm sqrt(r^T r):\n";
-    write(std::cout, lend(res_vec));
+    write(std::cout, res_vec);
 
     // Print solver statistics
     std::cout << "MPIR iteration count:     " << iter << std::endl;

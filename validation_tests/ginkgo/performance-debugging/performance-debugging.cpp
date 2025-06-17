@@ -1,37 +1,6 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-#include <ginkgo/ginkgo.hpp>
-
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <algorithm>
 #include <array>
@@ -47,6 +16,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 template <typename ValueType>
@@ -85,8 +56,8 @@ gko::remove_complex<ValueType> compute_norm(const vec<ValueType>* b)
 {
     auto exec = b->get_executor();
     auto b_norm = gko::initialize<real_vec<ValueType>>({0.0}, exec);
-    b->compute_norm2(gko::lend(b_norm));
-    return get_first_element(gko::lend(b_norm));
+    b->compute_norm2(b_norm);
+    return get_first_element(b_norm.get());
 }
 
 
@@ -99,9 +70,8 @@ gko::remove_complex<ValueType> compute_residual_norm(
     auto one = gko::initialize<vec<ValueType>>({1.0}, exec);
     auto neg_one = gko::initialize<vec<ValueType>>({-1.0}, exec);
     auto res = gko::clone(b);
-    system_matrix->apply(gko::lend(one), gko::lend(x), gko::lend(neg_one),
-                         gko::lend(res));
-    return compute_norm(gko::lend(res));
+    system_matrix->apply(one, x, neg_one, res);
+    return compute_norm(res.get());
 }
 
 
@@ -372,13 +342,12 @@ int main(int argc, char* argv[])
             {"omp", [] { return gko::OmpExecutor::create(); }},
             {"cuda",
              [] {
-                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
-                                                  true);
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
              }},
             {"hip",
              [] {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
-                                                 true);
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
              }},
             {"dpcpp",
              [] {
@@ -404,7 +373,7 @@ int main(int argc, char* argv[])
     // Read the matrix A from file
     auto A = gko::share(gko::read<mtx>(std::ifstream(input_mtx), exec));
     // Remove the storage logger
-    exec->remove_logger(gko::lend(storage_logger));
+    exec->remove_logger(storage_logger);
 
     // Pick a maximum iteration count
     const auto max_iters = A->get_size()[0];
@@ -418,10 +387,8 @@ int main(int argc, char* argv[])
         solver::build()
             .with_criteria(
                 gko::stop::ResidualNorm<ValueType>::build()
-                    .with_reduction_factor(reduction_factor)
-                    .on(exec),
-                gko::stop::Iteration::build().with_max_iters(max_iters).on(
-                    exec))
+                    .with_reduction_factor(reduction_factor),
+                gko::stop::Iteration::build().with_max_iters(max_iters))
             .with_preconditioner(preconditioner::create(exec))
             .on(exec);
 
@@ -434,7 +401,7 @@ int main(int argc, char* argv[])
         auto x_clone = gko::clone(x);
 
         // Generate and call apply on a solver
-        solver_factory->generate(A)->apply(gko::lend(b), gko::lend(x_clone));
+        solver_factory->generate(A)->apply(b, x_clone);
         exec->synchronize();
     }
 
@@ -462,7 +429,7 @@ int main(int argc, char* argv[])
         // Similarly time the apply
         exec->synchronize();
         auto a_tic = std::chrono::steady_clock::now();
-        generated_solver->apply(gko::lend(b), gko::lend(x_clone));
+        generated_solver->apply(b, x_clone);
         exec->synchronize();
         auto a_tac = std::chrono::steady_clock::now();
         auto apply_time =
@@ -470,8 +437,8 @@ int main(int argc, char* argv[])
         output_file << "Apply time (ns): " << apply_time.count() << std::endl;
 
         // Compute the residual norm
-        auto residual = utils::compute_residual_norm(gko::lend(A), gko::lend(b),
-                                                     gko::lend(x_clone));
+        auto residual =
+            utils::compute_residual_norm(A.get(), b.get(), x_clone.get());
         output_file << "Residual_norm: " << residual << std::endl;
     }
 
@@ -484,7 +451,7 @@ int main(int argc, char* argv[])
         // Generate a solver
         auto generated_solver = solver_factory->generate(A);
         // Remove the generate logger from the executor
-        exec->remove_logger(gko::lend(gen_logger));
+        exec->remove_logger(gen_logger);
         // Write the data to the output file
         output_file << "Generate operations times (ns):" << std::endl;
         gen_logger->write_data(output_file);
@@ -494,11 +461,11 @@ int main(int argc, char* argv[])
         exec->add_logger(apply_logger);
         // Create a ResidualLogger to log the recurent residual
         auto res_logger = std::make_shared<loggers::ResidualLogger<ValueType>>(
-            gko::lend(A), gko::lend(b));
+            A.get(), b.get());
         generated_solver->add_logger(res_logger);
         // Solve the system
-        generated_solver->apply(gko::lend(b), gko::lend(x));
-        exec->remove_logger(gko::lend(apply_logger));
+        generated_solver->apply(b, x);
+        exec->remove_logger(apply_logger);
         // Write the data to the output file
         output_file << "Apply operations times (ns):" << std::endl;
         apply_logger->write_data(output_file);
@@ -507,7 +474,7 @@ int main(int argc, char* argv[])
 
     // Print solution
     std::cout << "Solution, first ten entries: \n";
-    print_vector(gko::lend(x));
+    print_vector(x.get());
 
     // Print output file location
     std::cout << "The performance and residual data can be found in " << of_name

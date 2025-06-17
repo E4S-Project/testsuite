@@ -1,40 +1,13 @@
-/*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2022, the Ginkgo authors
-All rights reserved.
+// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+//
+// SPDX-License-Identifier: BSD-3-Clause
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************<GINKGO LICENSE>*******************************/
-
-#include <ginkgo/ginkgo.hpp>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
+
+#include <ginkgo/ginkgo.hpp>
 
 
 // Creates a stencil matrix in CSR format for the given number of discretization
@@ -144,13 +117,12 @@ int main(int argc, char* argv[])
             {"omp", [] { return gko::OmpExecutor::create(); }},
             {"cuda",
              [] {
-                 return gko::CudaExecutor::create(0, gko::OmpExecutor::create(),
-                                                  true);
+                 return gko::CudaExecutor::create(0,
+                                                  gko::OmpExecutor::create());
              }},
             {"hip",
              [] {
-                 return gko::HipExecutor::create(0, gko::OmpExecutor::create(),
-                                                 true);
+                 return gko::HipExecutor::create(0, gko::OmpExecutor::create());
              }},
             {"dpcpp",
              [] {
@@ -174,9 +146,9 @@ int main(int argc, char* argv[])
     // initialize matrix and vectors
     auto matrix = mtx::create(app_exec, gko::dim<2>(discretization_points),
                               3 * discretization_points - 2);
-    generate_stencil_matrix(lend(matrix));
+    generate_stencil_matrix(matrix.get());
     auto rhs = vec::create(app_exec, gko::dim<2>(discretization_points, 1));
-    generate_rhs(f, u0, u1, lend(rhs));
+    generate_rhs(f, u0, u1, rhs.get());
     auto u = vec::create(app_exec, gko::dim<2>(discretization_points, 1));
     for (int i = 0; i < u->get_size()[0]; ++i) {
         u->get_values()[i] = 0.0;
@@ -185,21 +157,19 @@ int main(int argc, char* argv[])
     const gko::remove_complex<ValueType> reduction_factor = 1e-7;
     // Generate solver and solve the system
     cg::build()
-        .with_criteria(gko::stop::Iteration::build()
-                           .with_max_iters(discretization_points)
-                           .on(exec),
-                       gko::stop::ResidualNorm<ValueType>::build()
-                           .with_reduction_factor(reduction_factor)
-                           .on(exec))
-        .with_preconditioner(bj::build().on(exec))
+        .with_criteria(
+            gko::stop::Iteration::build().with_max_iters(discretization_points),
+            gko::stop::ResidualNorm<ValueType>::build().with_reduction_factor(
+                reduction_factor))
+        .with_preconditioner(bj::build())
         .on(exec)
         ->generate(clone(exec, matrix))  // copy the matrix to the executor
-        ->apply(lend(rhs), lend(u));
+        ->apply(rhs, u);
 
     // Uncomment to print the solution
-    // print_solution<ValueType>(u0, u1, lend(u));
+    // print_solution<ValueType>(u0, u1, u.get());
     std::cout << "Solve complete.\nThe average relative error is "
-              << calculate_error(discretization_points, lend(u), correct_u) /
+              << calculate_error(discretization_points, u.get(), correct_u) /
                      static_cast<gko::remove_complex<ValueType>>(
                          discretization_points)
               << std::endl;
