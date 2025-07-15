@@ -1,2 +1,2 @@
 #!/bin/bash
-rm ./bin ./scripts ./tests/*.out
+rm -rf ./bin ./scripts ./tests/*.out
