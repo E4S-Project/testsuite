@@ -14,7 +14,7 @@ dArg=" -dpl "
 
 spackTestRun(){
 	#set -x
-	testOut=$(spack test run /${1}) # 2>/dev/null)
+	testOut=$(script -q -e -c "spack test run /${1}") # 2>/dev/null)
 	res=$?
 	echo "--- $testOut ---"
 	#echo $testOut | grep "No installed packages match spec"
