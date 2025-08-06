@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#exec &> /tmp/wspear/HOME/petsc_python_debug.log
+
 . ../../setup.sh
 
 if ! command -v cmake >/dev/null 2>&1 ; then
