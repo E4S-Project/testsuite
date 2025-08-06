@@ -2,4 +2,4 @@
 . ./setup.sh
 set -x
 ./build/minimal/symb_look
-./build/autotee/autotee_test
+script -q -e -c "./build/autotee/autotee_test"
