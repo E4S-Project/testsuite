@@ -8,6 +8,17 @@ source ${SPACK_ROOT}/share/spack/setup-env.sh
 if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/settings.sh; else source $TESTSUITE_SETTINGS_FILE; fi
 
 
+if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
+    echo "Error: The MPI command '$TEST_RUN_CMD' was not found." >&2
+    exit 1
+fi
+
+if ! $TEST_RUN hostname &> /dev/null; then
+    echo "Error: The MPI command '$TEST_RUN' failed to execute." >&2
+    exit 1
+fi
+
+
 #alias test_run='$TEST_RUN'
 rArg="  "
 dArg=" -dpl "
