@@ -9,12 +9,12 @@ if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/setti
 
 
 if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
-    echo "Error: The MPI command '$TEST_RUN_CMD' was not found." >&2
+    echo "Error: The MPI command '$TEST_RUN_CMD' was not found. Check your settings.sh" >&2
     exit 1
 fi
 
 if ! $TEST_RUN hostname &> /dev/null; then
-    echo "Error: The MPI command '$TEST_RUN' failed to execute." >&2
+    echo "Error: The MPI command '$TEST_RUN' hostname failed to execute. Check your settings.sh" >&2
     exit 1
 fi
 
