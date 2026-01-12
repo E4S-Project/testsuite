@@ -25,7 +25,7 @@ create_symlink() {
 mkdir -p "$CPU_TESTS_DIR" "$GPU_TESTS_DIR" "$CUDA_TESTS_DIR" "$ROCM_TESTS_DIR"
 
 # Iterate through the subdirectories in validation_tests
-find "$VALIDATION_TESTS_DIR" -maxdepth 1 -type d ! -path "$VALIDATION_TESTS_DIR" -print0 | while IFS= read -r -d $'\0' subdir; do
+find -L "$VALIDATION_TESTS_DIR" -maxdepth 1 -mindepth 1 -type d ! -print0 | while IFS= read -r -d $'\0' subdir; do
   # Extract the directory name without the full path
   dir_name=$(basename "$subdir")
 
@@ -33,7 +33,7 @@ find "$VALIDATION_TESTS_DIR" -maxdepth 1 -type d ! -path "$VALIDATION_TESTS_DIR"
   relative_path="../${VALIDATION_TESTS_DIR}/${dir_name}"
 
   # Check for suffixes and create links accordingly
-  if [[ "$dir_name" == *-cuda ]]; then
+  if [[ "$dir_name" == *-cuda || "$dir_name" == "cuda" ]]; then
     create_symlink "$GPU_TESTS_DIR/$dir_name" "$relative_path"
     create_symlink "$CUDA_TESTS_DIR/$dir_name" "$relative_path"
   elif [[ "$dir_name" == *-rocm ]]; then
