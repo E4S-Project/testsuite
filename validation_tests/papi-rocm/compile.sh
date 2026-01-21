@@ -3,4 +3,4 @@
 set -e
 set -x
 
-make PAPIROOT=$PAPI_ROOT 
+make PAPIROOT=$PAPI_ROOT
