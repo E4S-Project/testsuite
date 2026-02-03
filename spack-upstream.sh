@@ -2,44 +2,63 @@
 
 show_help() {
   cat <<EOF
-Usage: $0 -u <upstream_path> -l <local_parent_path>
+Usage: $0 [options]
 
-This script clones a new local Spack installation and configures it to use an
-upstream Spack installation.
+This script clones a new local Spack installation (named 'spack') and configures
+it to use an upstream Spack installation. It attempts to match the upstream Spack
+version and optionally handles the spack-packages repository (for Spack 1.0+).
 
 Options:
-  -u, --upstream <path>   Path to the upstream Spack installation. Defaults to
-			  SPACK_ROOT.
-  -l, --local <path>      Path to the parent directory for the new local Spack
-                          installation which will be named 'spack-downstream'
-  -d, --develop           Use develop version of spack (do not match upstream
-			  version).
-  -h, --help              Display this help message.
+  -u, --upstream <path>      Path to the upstream Spack installation. Defaults to
+                             SPACK_ROOT if a Spack environment is loaded.
+  -l, --local <path>         Path where the new 'spack' directory will be created.
+                             Defaults to current directory. Script will error if
+                             'spack' already exists at this location.
+  -n, --name <name>          Name for the new Spack directory. Defaults to 'spack'.
+  -d, --develop              Use develop version of spack (do not match upstream
+                             version).
+  --full-history             Clone with full git history instead of shallow clone.
+                             Slower but useful for development.
+  -p, --packages <option>    How to handle spack-packages repo (for Spack 1.0+):
+                               'upstream' - use upstream's packages repo
+                               'new' - clone a new local packages repo matching version
+                               'none' - don't configure packages repo (default)
+  -h, --help                 Display this help message.
 
 Notes:
   - To set an upstream for an *existing* local Spack, use the following
     command after initializing your Spack install:
       spack config --scope site add "upstreams:e4s:install_tree:\$UPSTREAM_SPACK_ROOT/opt/spack"
-  - This script will checkout the spack commit matching the upstream spack if possible
+  - This script will checkout the spack version matching the upstream spack if possible
+  - For Spack 1.0+, packages are in a separate repository (spack-packages)
+  - Configuration settings (concretizer:reuse, concretizer:unify, mirrors) are
+    automatically copied from upstream using spack config blame
+  - The script will fail if a 'spack' directory already exists at the target location
 
 Examples:
 
-- Specify upstream Spack and local destination directory:
-  $0 -u /path/to/upstream/spack -l /path/to/parent/of/new/local/spack
+- Create downstream Spack in current directory from loaded upstream:
+  $0
 
-- Create a downstream Spack in the current directory, from an active upstream Spack:
-  $0 -l .
+- Specify upstream Spack and destination directory:
+  $0 -u /path/to/upstream/spack -l /path/to/install/location
+
+- Create downstream with new local packages repo:
+  $0 -p new
+
+- Create downstream using upstream's packages repo with custom name:
+  $0 -p upstream -n my-spack
 EOF
   exit "$1"
 }
 
-if [[ $# -eq 0 ]]; then
-  show_help 0
-fi
-
+# Initialize variables
 upstream_spack=""
-local_parent_path=""
+local_parent_path=""  # Will default to current directory if not specified
+spack_dir_name="spack"  # Name of the Spack directory to create
 match_version=1
+packages_option="none"  # Options: 'upstream', 'new', 'none'
+full_history=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -51,11 +70,29 @@ while [[ $# -gt 0 ]]; do
       local_parent_path="$2"
       shift 2
       ;;
+    -n|--name)
+      spack_dir_name="$2"
+      shift 2
+      ;;
     -h|--help)
       show_help 0
       ;;
     -d|--develop)
       match_version=0
+      shift
+      ;;
+    --full-history)
+      full_history=1
+      shift
+      ;;
+    -p|--packages)
+      packages_option="$2"
+      if [[ "$packages_option" != "upstream" && "$packages_option" != "new" && "$packages_option" != "none" ]]; then
+        echo "Error: Invalid packages option '$packages_option'. Must be 'upstream', 'new', or 'none'."
+        show_help 1
+      fi
+      shift 2
+      ;;
     *)
       echo "Error: Unknown option '$1'"
       show_help 1
@@ -74,41 +111,234 @@ elif [[ -n "$SPACK_ROOT" ]]; then
   upstream_spack="$SPACK_ROOT"
 fi
 
-if [[ ! -d "$upstream_spack" || ! -f "$upstream_spack/share/spack/setup-env.sh" ]]; then
-  echo "Error: Invalid upstream Spack path: $upstream_spack"
+# Validate upstream Spack by checking essential files
+if [[ ! -d "$upstream_spack" ]]; then
+  echo "Error: Upstream Spack directory does not exist: $upstream_spack"
   show_help 1
 fi
 
-# Handle Local Spack Parent Path (Create if Necessary)
+echo "Validating upstream Spack installation at: $upstream_spack"
+
+# Check for essential Spack files
+missing_files=()
+if [[ ! -f "$upstream_spack/share/spack/setup-env.sh" ]]; then
+  missing_files+=("share/spack/setup-env.sh")
+fi
+if [[ ! -f "$upstream_spack/bin/spack" ]]; then
+  missing_files+=("bin/spack")
+fi
+if [[ ! -d "$upstream_spack/lib/spack" ]]; then
+  missing_files+=("lib/spack/")
+fi
+if [[ ! -d "$upstream_spack/etc/spack" ]]; then
+  missing_files+=("etc/spack/")
+fi
+if [[ ! -d "$upstream_spack/opt/spack" ]]; then
+  echo "Warning: No install tree found at $upstream_spack/opt/spack"
+  echo "         This upstream Spack may not have any packages installed yet."
+fi
+
+if [[ ${#missing_files[@]} -gt 0 ]]; then
+  echo "Error: Invalid upstream Spack installation. Missing required files:"
+  for file in "${missing_files[@]}"; do
+    echo "  - $file"
+  done
+  exit 1
+fi
+
+echo "✓ Upstream Spack validation successful"
+
+# Handle Local Spack Parent Path (Default to current directory)
 if [[ -z "$local_parent_path" ]]; then
-  echo "Error: Please specify the parent directory for the local Spack using --local."
-  show_help 1
+  local_parent_path="."
+  echo "No local path specified, using current directory: $(pwd)"
 fi
 
-mkdir -p "$local_parent_path"
+# Convert to absolute path
+local_parent_path=$(cd "$local_parent_path" && pwd)
 
 # Set the actual local Spack path (where we will clone to)
-local_spack="$local_parent_path/spack-downstream"
+local_spack="$local_parent_path/$spack_dir_name"
 
-if [[ -d "$local_spack" && -f "$local_spack/share/spack/setup-env.sh" ]]; then
-  echo "Error: '$local_spack' already contains a Spack installation."
-  show_help 1
+# Check if Spack already exists at target location
+if [[ -e "$local_spack" ]]; then
+  echo "Error: '$local_spack' already exists."
+  echo "       Please remove it first, choose a different location with -l,"
+  echo "       or use a different name with -n."
+  exit 1
+fi
+
+# Create parent directory if it doesn't exist
+mkdir -p "$local_parent_path"
+
+# Get upstream Spack version using spack debug report
+upstream_version=""
+upstream_commit=""
+if [[ $match_version -eq 1 ]]; then
+  # Temporarily activate upstream spack to get version info
+  source "$upstream_spack/share/spack/setup-env.sh" 2>/dev/null
+  
+  # Try to get version from spack debug report
+  # Format: * **Spack:** 1.0.2 (https://github.com/spack/spack/commit/...)
+  upstream_version=$(spack debug report 2>/dev/null | grep -E '^\*\s+\*\*Spack:\*\*' | awk '{print $3}')
+  
+  if [[ -z "$upstream_version" ]]; then
+    echo "Warning: Could not determine upstream Spack version from 'spack debug report'"
+  else
+    echo "Detected upstream Spack version: $upstream_version"
+  fi
+  
+  # Also get commit hash if it's a git repo
+  if [[ -d "$upstream_spack/.git" ]]; then
+    upstream_commit=$(cd "$upstream_spack" && git rev-parse HEAD)
+    echo "Detected upstream Spack commit: $upstream_commit"
+  fi
+  
+  # Deactivate upstream spack
+  unset SPACK_ROOT
 fi
 
 # Clone Local Spack
-echo "Cloning latest spack to $local_spack."
-if ! git clone --recursive https://github.com/spack/spack "$local_spack"; then
-  echo "Error: Failed to clone Spack to $local_spack"
-  show_help 1
+clone_opts=""
+if [[ $full_history -eq 0 ]]; then
+  clone_opts="--depth 1"
+  echo "Using shallow clone (--depth 1) for faster download"
+else
+  echo "Cloning with full git history"
 fi
 
-if [[ $match_version -eq 1 &&  -d "$upstream_spack/.git" ]]; then
-  # Checkout upstream's commit
-  upstream_commit=$(cd "$upstream_spack" && git rev-parse HEAD)
-  cd "$rundir"
+if [[ $match_version -eq 1 && -n "$upstream_version" ]]; then
+  echo "Cloning Spack version $upstream_version to $local_spack..."
+  
+  # Try to clone the specific version tag
+  if git clone --branch "v$upstream_version" $clone_opts https://github.com/spack/spack "$local_spack" 2>/dev/null; then
+    echo "Successfully cloned Spack version $upstream_version"
+  elif git clone --branch "$upstream_version" $clone_opts https://github.com/spack/spack "$local_spack" 2>/dev/null; then
+    echo "Successfully cloned Spack version $upstream_version"
+  else
+    echo "Warning: Could not clone specific version $upstream_version."
+    
+    # Try to checkout the specific commit if available
+    if [[ -n "$upstream_commit" ]]; then
+      echo "Attempting to clone and checkout commit $upstream_commit..."
+      # For commit checkout, we need full history
+      if ! git clone https://github.com/spack/spack "$local_spack"; then
+        echo "Error: Failed to clone Spack to $local_spack"
+        show_help 1
+      fi
+      
+      cd "$local_spack"
+      if git checkout "$upstream_commit" 2>/dev/null; then
+        echo "Successfully checked out commit $upstream_commit"
+      else
+        echo "Warning: Could not checkout commit $upstream_commit."
+        echo "This may happen if the upstream is using a private branch or local commits."
+        echo "Attempting to find closest stable version..."
+        
+        # Try to find the closest stable release tag
+        closest_tag=$(git tag -l "v*" --sort=-version:refname | grep -v "dev" | head -1)
+        if [[ -n "$closest_tag" ]]; then
+          git checkout "$closest_tag"
+          echo "Checked out closest stable version: $closest_tag"
+        else
+          echo "Warning: No stable version tags found. Using latest release tag."
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "develop")
+          git checkout "$latest_tag"
+          echo "Checked out: $latest_tag"
+        fi
+      fi
+      cd "$rundir"
+    else
+      echo "Warning: No commit hash available. Cloning latest stable release..."
+      if ! git clone https://github.com/spack/spack "$local_spack"; then
+        echo "Error: Failed to clone Spack to $local_spack"
+        show_help 1
+      fi
+      cd "$local_spack"
+      # Find the latest stable release (avoid dev versions)
+      latest_stable=$(git tag -l "v*" --sort=-version:refname | grep -v "dev" | head -1)
+      if [[ -n "$latest_stable" ]]; then
+        git checkout "$latest_stable"
+        echo "Checked out latest stable version: $latest_stable"
+      else
+        latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "develop")
+        git checkout "$latest_tag"
+        echo "Checked out: $latest_tag"
+      fi
+      cd "$rundir"
+    fi
+  fi
+else
+  echo "Cloning latest stable spack to $local_spack."
+  if ! git clone https://github.com/spack/spack "$local_spack"; then
+    echo "Error: Failed to clone Spack to $local_spack"
+    show_help 1
+  fi
+  # When not matching version, checkout latest stable release instead of develop
   cd "$local_spack"
-  if ! git checkout "$upstream_commit"; then
-    echo "Warning: Could not checkout commit $upstream_commit from upstream Spack. Using latest from 'develop' branch instead."
+  latest_stable=$(git tag -l "v*" --sort=-version:refname | grep -v "dev" | head -1)
+  if [[ -n "$latest_stable" ]]; then
+    git checkout "$latest_stable"
+    echo "Checked out latest stable version: $latest_stable"
+  fi
+  cd "$rundir"
+fi
+
+# Handle spack-packages repository (for Spack 1.0+)
+if [[ "$packages_option" == "new" ]]; then
+  echo "Setting up local spack-packages repository..."
+  
+  packages_path="$local_spack/var/spack/repos/spack-packages"
+  mkdir -p "$(dirname "$packages_path")"
+  
+  # Try to clone matching version of packages repo
+  if [[ -n "$upstream_version" ]]; then
+    echo "Cloning spack-packages version $upstream_version..."
+    if git clone --branch "v$upstream_version" $clone_opts https://github.com/spack/spack-packages "$packages_path" 2>/dev/null; then
+      echo "Successfully cloned spack-packages version $upstream_version"
+    elif git clone --branch "$upstream_version" $clone_opts https://github.com/spack/spack-packages "$packages_path" 2>/dev/null; then
+      echo "Successfully cloned spack-packages version $upstream_version"
+    else
+      echo "Warning: Could not clone specific version. Cloning latest tagged release..."
+      if [[ $full_history -eq 0 ]]; then
+        git clone https://github.com/spack/spack-packages "$packages_path"
+      else
+        git clone https://github.com/spack/spack-packages "$packages_path"
+      fi
+      cd "$packages_path"
+      latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+      git checkout "$latest_tag"
+      echo "Checked out packages: $latest_tag"
+      cd "$rundir"
+    fi
+  else
+    if [[ $full_history -eq 0 ]]; then
+      git clone --depth 1 https://github.com/spack/spack-packages "$packages_path"
+    else
+      git clone https://github.com/spack/spack-packages "$packages_path"
+    fi
+  fi
+  
+  # Configure Spack to use the packages repo
+  source "$local_spack/share/spack/setup-env.sh"
+  spack repo add "$packages_path"
+  unset SPACK_ROOT
+  
+elif [[ "$packages_option" == "upstream" ]]; then
+  echo "Configuring to use upstream's spack-packages repository..."
+  
+  # Check if upstream has a packages repo configured
+  source "$upstream_spack/share/spack/setup-env.sh" 2>/dev/null
+  upstream_packages=$(spack repo list 2>/dev/null | grep -v builtin | awk '{print $1}' | head -1)
+  unset SPACK_ROOT
+  
+  if [[ -n "$upstream_packages" && -d "$upstream_packages" ]]; then
+    source "$local_spack/share/spack/setup-env.sh"
+    spack repo add "$upstream_packages"
+    unset SPACK_ROOT
+    echo "Added upstream packages repo: $upstream_packages"
+  else
+    echo "Warning: No custom packages repository found in upstream Spack"
   fi
 fi
 
@@ -132,9 +362,90 @@ fi
   if [[ -f $upstream_spack/etc/spack/compilers.yaml ]] ; then
     cp $upstream_spack/etc/spack/compilers.yaml $SPACK_ROOT/etc/spack/
   else
-    echo warning: compilers.yaml not found in upstream $upstream_spack/etc/spack/compilers.yaml
+    echo "Warning: compilers.yaml not found in upstream $upstream_spack/etc/spack/compilers.yaml"
   fi
 
-  echo "Upstreaming enabled successfully! To activate run 'source $SPACK_ROOT/share/spack/setup-env.sh'"
+  # Copy configuration settings from upstream
+  echo "Copying configuration settings from upstream..."
+  
+  # Temporarily activate upstream to use spack config blame
+  old_spack_root="$SPACK_ROOT"
+  source "$upstream_spack/share/spack/setup-env.sh" 2>/dev/null
+  
+  # Get the config files that define key settings using spack config blame
+  # Look for concretizer:reuse, concretizer:unify, and mirrors
+  config_files=$(spack config blame config 2>/dev/null | grep -E '(concretizer:|reuse:|unify:)' | awk '{print $1}' | sort -u)
+  mirrors_files=$(spack config blame mirrors 2>/dev/null | awk '{print $1}' | sort -u)
+  
+  # Combine and get unique non-default config files
+  all_config_files=$(echo -e "${config_files}\n${mirrors_files}" | grep -v '/defaults/' | sort -u)
+  
+  # Reactivate downstream spack
+  source "$old_spack_root/share/spack/setup-env.sh"
+  
+  # Copy relevant settings
+  for config_file in $all_config_files; do
+    if [[ -f "$config_file" ]]; then
+      # Determine the scope and filename
+      scope="site"  # Default to site scope
+      if echo "$config_file" | grep -q "/site/"; then
+        scope="site"
+      elif echo "$config_file" | grep -q "/user/"; then
+        scope="user"
+      fi
+      
+      config_name=$(basename "$config_file")
+      echo "  Copying $config_name from $scope scope..."
+      
+      # Copy the file to the downstream spack
+      target_dir="$SPACK_ROOT/etc/spack/$scope"
+      mkdir -p "$target_dir"
+      cp "$config_file" "$target_dir/$config_name"
+    fi
+  done
+  
+  echo "Configuration settings copied successfully."
+
+  # Validate the configuration
+  echo ""
+  echo "Validating downstream Spack configuration..."
+  
+  # Check that upstreaming is configured
+  if spack config get upstreams | grep -q "e4s:"; then
+    echo "✓ Upstreaming configuration verified"
+  else
+    echo "Warning: Upstreaming may not be configured correctly"
+  fi
+  
+  # Check that setup-env.sh exists
+  if [[ -f "$SPACK_ROOT/share/spack/setup-env.sh" ]]; then
+    echo "✓ Spack setup script exists"
+  else
+    echo "Warning: Spack setup script not found"
+  fi
+  
+  # Check that compilers.yaml was copied
+  if [[ -f "$SPACK_ROOT/etc/spack/compilers.yaml" ]]; then
+    echo "✓ Compilers configuration copied"
+  else
+    echo "Warning: No compilers.yaml found"
+  fi
+
+  # Display configuration summary
+  echo ""
+  echo "==================================================================="
+  echo "Downstream Spack Setup Complete!"
+  echo "==================================================================="
+  echo "  Location:         $local_spack"
+  echo "  Spack Version:    ${upstream_version:-develop/latest}"
+  if [[ -n "$upstream_commit" ]]; then
+    echo "  Commit:           ${upstream_commit:0:12}"
+  fi
+  echo "  Upstream:         $upstream_spack"
+  echo "  Packages Repo:    $packages_option"
+  echo "  Full History:     $([ $full_history -eq 1 ] && echo 'yes' || echo 'no (shallow clone)')"
+  echo ""
+  echo "To activate: source $local_spack/share/spack/setup-env.sh"
+  echo "==================================================================="
 
 exit 0
