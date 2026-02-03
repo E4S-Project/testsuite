@@ -374,8 +374,9 @@ fi
   
   # Get the config files that define key settings using spack config blame
   # Look for concretizer:reuse, concretizer:unify, and mirrors
-  config_files=$(spack config blame config 2>/dev/null | grep -E '(concretizer:|reuse:|unify:)' | awk '{print $1}' | sort -u)
-  mirrors_files=$(spack config blame mirrors 2>/dev/null | awk '{print $1}' | sort -u)
+  # Note: awk extracts first column which contains "filepath:linenumber", so we strip the :linenumber part
+  config_files=$(spack config blame config 2>/dev/null | grep -E '(concretizer:|reuse:|unify:)' | awk '{print $1}' | sed 's/:[0-9]*$//' | sort -u)
+  mirrors_files=$(spack config blame mirrors 2>/dev/null | awk '{print $1}' | sed 's/:[0-9]*$//' | sort -u)
   
   # Combine and get unique non-default config files
   all_config_files=$(echo -e "${config_files}\n${mirrors_files}" | grep -v '/defaults/' | sort -u)
