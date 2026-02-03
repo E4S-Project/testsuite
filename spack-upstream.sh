@@ -364,7 +364,22 @@ fi
   else
     echo "Warning: compilers.yaml not found in upstream $upstream_spack/etc/spack/compilers.yaml"
   fi
-
+  # Copy GPG keys from upstream for binary package verification
+  echo "Copying GPG keys from upstream..."
+  if [[ -d $upstream_spack/opt/spack/gpg ]] ; then
+    mkdir -p $SPACK_ROOT/opt/spack/gpg
+    if cp -r $upstream_spack/opt/spack/gpg/* $SPACK_ROOT/opt/spack/gpg/ 2>/dev/null; then
+      # Set secure permissions on GPG directory to avoid warnings
+      chmod 700 $SPACK_ROOT/opt/spack/gpg
+      chmod -R go-rwx $SPACK_ROOT/opt/spack/gpg/* 2>/dev/null || true
+      echo "  GPG keys copied successfully"
+    else
+      echo "  Warning: GPG directory exists but no keys found or copy failed"
+    fi
+  else
+    echo "  Warning: No GPG keys found in upstream $upstream_spack/opt/spack/gpg"
+    echo "           Binary package verification may not work"
+  fi
   # Copy configuration settings from upstream
   echo "Copying configuration settings from upstream..."
   
@@ -379,7 +394,8 @@ fi
   mirrors_files=$(spack config blame mirrors 2>/dev/null | awk '{print $1}' | sed 's/:[0-9]*$//' | sort -u)
   
   # Combine and get unique non-default config files
-  all_config_files=$(echo -e "${config_files}\n${mirrors_files}" | grep -v '/defaults/' | sort -u)
+  # Filter out: default config paths, YAML markers (---), and empty lines
+  all_config_files=$(echo -e "${config_files}\n${mirrors_files}" | grep -v '/defaults/' | grep -v '^---$' | grep -v '^$' | sort -u)
   
   # Reactivate downstream spack
   source "$old_spack_root/share/spack/setup-env.sh"
@@ -387,19 +403,31 @@ fi
   # Copy relevant settings
   for config_file in $all_config_files; do
     if [[ -f "$config_file" ]]; then
-      # Determine the scope and filename
-      scope="site"  # Default to site scope
-      if echo "$config_file" | grep -q "/site/"; then
+      # Determine the scope and filename based on the file's location in upstream
+      # If the file is directly in etc/spack/ (no scope subdirectory), preserve that structure
+      # Otherwise, extract and preserve the scope subdirectory (site, user, system, etc.)
+      config_name=$(basename "$config_file")
+      
+      # Check if file has a scope subdirectory in its path
+      if echo "$config_file" | grep -q "/etc/spack/site/"; then
         scope="site"
-      elif echo "$config_file" | grep -q "/user/"; then
+        echo "  Copying $config_name from site scope..."
+        target_dir="$SPACK_ROOT/etc/spack/site"
+      elif echo "$config_file" | grep -q "/etc/spack/user/"; then
         scope="user"
+        echo "  Copying $config_name from user scope..."
+        target_dir="$SPACK_ROOT/etc/spack/user"
+      elif echo "$config_file" | grep -q "/etc/spack/system/"; then
+        scope="system"
+        echo "  Copying $config_name from system scope..."
+        target_dir="$SPACK_ROOT/etc/spack/system"
+      else
+        # File is directly in etc/spack/ without a scope subdirectory
+        echo "  Copying $config_name (no scope subdirectory)..."
+        target_dir="$SPACK_ROOT/etc/spack"
       fi
       
-      config_name=$(basename "$config_file")
-      echo "  Copying $config_name from $scope scope..."
-      
-      # Copy the file to the downstream spack
-      target_dir="$SPACK_ROOT/etc/spack/$scope"
+      # Copy the file to the downstream spack, preserving the directory structure
       mkdir -p "$target_dir"
       cp "$config_file" "$target_dir/$config_name"
     fi
@@ -430,6 +458,13 @@ fi
     echo "✓ Compilers configuration copied"
   else
     echo "Warning: No compilers.yaml found"
+  fi
+  
+  # Check that GPG keys were copied
+  if [[ -d "$SPACK_ROOT/opt/spack/gpg" ]] && [[ -n "$(ls -A $SPACK_ROOT/opt/spack/gpg 2>/dev/null)" ]]; then
+    echo "✓ GPG keys copied"
+  else
+    echo "Warning: No GPG keys found (binary verification may fail)"
   fi
 
   # Display configuration summary
