@@ -481,7 +481,7 @@ fi
   echo "  Packages Repo:    $packages_option"
   echo "  Full History:     $([ $full_history -eq 1 ] && echo 'yes' || echo 'no (shallow clone)')"
   echo ""
-  echo "To activate: source $local_spack/share/spack/setup-env.sh"
+  echo -e "To activate run: \e[1;33msource $local_spack/share/spack/setup-env.sh\e[0m"
   echo "==================================================================="
 
 exit 0
