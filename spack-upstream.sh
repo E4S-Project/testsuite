@@ -20,9 +20,8 @@ Options:
   --full-history             Clone with full git history instead of shallow clone.
                              Slower but useful for development.
   -p, --packages <option>    How to handle spack-packages repo (for Spack 1.0+):
-                               'upstream' - use upstream's packages repo
-                               'new' - clone a new local packages repo matching version
-                               'none' - don't configure packages repo (default)
+                               'upstream' - use upstream's packages repo (default)
+                               'new' - let spack auto-bootstrap its own packages repo
   -h, --help                 Display this help message.
 
 Notes:
@@ -57,7 +56,7 @@ upstream_spack=""
 local_parent_path=""  # Will default to current directory if not specified
 spack_dir_name="spack"  # Name of the Spack directory to create
 match_version=1
-packages_option="none"  # Options: 'upstream', 'new', 'none'
+packages_option="upstream"  # Options: 'upstream', 'new', 'none'
 full_history=0
 
 while [[ $# -gt 0 ]]; do
@@ -87,8 +86,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     -p|--packages)
       packages_option="$2"
-      if [[ "$packages_option" != "upstream" && "$packages_option" != "new" && "$packages_option" != "none" ]]; then
-        echo "Error: Invalid packages option '$packages_option'. Must be 'upstream', 'new', or 'none'."
+      if [[ "$packages_option" != "upstream" && "$packages_option" != "new" ]]; then
+        echo "Error: Invalid packages option '$packages_option'. Must be 'upstream' or 'new'."
         show_help 1
       fi
       shift 2
@@ -285,61 +284,38 @@ else
 fi
 
 # Handle spack-packages repository (for Spack 1.0+)
-if [[ "$packages_option" == "new" ]]; then
-  echo "Setting up local spack-packages repository..."
-  
-  packages_path="$local_spack/var/spack/repos/spack-packages"
-  mkdir -p "$(dirname "$packages_path")"
-  
-  # Try to clone matching version of packages repo
-  if [[ -n "$upstream_version" ]]; then
-    echo "Cloning spack-packages version $upstream_version..."
-    if git clone --branch "v$upstream_version" $clone_opts https://github.com/spack/spack-packages "$packages_path" 2>/dev/null; then
-      echo "Successfully cloned spack-packages version $upstream_version"
-    elif git clone --branch "$upstream_version" $clone_opts https://github.com/spack/spack-packages "$packages_path" 2>/dev/null; then
-      echo "Successfully cloned spack-packages version $upstream_version"
-    else
-      echo "Warning: Could not clone specific version. Cloning latest tagged release..."
-      if [[ $full_history -eq 0 ]]; then
-        git clone https://github.com/spack/spack-packages "$packages_path"
-      else
-        git clone https://github.com/spack/spack-packages "$packages_path"
-      fi
-      cd "$packages_path"
-      latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
-      git checkout "$latest_tag"
-      echo "Checked out packages: $latest_tag"
-      cd "$rundir"
-    fi
-  else
-    if [[ $full_history -eq 0 ]]; then
-      git clone --depth 1 https://github.com/spack/spack-packages "$packages_path"
-    else
-      git clone https://github.com/spack/spack-packages "$packages_path"
-    fi
-  fi
-  
-  # Configure Spack to use the packages repo
-  source "$local_spack/share/spack/setup-env.sh"
-  spack repo add "$packages_path"
-  unset SPACK_ROOT
-  
-elif [[ "$packages_option" == "upstream" ]]; then
+if [[ "$packages_option" == "upstream" ]]; then
   echo "Configuring to use upstream's spack-packages repository..."
   
-  # Check if upstream has a packages repo configured
+  # Activate upstream spack to query its repo configuration
+  old_spack_root="$SPACK_ROOT"
   source "$upstream_spack/share/spack/setup-env.sh" 2>/dev/null
-  upstream_packages=$(spack repo list 2>/dev/null | grep -v builtin | awk '{print $1}' | head -1)
-  unset SPACK_ROOT
   
-  if [[ -n "$upstream_packages" && -d "$upstream_packages" ]]; then
-    source "$local_spack/share/spack/setup-env.sh"
-    spack repo add "$upstream_packages"
-    unset SPACK_ROOT
-    echo "Added upstream packages repo: $upstream_packages"
+  # Get the upstream packages repo path using spack repo ls
+  # Format: [+] builtin    v2.2    /path/to/repo
+  # We want the last column (the path)
+  upstream_packages_repo=$(spack repo ls 2>/dev/null | grep builtin | awk '{print $NF}')
+  
+  # Switch to local spack
+  if [[ -n "$old_spack_root" ]]; then
+    source "$old_spack_root/share/spack/setup-env.sh"
   else
-    echo "Warning: No custom packages repository found in upstream Spack"
+    source "$local_spack/share/spack/setup-env.sh"
   fi
+  
+  # Configure local spack to use upstream's packages repo
+  if [[ -n "$upstream_packages_repo" && -d "$upstream_packages_repo" ]]; then
+    if spack repo add "$upstream_packages_repo" 2>/dev/null; then
+      echo "✓ Configured to use upstream packages repo: $upstream_packages_repo"
+    else
+      echo "Warning: Failed to configure upstream packages repo. Spack will auto-bootstrap."
+    fi
+  else
+    echo "No custom packages repository found in upstream. Spack will auto-bootstrap when needed."
+  fi
+  
+elif [[ "$packages_option" == "new" ]]; then
+  echo "Letting Spack auto-bootstrap packages repository when needed..."
 fi
 
   # Activate local Spack
