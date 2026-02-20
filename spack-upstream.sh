@@ -3,6 +3,7 @@
 show_help() {
   cat <<EOF
 Usage: $0 [options]
+       $0 <SPACK_ROOT>
 
 This script clones a new local Spack installation (named 'spack') and configures
 it to use an upstream Spack installation. It attempts to match the upstream Spack
@@ -10,7 +11,8 @@ version and optionally handles the spack-packages repository (for Spack 1.0+).
 
 Options:
   -u, --upstream <path>      Path to the upstream Spack installation. Defaults to
-                             SPACK_ROOT if a Spack environment is loaded.
+                             SPACK_ROOT if loaded, then spack_root_upstream,
+                             then /spack.
   -l, --local <path>         Path where the new 'spack' directory will be created.
                              Defaults to current directory. Script will error if
                              'spack' already exists at this location.
@@ -36,6 +38,9 @@ Notes:
 
 Examples:
 
+- Single argument mode:
+  $0 /path/to/downstream/spack
+
 - Create downstream Spack in current directory from loaded upstream:
   $0
 
@@ -55,6 +60,7 @@ EOF
 upstream_spack=""
 local_parent_path=""  # Will default to current directory if not specified
 spack_dir_name="spack"  # Name of the Spack directory to create
+local_spack_arg=""  # Optional positional argument: full path to downstream Spack root
 match_version=1
 packages_option="upstream"  # Options: 'upstream', 'new', 'none'
 full_history=0
@@ -93,11 +99,21 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Error: Unknown option '$1'"
-      show_help 1
+      if [[ -z "$local_spack_arg" ]]; then
+        local_spack_arg="$1"
+        shift
+      else
+        echo "Error: Too many positional arguments. Expected at most one: <SPACK_ROOT>"
+        show_help 1
+      fi
       ;;
   esac
 done
+
+if [[ -n "$local_spack_arg" && ( -n "$local_parent_path" || "$spack_dir_name" != "spack" ) ]]; then
+  echo "Error: Cannot combine positional <SPACK_ROOT> with -l/--local or -n/--name"
+  show_help 1
+fi
 
 rundir=`pwd`
 
@@ -108,6 +124,12 @@ if [[ -n "$upstream_spack" ]]; then
 elif [[ -n "$SPACK_ROOT" ]]; then
   # Upstream Spack is loaded and --upstream is not specified
   upstream_spack="$SPACK_ROOT"
+elif [[ -n "$spack_root_upstream" ]]; then
+  # Compatibility with e4s-chain-spack.sh
+  upstream_spack="$spack_root_upstream"
+else
+  # Compatibility default used by e4s-chain-spack.sh
+  upstream_spack="/spack"
 fi
 
 # Validate upstream Spack by checking essential files
@@ -147,17 +169,25 @@ fi
 
 echo "✓ Upstream Spack validation successful"
 
-# Handle Local Spack Parent Path (Default to current directory)
-if [[ -z "$local_parent_path" ]]; then
-  local_parent_path="."
-  echo "No local path specified, using current directory: $(pwd)"
+# Determine local Spack path
+if [[ -n "$local_spack_arg" ]]; then
+  local_parent_path=$(cd "$(dirname "$local_spack_arg")" && pwd)
+  spack_dir_name=$(basename "$local_spack_arg")
+  local_spack="$local_parent_path/$spack_dir_name"
+  echo "Using explicit downstream path: $local_spack"
+else
+  # Handle Local Spack Parent Path (Default to current directory)
+  if [[ -z "$local_parent_path" ]]; then
+    local_parent_path="."
+    echo "No local path specified, using current directory: $(pwd)"
+  fi
+
+  # Convert to absolute path
+  local_parent_path=$(cd "$local_parent_path" && pwd)
+
+  # Set the actual local Spack path (where we will clone to)
+  local_spack="$local_parent_path/$spack_dir_name"
 fi
-
-# Convert to absolute path
-local_parent_path=$(cd "$local_parent_path" && pwd)
-
-# Set the actual local Spack path (where we will clone to)
-local_spack="$local_parent_path/$spack_dir_name"
 
 # Check if Spack already exists at target location
 if [[ -e "$local_spack" ]]; then
