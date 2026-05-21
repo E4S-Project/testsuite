@@ -218,7 +218,7 @@ def print_results(results_queue, num_tests):
 
 # --- Main Orchestration ---
 
-def find_tests_to_run(testdir, skip_to, skip_if, test_only):
+def find_tests_to_run(testdir, skip_to, skip_if, test_only, skip_tests):
     """Walks the directory tree to find all valid tests based on filters."""
     tests_to_run = []
     stack = [os.path.abspath(testdir)]
@@ -228,7 +228,8 @@ def find_tests_to_run(testdir, skip_to, skip_if, test_only):
             base_name = os.path.basename(current_dir)
             if (not skip_to or base_name >= skip_to) and \
                (not skip_if or skip_if not in base_name) and \
-               (not test_only or base_name in test_only):
+               (not test_only or base_name in test_only) and \
+               (not skip_tests or base_name not in skip_tests):
                 tests_to_run.append(current_dir)
         else:
             try:
@@ -248,7 +249,8 @@ def main():
     parser.add_argument('--json-name', default="", help='Optional name for json output')
     parser.add_argument('--skip-to', type=str, help='Skip to specified test.')
     parser.add_argument('--skip-if', type=str, help='Skip tests with the given substring.')
-    parser.add_argument('--test-only', type=str, help='Run only specified tests, space-separated.')
+    parser.add_argument('--skip-tests', type=str, help='Skip specific tests by exact name, quoted, space-separated.')
+    parser.add_argument('--test-only', type=str, help='Run only specified tests, quoted, space-separated.')
     parser.add_argument('--processes', type=int, default=4, help='Number of parallel processes.')
     parser.add_argument('--timeout', type=int, default=600, help='Timeout in seconds for each test.')
     parser.add_argument('--print-logs', action='store_true', help='(Deprecated) Print all logs.')
@@ -258,7 +260,8 @@ def main():
 
     global print_color
     print_color = args.print_color
-    test_only = args.test_only.split() if args.test_only else []
+    test_only = set(args.test_only.split()) if args.test_only else set()
+    skip_tests = set(args.skip_tests.split()) if args.skip_tests else set()
     
     # Create the Manager and Queues in the main scope to ensure they live for the entire
     # duration of the script, preventing crashes from premature garbage collection.
@@ -266,7 +269,7 @@ def main():
     results_queue, test_queue = manager.Queue(), manager.Queue()
 
     # Find all tests first, then populate the queue.
-    tests_to_run = find_tests_to_run(args.directory, args.skip_to, args.skip_if, test_only)
+    tests_to_run = find_tests_to_run(args.directory, args.skip_to, args.skip_if, test_only, skip_tests)
     for test_path in tests_to_run: test_queue.put(test_path)
     num_tests = len(tests_to_run)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
