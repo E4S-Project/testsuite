@@ -4,5 +4,5 @@ rm -rf Amr Basic Blueprint EB \
        GPU LinearSolvers ML MUI \
        Particles SDC SENSEI SWFFT \
        cmake CMakeLists.txt build \
-       plt* plot* amrex-tutorials \
+       plt* plot* amrex-tutorials FFT UQ\
        SUNDIALS heFFTe FFTW amrex-tutorials MPMD

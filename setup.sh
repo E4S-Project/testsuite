@@ -22,6 +22,7 @@ fi
 #alias test_run='$TEST_RUN'
 rArg="  "
 dArg=" -dpl "
+#dArg=" -pl "
 
 spackTestRun(){
 	#set -x
@@ -125,20 +126,67 @@ spackLoadUnique(){
    HASH=${uniquehash}   #${FIND_ARRAY1[HASHDEX]}
    
    echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
-
    export E4S_TEST_HASH=$HASH
+   #return 0
    ARCH_IFS=$IFS
    FIND_BLOB2=`spack find $dArg /$HASH`
    IFS=$'\n'
    FIND_ARRAY2=(${FIND_BLOB2})   #($($dArg /$HASH))
    IFS=$ARCH_IFS
+
+   # Safely declare our regex in a variable to avoid bash parsing quirks.
+   # This matches the Hash (1), the Indentation Spaces (2), and the Package Spec (3).
+   line_regex='^([a-zA-Z0-9]+)( +)([^ ]+)'
+
    for((i=${#FIND_ARRAY2[@]}-1; i>=0; i--)); do
-        #echo ${FIND_ARRAY2[i]}
-        if [[ ${FIND_ARRAY2[i]} == --*  ]]; then
+	  # set -x
+        line="${FIND_ARRAY2[i]}"
+        
+        # Stop at the header
+        if [[ "$line" == --*  ]]; then
                 break
         fi
-        spackSetPackageRoot "${FIND_ARRAY2[i]}"
+
+        # Extract the hash, indentation spaces, and package info 
+        if [[ "$line" =~ $line_regex ]]; then
+                spaces="${BASH_REMATCH[2]}"
+                pkg_info="${BASH_REMATCH[3]}"
+                pkg_name="${pkg_info%@*}" # Strip out the @version and +variants to get the raw name
+                
+                # Check dependency depth based on space length
+                # Length 1 = Root package
+                # Length 5 = 1st-tier dependencies
+                # Length > 5 = 2nd-tier and beyond
+                if (( ${#spaces} > 5 )); then
+                        continue
+                fi
+                
+                # Exclude compiler-related packages.
+                # Note: We check that space length > 1, so if you ever explicitly 
+                # run this harness targeting gcc or glibc directly, it won't skip it!
+                if (( ${#spaces} > 1 )); then
+                        case "$pkg_name" in
+                                compiler-wrapper|gcc|gcc-runtime|glibc)
+                                        continue
+                                        ;;
+                        esac
+                fi
+        fi
+
+	#echo "Setting root for $line"
+	#set +x
+        # Pass the original, unmodified line into your existing parsing function
+        spackSetPackageRoot "$line"
    done
+
+
+ #  for((i=${#FIND_ARRAY2[@]}-1; i>=0; i--)); do
+ #       #echo ${FIND_ARRAY2[i]}
+ #       if [[ ${FIND_ARRAY2[i]} == --*  ]]; then
+ #               break
+ #       fi
+ #       spackSetPackageRoot "${FIND_ARRAY2[i]}"
+ #  done
    IFS=$ARCH_IFS
 }
 
