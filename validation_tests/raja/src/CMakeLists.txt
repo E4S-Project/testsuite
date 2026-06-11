@@ -4,63 +4,33 @@
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
-include (RAJAMacros.cmake)
-set(example_depends RAJA)
 
-if (ENABLE_OPENMP)
-  set(example_depends
-    ${example_depends}
-    openmp)
-endif ()
+# Define the list of executables
+set(EXAMPLES
+  ex2_approx-pi
+  ex2_approx-pi_solution
+  ex5_line-of-sight
+  ex5_line-of-sight_solution
+  ex6_stencil-offset-layout
+  ex6_stencil-offset-layout_solution
+  ex8_tiled-matrix-transpose
+  ex8_tiled-matrix-transpose_solution
+  ex9_matrix-transpose-local-array
+  ex9_matrix-transpose-local-array_solution
+)
 
-if (ENABLE_CUDA)
-  set(example_depends
-    ${example_depends}
-    cuda)
-endif ()
+foreach(example IN LISTS EXAMPLES)
+  
+  # Standard CMake replacement for raja_add_executable
+  add_executable(${example} ${example}.cpp)
+  
+  # Link against Spack's RAJA. This automatically applies compile definitions, 
+  # include directories, and link dependencies (e.g., OpenMP, CUDA/HIP runtimes).
+  target_link_libraries(${example} PRIVATE RAJA)
 
-if (ENABLE_HIP)
-  set(example_depends
-    ${example_depends}
-    hip)
-endif ()
-
-raja_add_executable(
-  NAME ex2_approx-pi
-  SOURCES ex2_approx-pi.cpp)
-
-raja_add_executable(
-  NAME ex2_approx-pi_solution
-  SOURCES ex2_approx-pi_solution.cpp)
-
-raja_add_executable(
-  NAME ex5_line-of-sight
-  SOURCES ex5_line-of-sight.cpp)
-
-raja_add_executable(
-  NAME ex5_line-of-sight_solution
-  SOURCES ex5_line-of-sight_solution.cpp)
-
-raja_add_executable(
-  NAME ex6_stencil-offset-layout
-  SOURCES ex6_stencil-offset-layout.cpp)
-
-raja_add_executable(
-  NAME ex6_stencil-offset-layout_solution
-  SOURCES ex6_stencil-offset-layout_solution.cpp)
-
-raja_add_executable(
-  NAME ex8_tiled-matrix-transpose
-  SOURCES ex8_tiled-matrix-transpose.cpp)
-
-raja_add_executable(
-  NAME ex8_tiled-matrix-transpose_solution
-  SOURCES ex8_tiled-matrix-transpose_solution.cpp)
-
-raja_add_executable(
-  NAME ex9_matrix-transpose-local-array
-  SOURCES ex9_matrix-transpose-local-array.cpp)
-
-raja_add_executable(
-  NAME ex9_matrix-transpose-local-array_solution
-  SOURCES ex9_matrix-transpose-local-array_solution.cpp)
+  # If using CUDA, we must tell CMake to compile these .cpp files using nvcc
+  if (ENABLE_CUDA)
+    set_source_files_properties(${example}.cpp PROPERTIES LANGUAGE CUDA)
+  endif ()
+  
+endforeach()
