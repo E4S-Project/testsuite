@@ -1,2 +1,3 @@
 #!/bin/bash
-make distclean
+#make distclean
+rm -f *.o hypre_smoke_test
