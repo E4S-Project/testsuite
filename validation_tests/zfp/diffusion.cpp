@@ -444,8 +444,8 @@ int main(int argc, char* argv[])
 #if WITH_HALF
       case type_half: {
           // use zfp generic codec with tiled half-precision storage
-          tiled::array2h u(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
-          tiled::array2h v(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
+          tiled::array2h u(nx, ny, sizeof(_Float16) * CHAR_BIT, 0, cache_size);
+          tiled::array2h v(nx, ny, sizeof(_Float16) * CHAR_BIT, 0, cache_size);
           execute(u, v, nt, iterator, parallel);
         }
         break;

@@ -1,1 +1,7 @@
 Tests extracted from zfp-1.0.1 on 10-Jan-2026
+
+Change to avoid undefined ARM-only __fp16 spelling:
+-          tiled::array2h u(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
+-          tiled::array2h v(nx, ny, sizeof(__fp16) * CHAR_BIT, 0, cache_size);
++          tiled::array2h u(nx, ny, sizeof(_Float16) * CHAR_BIT, 0, cache_size);
++          tiled::array2h v(nx, ny, sizeof(_Float16) * CHAR_BIT, 0, cache_size);
