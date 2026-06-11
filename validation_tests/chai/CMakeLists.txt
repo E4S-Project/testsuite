@@ -5,91 +5,71 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
 
-cmake_policy(SET CMP0057 NEW)
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0025 NEW)
-
-#include(CMakeDependentOption)
-#include(CMakePackageConfigHelpers)
-
-project(Chai-Examples LANGUAGES C CXX VERSION 2022.03.0)
 cmake_minimum_required(VERSION 3.14)
 
-#include(cmake/SetupChaiOptions.cmake)
+project(Chai-Examples LANGUAGES C CXX VERSION 2022.03.0)
 
-set(BLT_CXX_STD c++14 CACHE STRING "")
+# 1. Standard CMake replacement for set(BLT_CXX_STD c++14) (breaks recent chai, don't use)
+#set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 2. Replicate BLT's behavior by sending all executables to build/bin/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "PGI")
   message(STATUS "Setting CMAKE_CXX_EXTENSIONS to ON for PGI Compiler")
-  set( CMAKE_CXX_EXTENSIONS ON )
+  set(CMAKE_CXX_EXTENSIONS ON)
 endif()
 
 message(STATUS "Using CMake version ${CMAKE_VERSION}")
 
-
-################################
-# BLT
-################################
-if (NOT BLT_LOADED)
-  if (DEFINED BLT_SOURCE_DIR)
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-        message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
-    endif()
-  else ()
-    set (BLT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/blt CACHE PATH "")
-
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-      message(FATAL_ERROR "\
-      The BLT submodule is not present. \
-      If in git repository run the following two commands:\n \
-      git submodule init\n \
-      git submodule update")
-    endif ()
-  endif ()
-
-  include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
-endif()
-
-include(cmake/ChaiBasics.cmake)
-##############################
-    list(APPEND CMAKE_PREFIX_PATH ${chai_DIR})
-    find_package(chai REQUIRED)
-
-set (chai_umpire_example_depends
-  chai umpire )
+# 3. Setup standard Options (can be toggled from compile.sh)
+option(CHAI_ENABLE_CUDA "Enable CUDA support" OFF)
+option(CHAI_ENABLE_HIP "Enable HIP support" OFF)
+option(CHAI_ENABLE_MANAGED_PTR "Enable Managed Ptr" OFF)
 
 if (CHAI_ENABLE_CUDA)
-  set (chai_umpire_example_depends
-    ${chai_umpire_example_depends}
-    cuda)
-endif()
-if (CHAI_ENABLE_HIP)
-  set (chai_umpire_example_depends
-    ${chai_umpire_example_depends}
-    blt::hip)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+endif ()
+
+# 4. Find pre-installed Spack packages natively
+find_package(chai REQUIRED)
+find_package(umpire REQUIRED) # Added because you link umpire below
+
+# 5. Build Executables natively
+# ---------------------------------------------------------
+# chai-umpire-example.exe
+# ---------------------------------------------------------
+add_executable(chai-umpire-example.exe chai-umpire-allocators.cpp)
+target_link_libraries(chai-umpire-example.exe PRIVATE chai umpire)
+if (CHAI_ENABLE_CUDA)
+  set_source_files_properties(chai-umpire-allocators.cpp PROPERTIES LANGUAGE CUDA)
 endif()
 
-blt_add_executable(
-  NAME chai-umpire-example.exe
-  SOURCES chai-umpire-allocators.cpp
-  DEPENDS_ON ${chai_umpire_example_depends})
-
+# ---------------------------------------------------------
+# chai-example.exe & pinned.exe
+# ---------------------------------------------------------
 if (CHAI_ENABLE_CUDA OR CHAI_ENABLE_HIP)
-  blt_add_executable(
-    NAME chai-example.exe
-    SOURCES example.cpp
-    DEPENDS_ON ${chai_umpire_example_depends})
+  add_executable(chai-example.exe example.cpp)
+  target_link_libraries(chai-example.exe PRIVATE chai umpire)
 
-  blt_add_executable(
-    NAME pinned.exe
-    SOURCES pinned.cpp
-    DEPENDS_ON ${chai_umpire_example_depends})
+  add_executable(pinned.exe pinned.cpp)
+  target_link_libraries(pinned.exe PRIVATE chai umpire)
+
+  if (CHAI_ENABLE_CUDA)
+    set_source_files_properties(example.cpp pinned.cpp PROPERTIES LANGUAGE CUDA)
+  endif()
 endif ()
 
+# ---------------------------------------------------------
+# managed_ptr_example.exe
+# ---------------------------------------------------------
 if (CHAI_ENABLE_MANAGED_PTR)
-  blt_add_executable(
-    NAME managed_ptr_example.exe
-    SOURCES managed_ptr_example.cpp
-    DEPENDS_ON ${chai_umpire_example_depends})
-endif ()
+  add_executable(managed_ptr_example.exe managed_ptr_example.cpp)
+  target_link_libraries(managed_ptr_example.exe PRIVATE chai umpire)
 
+  if (CHAI_ENABLE_CUDA)
+    set_source_files_properties(managed_ptr_example.cpp PROPERTIES LANGUAGE CUDA)
+  endif()
+endif ()
