@@ -7,174 +7,114 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-project(umpire_examples)
-
-
-if (NOT BLT_LOADED)
-  if (DEFINED BLT_SOURCE_DIR)
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-        message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
-    endif()
-  else ()
-    set (BLT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/blt CACHE PATH "")
-
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-      message(FATAL_ERROR
-          "The BLT git submodule is not present. "
-          "Either run the following two commands in your git repository: \n"
-          "    git submodule init\n"
-          "    git submodule update\n"
-          "Or add -DBLT_SOURCE_DIR=/path/to/blt to your CMake command." )
-    endif ()
-  endif ()
-
-  message(STATUS "BLT Source Directory: ${BLT_SOURCE_DIR}")
-  include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
+# Silence the CMP0144 warning for <PACKAGE>_ROOT variables on newer CMake versions
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
 endif()
 
+project(umpire_examples LANGUAGES C CXX)
 
 
+# Replicate BLT's behavior by sending all executables to build/bin/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-find_package(Umpire REQUIRED)
-
-set (example_depends umpire)
-
-if (UMPIRE_ENABLE_OPENMP_TARGET)
-  set (example_depends
-      ${example_depends}
-      openmp)
-endif()
-
-blt_add_executable(
-  NAME aligned_allocator
-  SOURCES aligned_allocator.cpp
-  DEPENDS_ON ${example_depends})
-
-blt_add_executable(
-  NAME alloc_access
-  SOURCES allocator_access.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples alloc_access)
-
-blt_add_executable(
-  NAME malloc
-  SOURCES malloc.cxx
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples malloc)
-
-if (UMPIRE_ENABLE_HIP)
-  if (UMPIRE_ENABLE_DEVICE_ALLOCATOR)
-    blt_add_executable(
-      NAME device_allocator_example
-      SOURCES device-allocator.cpp
-      DEPENDS_ON umpire_device umpire blt::hip)
-    list(APPEND umpire_examples device_allocator_example)
-
-    target_compile_options(device_allocator_example PUBLIC -fgpu-rdc)
-    blt_add_target_link_flags( TO device_allocator_example FLAGS -fgpu-rdc)
-  endif()
-
-    blt_add_executable(
-    NAME multi_device
-    SOURCES multi_device.cpp
-    DEPENDS_ON umpire blt::hip)
-  list(APPEND umpire_examples multi_device)
-endif()
-
-blt_add_executable(
-  NAME get_parent 
-  SOURCES get_parent.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples get_parent)
-
-blt_add_executable(
-  NAME strategy_example
-  SOURCES strategy_example.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples strategy_example)
-
-blt_add_executable(
-  NAME allocator
-  SOURCES allocator.cxx
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples allocator)
-
-blt_add_executable(
-  NAME backtrace_example
-  SOURCES backtrace_example.cpp
-  DEPENDS_ON ${example_depends})
-
-if (NOT WIN32 AND NOT APPLE)
-  blt_add_target_link_flags( TO backtrace_example FLAGS -rdynamic)
-endif()
-
-list(APPEND umpire_examples backtrace_example)
-
-if (UMPIRE_ENABLE_C)
-  blt_add_executable(
-    NAME allocator_c
-    SOURCES allocator.c
-    DEPENDS_ON ${example_depends})
-  list(APPEND umpire_examples allocator)
-endif ()
-
-blt_add_executable(
-  NAME vector_allocator
-  SOURCES vector_allocator.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples vector_allocator)
-
-blt_add_executable(
-  NAME size_limiter
-  SOURCES size_limiter.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples size_limiter)
-
-blt_add_executable(
-  NAME use_after_free
-  SOURCES use_after_free.cpp
-  DEPENDS_ON ${example_depends})
-list(APPEND umpire_examples use_after_free)
+# Configure build options
+option(UMPIRE_ENABLE_CUDA "Enable CUDA support" OFF)
+option(UMPIRE_ENABLE_HIP "Enable HIP support" OFF)
+option(UMPIRE_ENABLE_C "Enable C support" OFF)
+option(UMPIRE_ENABLE_DEVICE_ALLOCATOR "Enable device allocator" OFF)
+option(UMPIRE_ENABLE_OPENMP_TARGET "Enable OpenMP target" OFF)
 
 if (UMPIRE_ENABLE_CUDA)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
+endif()
+
+# Find pre-installed Umpire
+find_package(umpire REQUIRED)
+
+# Need GNUInstallDirs to define standard variables like CMAKE_INSTALL_BINDIR
+include(GNUInstallDirs)
+
+set(umpire_examples "")
+
+# --- Helper macro to easily generate standard C++ examples ---
+macro(add_ump_example NAME SOURCE)
+  add_executable(${NAME} ${SOURCE})
+  target_link_libraries(${NAME} PRIVATE umpire)
+  if(UMPIRE_ENABLE_CUDA)
+    set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
+  endif()
+  list(APPEND umpire_examples ${NAME})
+endmacro()
+
+# --- Standard Executables ---
+add_ump_example(aligned_allocator aligned_allocator.cpp)
+add_ump_example(alloc_access allocator_access.cpp)
+add_ump_example(malloc malloc.cxx)
+add_ump_example(get_parent get_parent.cpp)
+add_ump_example(strategy_example strategy_example.cpp)
+add_ump_example(allocator allocator.cxx)
+add_ump_example(vector_allocator vector_allocator.cpp)
+add_ump_example(size_limiter size_limiter.cpp)
+add_ump_example(use_after_free use_after_free.cpp)
+
+# Backtrace Example requires -rdynamic
+add_ump_example(backtrace_example backtrace_example.cpp)
+if (NOT WIN32 AND NOT APPLE)
+  # Standard CMake replacement for blt_add_target_link_flags
+  target_link_options(backtrace_example PRIVATE -rdynamic)
+endif()
+
+# --- C Executable ---
+if (UMPIRE_ENABLE_C)
+  add_executable(allocator_c allocator.c)
+  target_link_libraries(allocator_c PRIVATE umpire)
+  list(APPEND umpire_examples allocator_c)
+endif()
+
+# --- HIP Specific Executables ---
+if (UMPIRE_ENABLE_HIP)
   if (UMPIRE_ENABLE_DEVICE_ALLOCATOR)
-    blt_add_executable(
-      NAME device_allocator_example
-      SOURCES device-allocator.cpp
-      DEPENDS_ON umpire_device umpire cuda
-    )
-
-    set_source_files_properties(
-      device-allocator.cpp
-      PROPERTIES CUDA_SEPARABLE_COMPILATION On)
-
-    set_target_properties(
-      device_allocator_example
-      PROPERTIES CUDA_SEPARABLE_COMPILATION On)
-
+    add_executable(device_allocator_example device-allocator.cpp)
+    target_link_libraries(device_allocator_example PRIVATE umpire umpire_device)
+    
+    # Apply -fgpu-rdc natively
+    target_compile_options(device_allocator_example PRIVATE -fgpu-rdc)
+    target_link_options(device_allocator_example PRIVATE -fgpu-rdc)
+    
     list(APPEND umpire_examples device_allocator_example)
   endif()
 
-    blt_add_executable(
-    NAME multi_device
-    SOURCES multi_device.cpp
-    DEPENDS_ON umpire cuda)
-
-    set_source_files_properties(
-      multi_device.cpp
-      PROPERTIES CUDA_SEPARABLE_COMPILATION On)
-
-    set_target_properties(
-      multi_device
-      PROPERTIES CUDA_SEPARABLE_COMPILATION On)
-
+  add_executable(multi_device multi_device.cpp)
+  target_link_libraries(multi_device PRIVATE umpire)
   list(APPEND umpire_examples multi_device)
 endif()
 
-install(TARGETS ${umpire_examples} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# --- CUDA Specific Executables ---
+if (UMPIRE_ENABLE_CUDA)
+  if (UMPIRE_ENABLE_DEVICE_ALLOCATOR)
+    add_executable(device_allocator_example device-allocator.cpp)
+    set_source_files_properties(device-allocator.cpp PROPERTIES LANGUAGE CUDA)
+    target_link_libraries(device_allocator_example PRIVATE umpire umpire_device)
+    
+    # Native CMake equivalent of CUDA separable compilation
+    set_target_properties(device_allocator_example PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    
+    list(APPEND umpire_examples device_allocator_example)
+  endif()
 
-#add_subdirectory(tutorial)
+  add_executable(multi_device multi_device.cpp)
+  set_source_files_properties(multi_device.cpp PROPERTIES LANGUAGE CUDA)
+  target_link_libraries(multi_device PRIVATE umpire)
+  
+  # Native CMake equivalent of CUDA separable compilation
+  set_target_properties(multi_device PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  
+  list(APPEND umpire_examples multi_device)
+endif()
 
-#add_subdirectory(cookbook)
-
-#umpire_add_code_checks(PREFIX examples)
+# --- Install Targets ---
+if (umpire_examples)
+  install(TARGETS ${umpire_examples} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
