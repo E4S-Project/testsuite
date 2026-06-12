@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (c) 2012-2020 by the ArborX authors                            *
+ * Copyright (c) 2025, ArborX authors                                       *
  * All rights reserved.                                                     *
  *                                                                          *
  * This file is part of the ArborX library. ArborX is                       *
@@ -34,30 +34,31 @@ struct Spheres
   int N;
 };
 
-namespace ArborX
-{
 template <>
-struct AccessTraits<PointCloud, PrimitivesTag>
+struct ArborX::AccessTraits<PointCloud>
 {
-  static std::size_t size(PointCloud const &cloud) { return cloud.N; }
-  KOKKOS_FUNCTION static Point get(PointCloud const &cloud, std::size_t i)
+  static KOKKOS_FUNCTION std::size_t size(PointCloud const &cloud)
   {
-    return {{cloud.d_x[i], cloud.d_y[i], cloud.d_z[i]}};
+    return cloud.N;
+  }
+  static KOKKOS_FUNCTION auto get(PointCloud const &cloud, std::size_t i)
+  {
+    return ArborX::Point{cloud.d_x[i], cloud.d_y[i], cloud.d_z[i]};
   }
   using memory_space = Kokkos::CudaSpace;
 };
 
 template <>
-struct AccessTraits<Spheres, PredicatesTag>
+struct ArborX::AccessTraits<Spheres>
 {
-  static std::size_t size(Spheres const &d) { return d.N; }
-  KOKKOS_FUNCTION static auto get(Spheres const &d, std::size_t i)
+  static KOKKOS_FUNCTION std::size_t size(Spheres const &d) { return d.N; }
+  static KOKKOS_FUNCTION auto get(Spheres const &d, std::size_t i)
   {
-    return intersects(Sphere{{{d.d_x[i], d.d_y[i], d.d_z[i]}}, d.d_r[i]});
+    return ArborX::intersects(
+        ArborX::Sphere{ArborX::Point{d.d_x[i], d.d_y[i], d.d_z[i]}, d.d_r[i]});
   }
   using memory_space = Kokkos::CudaSpace;
 };
-} // namespace ArborX
 
 int main(int argc, char *argv[])
 {
@@ -73,24 +74,27 @@ int main(int argc, char *argv[])
 
   cudaStream_t stream;
   cudaStreamCreate(&stream);
+  Kokkos::push_finalize_hook([stream]() { cudaStreamDestroy(stream); });
+
   cudaMemcpyAsync(d_a, a.data(), sizeof(a), cudaMemcpyHostToDevice, stream);
 
   Kokkos::Cuda cuda{stream};
-  ArborX::BVH<Kokkos::CudaSpace> bvh{cuda, PointCloud{d_a, d_a, d_a, N}};
+  ArborX::BoundingVolumeHierarchy bvh{cuda, PointCloud{d_a, d_a, d_a, N}};
 
-  Kokkos::View<int *, Kokkos::CudaSpace> indices("indices", 0);
-  Kokkos::View<int *, Kokkos::CudaSpace> offset("offset", 0);
-  bvh.query(cuda, Spheres{d_a, d_a, d_a, d_a, N}, indices, offset);
+  Kokkos::View<ArborX::Point<3> *, Kokkos::CudaSpace> points("Example::points",
+                                                             0);
+  Kokkos::View<int *, Kokkos::CudaSpace> offset("Example::offset", 0);
+  ArborX::query(bvh, cuda, Spheres{d_a, d_a, d_a, d_a, N}, points, offset);
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::Cuda>(cuda, 0, N),
-                       KOKKOS_LAMBDA(int i) {
-                         for (int j = offset(i); j < offset(i + 1); ++j)
-                         {
-                           printf("%i %i\n", i, indices(j));
-                         }
-                       });
-
-  cudaStreamDestroy(stream);
+  Kokkos::parallel_for(
+      "Example::print_points", Kokkos::RangePolicy(cuda, 0, N),
+      KOKKOS_LAMBDA(int i) {
+        for (int j = offset(i); j < offset(i + 1); ++j)
+        {
+          printf("%i: (%.1f, %.1f, %.1f)\n", i, points(j)[0], points(j)[1],
+                 points(j)[2]);
+        }
+      });
 
   return 0;
 }
