@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 The University of Tennessee and The University
+ * Copyright (c) 2017-2023 The University of Tennessee and The University
  *                         of Tennessee Research Foundation.  All rights
  *                         reserved.
  */
@@ -13,11 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#if PARSEC_VERSION_MAJOR < 4
-#include "parsec/interfaces/superscalar/insert_function.h"
-#else
 #include "parsec/interfaces/dtd/insert_function.h"
-#endif
 #include "parsec/data_dist/matrix/two_dim_rectangle_cyclic.h"
 #include "parsec/arena.h"
 #include "parsec/data_internal.h"
@@ -34,14 +30,8 @@
 
 static int verbose = 0;
 
-#if PARSEC_VERSION_MAJOR < 4
-enum regions {
-               TILE_FULL,
-             };
-#else
 /* IDs for the Arena Datatypes */
 static int TILE_FULL;
-#endif
 
 int
 fill_data( parsec_execution_stream_t    *es,
@@ -99,10 +89,11 @@ bcast_recv( parsec_execution_stream_t    *es,
 int main(int argc, char **argv)
 {
     parsec_context_t* parsec;
+    parsec_arena_datatype_t *adt;
     int rc, nb, nt;
     int rank, world, cores = -1, root = 0;
     int i;
-    parsec_tiled_matrix_dc_t *dcA;
+    parsec_tiled_matrix_t *dcA;
 
 #if defined(PARSEC_HAVE_MPI)
     {
@@ -120,42 +111,38 @@ int main(int argc, char **argv)
     nt = world*10; /* total no. of tiles */
     verbose = 0;
 
-    i = 0;
-    while(NULL != argv[i]) {
+    int pargc = 0; char **pargv = NULL;
+    for( i = 1; i < argc; i++) {
+        if( 0 == strncmp(argv[i], "--", 3) ) {
+            pargc = argc - i;
+            pargv = argv + i;
+            break;
+        }
         if( 0 == strncmp(argv[i], "-n=", 3) ) {
             nt = strtol(argv[i]+3, NULL, 10);
             if( 0 >= nt ) nt = world*10;  /* set to default value */
-            goto move_and_continue;
+            continue;
         }
         if( 0 == strncmp(argv[i], "-v", 2) ) {
             verbose = 1;
-            goto move_and_continue;
+            continue;
         }
-        i++;  /* skip this one */
-        continue;
-    move_and_continue:
-        memmove(&argv[i], &argv[i+1], (argc - 1) * sizeof(char*));
-        argc -= 1;
     }
 
-    parsec = parsec_init( cores, &argc, &argv );
+    parsec = parsec_init( cores, &pargc, &pargv );
     if( NULL == parsec ) {
         return -1;
     }
 
     parsec_taskpool_t *dtd_tp = parsec_dtd_taskpool_new(  );
-#if PARSEC_VERSION_MAJOR < 4
-    parsec_matrix_add2arena_rect(&parsec_dtd_arenas_datatypes[TILE_FULL],
-#else
-    parsec_arena_datatype_t *adt;
-    adt = parsec_dtd_create_arena_datatype(parsec, &TILE_FULL);
-    parsec_matrix_add2arena_rect( adt,
-#endif
-                                 parsec_datatype_int32_t,
-                                 nb, 1, nb);
 
-    two_dim_block_cyclic_t *m = (two_dim_block_cyclic_t*)malloc(sizeof(two_dim_block_cyclic_t));
-    two_dim_block_cyclic_init(m, matrix_ComplexDouble, matrix_Tile,
+    adt = parsec_dtd_create_arena_datatype(parsec, &TILE_FULL);
+    parsec_add2arena_rect( adt,
+                                  parsec_datatype_int32_t,
+                                  nb, 1, nb );
+
+    parsec_matrix_block_cyclic_t *m = (parsec_matrix_block_cyclic_t*)malloc(sizeof(parsec_matrix_block_cyclic_t));
+    parsec_matrix_block_cyclic_init(m, PARSEC_MATRIX_COMPLEX_DOUBLE, PARSEC_MATRIX_TILE,
                               rank,
                               nb, 1,
                               nt*nb, 1,
@@ -168,13 +155,16 @@ int main(int argc, char **argv)
     m->mat = parsec_data_allocate((size_t)m->super.nb_local_tiles *
                                   (size_t)m->super.bsiz *
                                   (size_t)parsec_datadist_getsizeoftype(m->super.mtype));
-    dcA = (parsec_tiled_matrix_dc_t*)m;
+    dcA = (parsec_tiled_matrix_t*)m;
 
     parsec_data_collection_set_key((parsec_data_collection_t *)dcA, "A");
 
     parsec_data_collection_t *A = (parsec_data_collection_t *)dcA;
     parsec_dtd_data_collection_init(A);
 
+    parsec_data_copy_t *gdata;
+    parsec_data_t *data;
+    int *real_data, key;
 
     /* Registering the dtd_handle with PARSEC context */
     rc = parsec_context_add_taskpool( parsec, dtd_tp );
@@ -185,37 +175,44 @@ int main(int argc, char **argv)
 
 //Reduce:
 // *********************
+    key = A->data_key(A, rank, 0);
+    data = A->data_of_key(A, key);
+    gdata = data->device_copies[0];
+    real_data = PARSEC_DATA_COPY_GET_PTR((parsec_data_copy_t *) gdata);
+    *real_data = rank;
 
     for( i = 0; i < nt; i ++ ) {
-        parsec_dtd_taskpool_insert_task( dtd_tp, fill_data, 0,  "fill_data",
-                            PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, i), PARSEC_INOUT | TILE_FULL | PARSEC_AFFINITY,
-                            sizeof(int),      &i, PARSEC_VALUE,
-                            PARSEC_DTD_ARG_END );
+        parsec_dtd_insert_task( dtd_tp, fill_data, 0, PARSEC_DEV_CPU, "fill_data",
+                                PASSED_BY_REF, PARSEC_DTD_TILE_OF_KEY(A, i), PARSEC_INOUT | TILE_FULL | PARSEC_AFFINITY,
+                                sizeof(int), &i, PARSEC_VALUE,
+                                PARSEC_DTD_ARG_END );
         if(i != root) {
-            parsec_dtd_taskpool_insert_task( dtd_tp, reduce_accumulate, 0,  "reduce_accumulate",
-                            PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, root), PARSEC_INOUT | TILE_FULL,
-                            PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, i),    PARSEC_INPUT | TILE_FULL | PARSEC_AFFINITY, /* not the best affinity, but it exercises more PaRSEC subsystems that way */
-                            PARSEC_DTD_ARG_END );
+            parsec_dtd_insert_task( dtd_tp, reduce_accumulate, 0,  PARSEC_DEV_CPU, "reduce_accumulate",
+                                    PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, root), PARSEC_INOUT | TILE_FULL,
+                                    PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, i),    PARSEC_INPUT | TILE_FULL | PARSEC_AFFINITY, /* not the best affinity, but it exercises more PaRSEC subsystems that way */
+                                    PARSEC_DTD_ARG_END );
         }
     }
+
 
 //Test force data flush back to root; note that other than for the printf below,
 //this would be unecessary, PaRSEC would do the correct thing in bcast anyway
 //and merge the reduce/bcast steps
 //*********************
-    parsec_dtd_data_flush_all( dtd_tp, A );
-    rc = parsec_dtd_taskpool_wait( dtd_tp );
-    PARSEC_CHECK_ERROR(rc, "parsec_dtd_taskpool_wait");
+    rc = parsec_dtd_data_flush_all( dtd_tp, A );
+    PARSEC_CHECK_ERROR(rc, "parsec_dtd_data_flush_all(A)");
+    rc = parsec_taskpool_wait( dtd_tp );
+    PARSEC_CHECK_ERROR(rc, "parsec_taskpool_wait");
     if( rank == root) {
         printf("Root: %d; value=%d\n\n", root, ((int*)m->mat)[0] );
     }
 
-//Broadcast:
-// *********************
+    //Broadcast:
+    // *********************
 
     for( i = 0; i < world; i++ ) {
         if( i != root ) {
-            parsec_dtd_taskpool_insert_task( dtd_tp, bcast_recv, 0,  "bcast_recv",
+            parsec_dtd_insert_task( dtd_tp, bcast_recv, 0,  PARSEC_DEV_CPU, "bcast_recv",
                                     PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, root),  PARSEC_INPUT | TILE_FULL,
                                     PASSED_BY_REF,    PARSEC_DTD_TILE_OF_KEY(A, i),     PARSEC_INOUT | TILE_FULL | PARSEC_AFFINITY,
                                     PARSEC_DTD_ARG_END );
@@ -223,20 +220,17 @@ int main(int argc, char **argv)
     }
 //******************
 
-    parsec_dtd_data_flush_all( dtd_tp, A );
+    rc = parsec_dtd_data_flush_all( dtd_tp, A );
+    PARSEC_CHECK_ERROR(rc, "parsec_dtd_data_flush_all(A)");
     rc = parsec_context_wait(parsec);
     PARSEC_CHECK_ERROR(rc, "parsec_context_wait");
     parsec_taskpool_free( dtd_tp );
 
-#if PARSEC_VERSION_MAJOR < 4
-    PARSEC_OBJ_RELEASE(parsec_dtd_arenas_datatypes[0].arena);
-#else
-    parsec_matrix_del2arena(adt);
+    parsec_del2arena(adt);
     PARSEC_OBJ_RELEASE(adt->arena);
     parsec_dtd_destroy_arena_datatype(parsec, TILE_FULL);
-#endif
     parsec_dtd_data_collection_fini( A );
-    parsec_matrix_destroy_data(dcA);
+    parsec_tiled_matrix_destroy_data(dcA);
     parsec_data_collection_destroy(&dcA->super);
     free(dcA);
 
