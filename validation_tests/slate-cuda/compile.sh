@@ -3,10 +3,13 @@
 . ./setup.sh
 
 set -x
-
+env | grep BLAS
 #Detect external BLAS link line and use if present, otherwise default to openblas
 if [ -z ${TEST_BLAS_LINK+x} ]
-then BLAS_LINK="-L${OPENBLAS_ROOT}/lib -lopenblas"
+then 
+	if [ -n "${OPENBLAS_ROOT}" ]; then
+	BLAS_LINK="-L${OPENBLAS_ROOT}/lib -lopenblas"
+	fi
 else BLAS_LINK=${TEST_BLAS_LINK}
 fi
 
