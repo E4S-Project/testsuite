@@ -26,6 +26,9 @@
 #include <sys/time.h>
 //#include <signal.h>
 #include <stdlib.h>
+#include <unistd.h> // For usleep
+#include <string.h> // For memset
+#include <stdlib.h> // For rand
 //#include <unistd.h>
 //#include <string.h>
 //#include <sys/mman.h>

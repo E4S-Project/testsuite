@@ -1,0 +1,4 @@
+Modified test to avoid implicit function declaration errors:
+#include <unistd.h> // For usleep
+#include <string.h> // For memset
+#include <stdlib.h> // For rand
