@@ -1,4 +1,6 @@
 #!/bin/bash
 . ./setup.sh
-${TEST_RUN} ./hypre_smoke_test 
+set -x
+#${TEST_RUN} 
+${TEST_RUN_CMD} $TEST_RUN_PROCFLAG $MPIRANKS ./hypre_smoke_test 
  
