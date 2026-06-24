@@ -14,7 +14,9 @@ option(ENABLE_CUDA "Enable CUDA support" OFF)
 option(ENABLE_HIP "Enable HIP support" OFF)
 
 if (ENABLE_CUDA)
+  set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
   enable_language(CUDA)
+  set(CMAKE_CUDA_ARCHITECTURES $ENV{SPACK_CUDA_ARCH})
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 endif ()
 
