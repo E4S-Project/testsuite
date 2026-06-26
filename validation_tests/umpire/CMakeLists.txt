@@ -5,7 +5,10 @@
 # SPDX-License-Identifier: (MIT)
 ##############################################################################
 
-cmake_minimum_required(VERSION 3.14)
+#cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
+
+cmake_policy(VERSION 3.21...${CMAKE_VERSION})
 
 # Silence the CMP0144 warning for <PACKAGE>_ROOT variables on newer CMake versions
 if(POLICY CMP0144)
@@ -26,7 +29,11 @@ option(UMPIRE_ENABLE_DEVICE_ALLOCATOR "Enable device allocator" OFF)
 option(UMPIRE_ENABLE_OPENMP_TARGET "Enable OpenMP target" OFF)
 
 if (UMPIRE_ENABLE_CUDA)
+  if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
+    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+  endif()
   enable_language(CUDA)
+  set(CMAKE_CUDA_ARCHITECTURES $ENV{SPACK_CUDA_ARCH})
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 endif()
 
