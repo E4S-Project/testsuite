@@ -5,7 +5,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ##############################################################################
 
-cmake_minimum_required(VERSION 3.14)
+#cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
+
+cmake_policy(VERSION 3.21...${CMAKE_VERSION})
 
 project(Chai-Examples LANGUAGES C CXX VERSION 2022.03.0)
 
@@ -29,7 +32,11 @@ option(CHAI_ENABLE_HIP "Enable HIP support" OFF)
 option(CHAI_ENABLE_MANAGED_PTR "Enable Managed Ptr" OFF)
 
 if (CHAI_ENABLE_CUDA)
+  if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
+    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+  endif()
   enable_language(CUDA)
+  set(CMAKE_CUDA_ARCHITECTURES $ENV{SPACK_CUDA_ARCH})
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 endif ()
 

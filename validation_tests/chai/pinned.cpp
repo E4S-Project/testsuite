@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 //////////////////////////////////////////////////////////////////////////////
-#include "../src/util/forall.hpp"
+#include "forall.hpp"
 #include "chai/ManagedArray.hpp"
 
 #include <iostream>

@@ -46,7 +46,7 @@
 // WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 // ---------------------------------------------------------------------
-#include "../src/util/forall.hpp"
+#include "forall.hpp"
 #include "chai/ManagedArray.hpp"
 
 #include <iostream>

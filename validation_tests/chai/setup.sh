@@ -6,6 +6,7 @@ USECUDA=0
 USEROCM=0
 if [  "$THISDIR" = "chai-cuda" ];then
         spackLoadUnique chai+cuda
+	 export SPACK_CUDA_ARCH=$(spack find --json /$E4S_TEST_HASH | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["parameters"]["cuda_arch"][0])')
         USECUDA=1
 elif [  "$THISDIR" = "chai-rocm" ];then
         spackLoadUnique chai+rocm
