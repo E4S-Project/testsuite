@@ -14,7 +14,10 @@
 # limitations under the License.
 #------------------------------------------------------------------------------#
 
-cmake_minimum_required(VERSION 3.1)
+#cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.21)
+
+cmake_policy(VERSION 3.21...${CMAKE_VERSION})
 project(LegionExample_08_multiple_partitions)
 
  
@@ -25,7 +28,20 @@ if(NOT Legion_SOURCE_DIR)
 endif()
 
 add_executable(legion legionTest.cc)
-target_link_libraries(legion Legion::Legion)
+target_link_libraries(legion PRIVATE Legion::Legion)
+
+
+if(Legion_USE_CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(Legion::Legion INTERFACE CUDA::cudart)
+  #target_link_libraries(legion PRIVATE CUDA::cudart)
+elseif(Legion_USE_HIP)
+  find_package(hip REQUIRED)
+  #target_link_libraries(legion PRIVATE hip::host)
+  target_link_libraries(Legion::Legion INTERFACE hip::host)
+endif()
+
+
 if(Legion_ENABLE_TESTING)
   add_test(NAME legion COMMAND ${Legion_TEST_LAUNCHER} $<TARGET_FILE:legion> ${Legion_TEST_ARGS})
 endif()
