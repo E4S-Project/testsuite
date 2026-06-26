@@ -20,7 +20,10 @@
 #
 #------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.8)
+#cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21)
+
+cmake_policy(VERSION 3.21...${CMAKE_VERSION})
 
 project(using_with_cmake)
 
@@ -35,6 +38,19 @@ find_package(axom REQUIRED
              NO_DEFAULT_PATH 
              PATHS ${AXOM_DIR}/lib/cmake)
 
+
+if("$ENV{TEST_COMPILER_BACKEND}" STREQUAL "CUDA")
+    message(STATUS "Test environment detected: CUDA. Forcing nvcc compilation.")
+    set(CMAKE_CUDA_ARCHITECTURES $ENV{SPACK_CUDA_ARCH})
+    set_source_files_properties(example.cpp PROPERTIES LANGUAGE CUDA)
+
+elseif("$ENV{TEST_COMPILER_BACKEND}" STREQUAL "HIP")
+    message(STATUS "Test environment detected: ROCm. Forcing hipcc compilation.")
+    set_source_files_properties(example.cpp PROPERTIES LANGUAGE HIP)
+
+else()
+    message(STATUS "Test environment detected: Host-only CXX compilation.")
+endif()
 
 #------------------------------------------------------------------------------
 # Set up example target that depends on axom
