@@ -54,7 +54,8 @@ default:
 
 all: c fortran
 
-c: example_v1 example_v2 example_sparse example_sparse_operator
+#c: example_v1 
+c: example_v2 example_sparse example_sparse_operator
 
 fortran: example_f
 
@@ -66,11 +67,14 @@ clean:
 
 # ----------------------------------------
 # C example
+
+example_v1.o: MAGMA_CFLAGS += -DMAGMA_V1
+
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(MAGMA_CFLAGS) -c -o $@ $<
 
-example_v1: example_v1.o
-	$(LD) $(LDFLAGS) -o $@ $^ $(MAGMA_LIBS)
+#example_v1: example_v1.o
+#	$(LD) $(LDFLAGS) -o $@ $^ $(MAGMA_LIBS)
 
 example_v2: example_v2.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(MAGMA_LIBS)
