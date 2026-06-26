@@ -2,4 +2,12 @@
 
 . ./setup.sh
 
-echo "Skipped Compilation. Using internal spack tests."
+mkdir -p build
+
+cd build
+
+cp $TASMANIAN_ROOT/share/Tasmanian/testing/CMakeLists.txt . 
+
+cmake .
+
+make

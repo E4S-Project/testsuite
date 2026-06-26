@@ -2,4 +2,5 @@
 
 . ./setup.sh
 
-spackTestRun $TASMANIAN_HASH
+cd ./build
+make test 
