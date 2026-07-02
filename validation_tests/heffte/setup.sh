@@ -14,4 +14,5 @@ elif [  "$THISDIR" = "$TESTNAME-fftw" ];then
 else
         spackLoadUnique $TESTNAME ~cuda~rocm~fftw $TESTVERSION
 fi
-spack load cmake
+spack load --first cmake@3.31:
+#spack load cmake

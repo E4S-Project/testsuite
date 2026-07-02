@@ -85,7 +85,7 @@ def _determine_failure_stage(all_logs, timed_out, active_stages):
 
 # --- Producer/Consumer Functions ---
 
-def async_worker(test_queue, results_queue, timeout, print_json, print_logs, timestamp, verbose):
+def async_worker(test_queue, results_queue, timeout, print_json, print_logs, timestamp, verbose, setup_mode,skip_internal):
     """
     The "Producer" function, run by each parallel worker process.
     It pulls a test path from the test_queue, executes the test, and puts
@@ -97,15 +97,19 @@ def async_worker(test_queue, results_queue, timeout, print_json, print_logs, tim
         except queue.Empty:
             break
         
-        os.chdir(current_dir)
+        #os.chdir(current_dir)
         os.environ['PWD'] = current_dir
         test_name = os.path.basename(current_dir)
         log_suffix = f"{test_name}_{timestamp}.log"
-        setup_log, clean_log, compile_log, run_log = f"./setup-{log_suffix}", f"./clean-{log_suffix}", f"./compile-{log_suffix}", f"./run-{log_suffix}"
+        #setup_log, clean_log, compile_log, run_log = f"./setup-{log_suffix}", f"./clean-{log_suffix}", f"./compile-{log_suffix}", f"./run-{log_suffix}"
+        setup_log = os.path.join(current_dir, f"setup-{log_suffix}")
+        clean_log = os.path.join(current_dir, f"clean-{log_suffix}")
+        compile_log = os.path.join(current_dir, f"compile-{log_suffix}")
+        run_log = os.path.join(current_dir, f"run-{log_suffix}")
         all_logs = [setup_log, clean_log, compile_log, run_log]
 
-        clean_bool = os.path.exists('./clean.sh')
-        compile_bool = os.path.exists('./compile.sh')
+        clean_bool = os.path.exists(os.path.join(current_dir, 'clean.sh'))
+        compile_bool = os.path.exists(os.path.join(current_dir, 'compile.sh'))
 
         active_stage_names = ['setup']
         if clean_bool: active_stage_names.append('clean')
@@ -115,17 +119,17 @@ def async_worker(test_queue, results_queue, timeout, print_json, print_logs, tim
         # This shell command  sources setup.sh to inherit its
         # environment, then checks the SPACK_LOAD_RESULT variable. If the spack load
         # failed, it exits immediately with the failure code. Otherwise, it proceeds.
-        setup_stage = f"export SPACK_LOAD_RESULT=0; source ./setup.sh > {setup_log} 2>&1; exit_code=$SPACK_LOAD_RESULT; if [ $exit_code -ne 0 ]; then exit $exit_code; fi"
+        setup_stage = f"export E4S_TEST_SKIP_INTERNAL={skip_internal}; export E4S_TEST_SETUP_MODE={setup_mode}; export SPACK_LOAD_RESULT=0; source ./setup.sh > {setup_log} 2>&1; exit_code=$SPACK_LOAD_RESULT; if [ $exit_code -ne 0 ]; then exit $exit_code; fi"
         clean_stage = f"./clean.sh > {clean_log} 2>&1" if clean_bool else "true"
         compile_stage = f"./compile.sh > {compile_log} 2>&1" if compile_bool else "true"
         run_stage = f"./run.sh > {run_log} 2>&1"
         
-        full_command_chain = f"{setup_stage} && {clean_stage} && {compile_stage} && {run_stage}"
-        command = f"bash -c '{full_command_chain}'"
+        full_command_chain = f"{setup_stage} && {clean_stage} && {compile_stage} && sync && sleep 0.5 && {run_stage}"
+        #command = f"bash -c '{full_command_chain}'"
 
         timed_out, return_code = False, -1
         try:
-            result = subprocess.Popen(command, shell=True, executable='/bin/bash', text=True, start_new_session=True)
+            result = subprocess.Popen(full_command_chain, shell=True, executable='/bin/bash', cwd=current_dir, text=True, start_new_session=True)
             result.communicate(timeout=timeout)
             return_code = result.returncode
         except subprocess.TimeoutExpired:
@@ -144,6 +148,10 @@ def async_worker(test_queue, results_queue, timeout, print_json, print_logs, tim
                 completed_stages = {stage: "skipped" for stage in active_stage_names}
                 completed_stages["setup"] = "missing"
                 results_queue.put(("missing", test_name, completed_stages, return_code, []))
+            elif return_code == 216:
+                completed_stages = {stage: "skipped" for stage in active_stage_names}
+                completed_stages["setup"] = "spacktest"
+                results_queue.put(("spacktest", test_name, completed_stages, return_code, []))               
             else:
                 if verbose:
                     for log_file in all_logs:
@@ -189,6 +197,9 @@ def print_results(results_queue, num_tests):
                 success += 1
             elif message_type == "missing":
                 print(yellow("Setup Missing"))
+                skipped += 1
+            elif message_type == "spacktest":
+                print(yellow("Spack tests skipped"))
                 skipped += 1
             elif message_type == "failure":
                 log_contents, failing_stage, timed_out = extra_payload[0], extra_payload[1], extra_payload[2]
@@ -256,6 +267,9 @@ def main():
     parser.add_argument('--print-logs', action='store_true', help='(Deprecated) Print all logs.')
     parser.add_argument('--color-off', action='store_false', dest='print_color', help='Disable color output.')
     parser.add_argument('--verbose', action='store_true', help='On failure, print test logs.')
+    parser.add_argument('--setup-mode', choices=['spack', 'module'], default='spack', 
+                    help='Choose how to load packages in the test environment (default: spack)')
+    parser.add_argument('--skip-internal', action='store_true', help='Skip spack-provided tests.')                
     args = parser.parse_args()
 
     global print_color
@@ -278,7 +292,7 @@ def main():
     global Processes
     Processes = []
     for i in range(args.processes):
-        p = Process(target=async_worker, args=(test_queue, results_queue, args.timeout, args.json, args.print_logs, timestamp, args.verbose))
+        p = Process(target=async_worker, args=(test_queue, results_queue, args.timeout, args.json, args.print_logs, timestamp, args.verbose, args.setup_mode, args.skip_internal))
         p.start()
         Processes.append(p)
 
