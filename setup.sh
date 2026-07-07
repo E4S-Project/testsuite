@@ -1,5 +1,6 @@
 if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/settings.sh; else source $TESTSUITE_SETTINGS_FILE; fi
 
+if [ "${E4S_MPI_SANITY_OK}" != "1" ]; then
 
 if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
 	    echo "Error: The MPI command '$TEST_RUN_CMD' was not found. Check your settings.sh" >&2
@@ -13,6 +14,13 @@ if ! MPI_OUTPUT=$($TEST_RUN hostname 2>&1); then
 	    echo "-----------------------------" >&2
 	    exit 1
 fi
+
+if [ "${E4S_MPI_SANITY_TEST}" = "1" ]; then
+     exit 0
+fi
+
+fi #E4S_MPI_SANITY_OK
+
 
 
 if [ "$E4S_TEST_SETUP_MODE" == "module" ]; then

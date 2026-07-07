@@ -83,6 +83,19 @@ def _determine_failure_stage(all_logs, timed_out, active_stages):
     return statuses, failing_stage
 
 
+def verify_mpi_environment():
+    """Triggers setup.sh in a dedicated validation mode to check MPI globally."""
+    driver_dir = os.path.dirname(os.path.abspath(__file__))
+    setup_script = os.path.join(driver_dir, "setup.sh")
+    
+    # Run setup.sh with the special intercept variable active
+    cmd = f"E4S_MPI_SANITY_TEST=1 bash {setup_script}"
+    
+    result = subprocess.run(cmd, shell=True, cwd=driver_dir)
+    return result.returncode == 0
+
+
+
 # --- Producer/Consumer Functions ---
 
 def async_worker(test_queue, results_queue, timeout, print_json, print_logs, timestamp, verbose, setup_mode,skip_internal):
@@ -271,6 +284,14 @@ def main():
                     help='Choose how to load packages in the test environment (default: spack)')
     parser.add_argument('--skip-internal', action='store_true', help='Skip spack-provided tests.')                
     args = parser.parse_args()
+
+    if verify_mpi_environment():
+        print("MPI environment verified. Proceeding to parallel tests.")
+        # Set the bypass variable. Parallel workers inherit this.
+        os.environ['E4S_MPI_SANITY_OK'] = '1'
+    else:
+        print("\nAborting test suite run. MPI sanity check failed.")
+        sys.exit(1)
 
     global print_color
     print_color = args.print_color
