@@ -1,3 +1,3 @@
 #!/bin/bash
 . ../../setup.sh
-spackLoadUnique boost 
+spackLoadUnique boost@1.90.0: 

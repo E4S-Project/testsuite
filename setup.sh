@@ -1,7 +1,33 @@
 if [ -z ${TESTSUITE_SETTINGS_FILE+x} ]; then source `dirname $BASH_SOURCE`/settings.sh; else source $TESTSUITE_SETTINGS_FILE; fi
 
+
+if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
+	    echo "Error: The MPI command '$TEST_RUN_CMD' was not found. Check your settings.sh" >&2
+	        exit 1
+fi
+
+if ! MPI_OUTPUT=$($TEST_RUN hostname 2>&1); then
+	    echo "Error: The MPI command '$TEST_RUN hostname' failed to execute. Check your settings.sh" >&2
+	    echo "--- MPI Diagnostic Output ---" >&2
+	    echo "$MPI_OUTPUT" >&2
+	    echo "-----------------------------" >&2
+	    exit 1
+fi
+
+
 if [ "$E4S_TEST_SETUP_MODE" == "module" ]; then
 
+	# Return 0 (true) if version $1 >= $2
+	version_ge() {
+		    [[ "$1" == "$2" ]] && return 0
+		        [[ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" == "$1" ]]
+		}
+
+	# Return 0 (true) if version $1 <= $2
+	version_le() {
+		    [[ "$1" == "$2" ]] && return 0
+		        [[ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" == "$1" ]]
+		}
     # ---------------------------------------------------------
     # MODULE-BASED SETUP
     # ---------------------------------------------------------
@@ -59,12 +85,31 @@ if [ "$E4S_TEST_SETUP_MODE" == "module" ]; then
 
             elif [[ "$arg" == "@"* ]]; then
                 # @version -> ignore ranges with ':', otherwise soft include
+                #local v_stripped="${arg:1}"
+                #if [[ "$v_stripped" != *":"* ]]; then
+                #    local filtered=$(echo "$mods" | grep "${v_stripped}")
+                #    if [ -n "$filtered" ]; then mods="$filtered"; fi
+                #fi
                 local v_stripped="${arg:1}"
-                if [[ "$v_stripped" != *":"* ]]; then
-                    local filtered=$(echo "$mods" | grep "${v_stripped}")
-                    if [ -n "$filtered" ]; then mods="$filtered"; fi
+                local low high
+                if [[ "$v_stripped" == *":"* ]]; then
+                    low="${v_stripped%%:*}"
+                    high="${v_stripped#*:}"
+                else
+                    low="$v_stripped"
+                    high="$v_stripped"
                 fi
-
+                local filtered=""
+                while IFS= read -r m; do
+                    [[ -z "$m" ]] && continue
+                    local mver="${m#*/}"
+                    mver="${mver%%-*}"
+                    local ok=1
+                    if [[ -n "$low" ]] && ! version_ge "$mver" "$low"; then ok=0; fi
+                    if [[ -n "$high" ]] && ! version_le "$mver" "$high"; then ok=0; fi
+                    [[ "$ok" -eq 1 ]] && filtered+="$m"$'\n'
+                done <<< "$mods"
+                mods="${filtered%$'\n'}"
             elif [[ "$arg" == "%"* ]]; then
                 # %compiler -> soft include
                 local filtered=$(echo "$mods" | grep "${arg:1}")
@@ -231,15 +276,15 @@ source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 
 
-if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
-    echo "Error: The MPI command '$TEST_RUN_CMD' was not found. Check your settings.sh" >&2
-    exit 1
-fi
-
-if ! $TEST_RUN hostname &> /dev/null; then
-    echo "Error: The MPI command '$TEST_RUN' hostname failed to execute. Check your settings.sh" >&2
-    exit 1
-fi
+#if ! command -v "$TEST_RUN_CMD" &> /dev/null; then
+#    echo "Error: The MPI command '$TEST_RUN_CMD' was not found. Check your settings.sh" >&2
+#    exit 1
+#fi
+#
+#if ! $TEST_RUN hostname &> /dev/null; then
+#    echo "Error: The MPI command '$TEST_RUN' hostname failed to execute. Check your settings.sh" >&2
+#    exit 1
+#fi
 
 
 #alias test_run='$TEST_RUN'
