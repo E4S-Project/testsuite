@@ -1,2 +1,2 @@
 #!/bin/bash
-rm ./a.out
+rm -f ./a.out
