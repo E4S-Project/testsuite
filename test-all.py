@@ -20,6 +20,11 @@ shutdown_event = multiprocessing.Event()
 # This global list holds the worker processes so they can be managed during shutdown.
 Processes = []
 
+def safe_stty_sane():
+    """Resets the terminal state, but only if running in an interactive terminal."""
+    if sys.stdin and sys.stdin.isatty():
+        os.system('stty sane')
+
 def cleanup_terminal():
     """
     This function is registered to run unconditionally on script exit.
@@ -27,7 +32,7 @@ def cleanup_terminal():
     in a broken state by a misbehaving test script.
     """
     print("\n--- Running final terminal cleanup ---")
-    os.system('stty sane')
+    safe_stty_sane()
 
 # Register the failsafe cleanup. It will run on normal exit, error, or most signals.
 atexit.register(cleanup_terminal)
@@ -198,7 +203,7 @@ def print_results(results_queue, num_tests):
             # Proactively reset terminal state before printing. This fixes visual corruption
             # caused by a race condition where a finishing test breaks the terminal
             # before the next result is printed.
-            os.system('stty sane')
+            safe_stty_sane()
 
             message_type, test_name, completed_stages, return_code, *extra_payload = result_tuple
 
