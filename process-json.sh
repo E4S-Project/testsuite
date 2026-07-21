@@ -26,7 +26,13 @@ parse_json() {
   fi
 
   # Extract relevant entries and filter them
-  local filtered_entries=$(echo "$json_data" | jq -c --arg key "$key" --arg value "$value" '.[] | select(.test_stages[$key] == $value and .test != null)')
+#  local filtered_entries=$(echo "$json_data" | jq -c --arg key "$key" --arg value "$value" '.[] | select(.test_stages[$key] == $value and .test != null)')
+local filtered_entries=$(echo "$json_data" | jq -c --arg key "$key" --arg value "$value" '
+  .[] | select(
+    .test != null and
+    (.test_stages[$key] == $value or ($value == "fail" and .test_stages[$key] == "timeout"))
+  )
+')
 
   # Loop through each filtered entry and print the directory path
   while IFS= read -r entry; do
