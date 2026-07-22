@@ -5,7 +5,7 @@ set -x
   echo "Running with TAU:" 
   export TAU_METRICS=time:PAPI_L1_DCM
 #  mpirun -np 4 
-  timeout -k 15 300 ${TEST_RUN} tau_exec -T cupti -ebs -monitoring ./add 
+  timeout -k 15 300  $TEST_RUN_CMD $TEST_RUN_PROCFLAG 2  tau_exec -T cupti -ebs -monitoring ./add 
   # timeout -k 15 300 mpirun -np 1 tau_exec -T cupti -ebs -monitoring ./add
   retVal=$?
   if [ $retVal -ne 0 ] ; then
