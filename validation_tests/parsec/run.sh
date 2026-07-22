@@ -13,11 +13,19 @@
 
 #NC='\033[0m'
 #fi
+
+set -x
+
+CUDA_MCA=""
+if [[ "$PWD" == *cuda* ]]; then
+    CUDA_MCA="--mca device_cuda_memory_use 15"
+fi
+
 ret=0
 for PROGNAME in dtd_test_allreduce write_check; do
     echo -e "${BBLUE}### TESTING${NC} $PROGNAME"
     echo -e "${BBLUE}# $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}${NC}"
-    eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}
+    eval $TEST_RUN_CMD $TEST_RUN_PROCFLAG $NP ./${PROGNAME}  $CUDA_MCA
     RC=$?
     if [ $RC != 0 ]; then
       echo -e "${BBLUE}#   ${BRED}[FAILED]${NC}${BBLUE}: $PROGNAME${NC}"
