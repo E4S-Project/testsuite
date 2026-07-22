@@ -2,11 +2,11 @@
 #!/bin/bash
 . ./setup.sh
 set -x
-cd ./mpi_cuda_mm
   echo "Running with TAU:" 
   export TAU_METRICS=time:PAPI_L1_DCM
 #  mpirun -np 4 
   timeout -k 15 300 ${TEST_RUN} tau_exec -T cupti -ebs -monitoring ./add 
+  # timeout -k 15 300 mpirun -np 1 tau_exec -T cupti -ebs -monitoring ./add
   retVal=$?
   if [ $retVal -ne 0 ] ; then
     exit $retVal
