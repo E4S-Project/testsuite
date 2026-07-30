@@ -84,6 +84,8 @@ int main(int argc, char *argv[])
     /* Optional: initialise GPU features when the library was built with
      * CUDA/HIP support.  This is a no-op on CPU-only builds. */
     HYPRE_DeviceInitialize();
+    HYPRE_SetMemoryLocation(HYPRE_MEMORY_HOST);
+    HYPRE_SetExecutionPolicy(HYPRE_EXEC_HOST);
 
     /* ------------------------------------------------------------------ */
     /* 2.  Problem definition: 1-D Poisson, N unknowns                     */
