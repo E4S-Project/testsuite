@@ -1,0 +1,1 @@
+Example taken from https://gitlab.com/Molcas/OpenMolcas/-/blob/master/test/standard/005.input?ref_type=heads. For more information about OpenMolcas, see https://gitlab.com/Molcas/OpenMolcas/-/tree/master?ref_type=heads.
