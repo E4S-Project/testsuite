@@ -127,7 +127,7 @@ my_rpc_handler_bulk_cb(const struct hg_cb_info *info)
     assert(info->ret == 0);
 
     /* open file (NOTE: this is blocking for now, for simplicity ) */
-    sprintf(filename, "/tmp/hg-stock-%d.txt", my_rpc_state_p->in.input_val);
+    sprintf(filename, "/tmp/hg-stock-%d-%d.txt", (int)getpid(), my_rpc_state_p->in.input_val);
     memset(&my_rpc_state_p->acb, 0, sizeof(my_rpc_state_p->acb));
     my_rpc_state_p->acb.aio_fildes =
         open(filename, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
