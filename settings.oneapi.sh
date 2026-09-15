@@ -15,3 +15,12 @@ export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="4"
 export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
+
+
+# Limit threaded applications
+export OMP_NUM_THREADS=4
+                                                                                                                                     export OPENBLAS_NUM_THREADS=2                                                                                                        export MKL_NUM_THREADS=2
+export GOTO_NUM_THREADS=2                                                                                                            export VECLIB_MAXIMUM_THREADS=2
+export BLIS_NUM_THREADS=2
+export TBB_NUM_THREADS=2
+export VTK_SMP_MAX_THREADS=2

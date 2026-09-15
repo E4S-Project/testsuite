@@ -18,3 +18,14 @@ export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
 #export TEST_ROCM_ARCH="amdgpu_target=gfx908"
 #export TEST_CUDA_ARCH="cuda_arch=80"
 #export TESTSUITE_VARIANT="%gcc"
+
+# Limit threaded applications
+export OMP_NUM_THREADS=4
+
+export OPENBLAS_NUM_THREADS=2
+export MKL_NUM_THREADS=2
+export GOTO_NUM_THREADS=2
+export VECLIB_MAXIMUM_THREADS=2
+export BLIS_NUM_THREADS=2
+export TBB_NUM_THREADS=2
+export VTK_SMP_MAX_THREADS=2
