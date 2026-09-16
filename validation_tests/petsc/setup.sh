@@ -18,7 +18,7 @@ elif [  "$THISDIR" = "$TESTNAME-rocm" ];then
         spackLoadUnique "$TESTNAME+rocm $TEST_ROCM_ARCH $TESTVERSION"
 	export ROCMTEST=true
 else
-        spackLoadUnique $TESTNAME ~cuda~rocm $TESTVERSION
+        spackLoadUnique $TESTNAME ~cuda~rocm+mpi+superlu-dist $TESTVERSION
 fi
 
 
