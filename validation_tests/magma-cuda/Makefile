@@ -12,7 +12,7 @@ OPENBLASDIR  ?= "${OPENBLAS_ROOT}"
 
 CC            = $(TEST_CC) #gcc
 FORT          = $(TEST_FTN) #gfortran
-LD            = $(TEST_CC) #gcc
+LD            = $(TEST_CXX) #gcc
 CFLAGS        = -Wall ${E4S_ACCEL} ${HIP_PLATFORM}
 # needs -fopenmp if MAGMA was compiled with OpenMP
 LDFLAGS       = -Wall #-fopenmp
