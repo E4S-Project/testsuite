@@ -143,7 +143,7 @@ if [ "$E4S_TEST_SETUP_MODE" == "module" ]; then
         if [[ "$selected_mod" =~ [Cc][Uu][Dd][Aa]([0-9]+) ]]; then
             export SPACK_CUDA_ARCH="${BASH_REMATCH[1]}"
         fi
-        if [[ "$selected_mod" =~ [Rr][Oo][Cc][Mm]([0-9]+) ]]; then
+        if [[ "$selected_mod" =~ (gfx[0-9a-z]+) ]]; then   #[Rr][Oo][Cc][Mm]([0-9]+) ]]; then
             export SPACK_ROCM_ARCH="${BASH_REMATCH[1]}"
         fi
 
@@ -412,6 +412,10 @@ spackLoadUnique(){
    
    echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
    export E4S_TEST_HASH=$HASH
+
+   export SPACK_CUDA_ARCH=$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("cuda_arch",[""])[0])' 2>/dev/null)
+   export SPACK_ROCM_ARCH=$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("amdgpu_target",[""])[0])' 2>/dev/null)
+
    #return 0
    ARCH_IFS=$IFS
    FIND_BLOB2=`spack find $dArg /$HASH`
