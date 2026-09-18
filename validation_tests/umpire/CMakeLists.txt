@@ -37,6 +37,10 @@ if (UMPIRE_ENABLE_CUDA)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
 endif()
 
+if (UMPIRE_ENABLE_HIP)
+  enable_language(HIP)
+endif()
+
 # Find pre-installed Umpire
 find_package(umpire REQUIRED)
 
@@ -94,6 +98,7 @@ if (UMPIRE_ENABLE_HIP)
   endif()
 
   add_executable(multi_device multi_device.cpp)
+  set_source_files_properties(multi_device.cpp PROPERTIES LANGUAGE HIP)
   target_link_libraries(multi_device PRIVATE umpire)
   list(APPEND umpire_examples multi_device)
 endif()
