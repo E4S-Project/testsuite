@@ -1,7 +1,12 @@
 #!/bin/bash
 . ./setup.sh
 set -x
-set -e
+#set -e
+grep -rEi "CXX_STANDARD|cxx_std_[0-9]+" "${CAMP_ROOT}"/lib*/cmake/camp/*.cmake 2>/dev/null
+grep -rEi "CXX_STANDARD|cxx_std_[0-9]+" "${UMPIRE_ROOT}"/lib*/cmake/umpire/*.cmake 2>/dev/null
+grep -rEi "CXX_STANDARD|cxx_std_[0-9]+" "${CHAI_ROOT}"/lib*/cmake/chai/*.cmake 2>/dev/null
+
+
 mkdir -p build
 cd build
 
