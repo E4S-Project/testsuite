@@ -370,6 +370,99 @@ spackGetUniqueExplicit(){
 #unset -x
 }
 
+
+get_spack_cuda_arch() {
+    local hash="$1"
+    spack find --json /"${hash}" | python3 -c '
+import sys, json, subprocess
+
+def detect():
+    # 1. Search Spack spec tree (root and dependencies)
+    try:
+        data = json.load(sys.stdin)
+        def search(obj):
+            if isinstance(obj, dict):
+                if "cuda_arch" in obj.get("parameters", {}):
+                    v = obj["parameters"]["cuda_arch"]
+                    if v and v[0]: return str(v[0])
+                for val in obj.values():
+                    res = search(val)
+                    if res: return res
+            elif isinstance(obj, list):
+                for item in obj:
+                    res = search(item)
+                    if res: return res
+            return None
+        res = search(data)
+        if res: return res
+    except Exception: pass
+
+    # 2. Query host GPU compute capability via nvidia-smi
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=compute_cap", "--format=csv,noheader"],
+            text=True, stderr=subprocess.DEVNULL
+        )
+        cc = out.strip().split("\n")[0].replace(".", "")
+        if cc: return cc
+    except Exception: pass
+
+    # 3. Fallback for non-GPU build node (Volta sm_70)
+    return "70"
+
+print(detect())
+' 2>/dev/null
+}
+
+get_spack_rocm_arch() {
+    local hash="$1"
+    spack find --json /"${hash}" | python3 -c '
+import sys, json, subprocess, re
+
+def detect():
+    # 1. Search Spack spec tree (root and dependencies)
+    try:
+        data = json.load(sys.stdin)
+        def search(obj):
+            if isinstance(obj, dict):
+                if "amdgpu_target" in obj.get("parameters", {}):
+                    v = obj["parameters"]["amdgpu_target"]
+                    if v and v[0]: return str(v[0])
+                for val in obj.values():
+                    res = search(val)
+                    if res: return res
+            elif isinstance(obj, list):
+                for item in obj:
+                    res = search(item)
+                    if res: return res
+            return None
+        res = search(data)
+        if res: return res
+    except Exception: pass
+
+    # 2. Query live host GPU via rocminfo
+    try:
+        out = subprocess.check_output(["rocminfo"], text=True, stderr=subprocess.DEVNULL)
+        match = re.search(r"gfx[0-9a-f]+", out)
+        if match:
+            return match.group(0)
+    except Exception: pass
+
+    # 3. Query live host GPU via rocm-smi
+    try:
+        out = subprocess.check_output(["rocm-smi", "--showshowproductname"], text=True, stderr=subprocess.DEVNULL)
+        match = re.search(r"gfx[0-9a-f]+", out)
+        if match:
+            return match.group(0)
+    except Exception: pass
+
+    # 4. Fallback for non-GPU build node (Common HPC target)
+    return "gfx90a"
+
+print(detect())
+' 2>/dev/null
+}
+
 spackLoadUnique(){
 
 	if [[ $E4S_TEST_SKIP_INTERNAL == "True" ]]; then
@@ -413,8 +506,8 @@ spackLoadUnique(){
    echo "$@ $TESTSUITE_VARIANT: $HASH" >&1
    export E4S_TEST_HASH=$HASH
 
-   export SPACK_CUDA_ARCH=$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("cuda_arch",[""])[0])' 2>/dev/null)
-   export SPACK_ROCM_ARCH=$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("amdgpu_target",[""])[0])' 2>/dev/null)
+   export SPACK_CUDA_ARCH=$(get_spack_cuda_arch "$HASH")  #$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("cuda_arch",[""])[0])' 2>/dev/null)
+   export SPACK_ROCM_ARCH=$(get_spack_rocm_arch "$HASH")  #$(spack find --json /$HASH | python3 -c 'import sys,json; d=json.load(sys.stdin)[0]["parameters"]; print(d.get("amdgpu_target",[""])[0])' 2>/dev/null)
 
    #return 0
    ARCH_IFS=$IFS

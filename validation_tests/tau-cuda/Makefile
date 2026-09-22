@@ -1,5 +1,5 @@
 MPI_CC=mpicc
-CC=nvcc -arch=native
+CC=nvcc -arch=sm_$(SPACK_CUDA_ARCH)
 CFLAGS=-Xcompiler -fopenmp -Xcompiler -fPIC
 LIBS=-lgomp 
 all: add
