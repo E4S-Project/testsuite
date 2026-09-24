@@ -1,5 +1,4 @@
-#!/bin/bash 
+#!/bin/bash -e
 . ./setup.sh
-
-spackTestRun $SUNDIALS_HASH
-#eval $TEST_RUN ./ph5example # -v
+cd examples/*/
+ctest --output-on-failure
