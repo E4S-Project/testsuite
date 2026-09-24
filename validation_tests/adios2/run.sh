@@ -1,5 +1,6 @@
 #!/bin/bash
-
 . ./setup.sh
-
-spackTestRun "${ADIOS2_HASH}"
+set -x
+set -e
+cd build
+ctest --output-on-failure
