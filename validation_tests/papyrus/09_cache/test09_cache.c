@@ -17,7 +17,7 @@ const char* v2[] = { "HTTPS://GOOGLE.COM", "HTTPS://FACEBOOK.COM", "HTTPS://TWIT
 
 
 int main(int argc, char** argv) {
-    MPI_Init(&argc, &argv);
+    int provided; MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     papyruskv_init(&argc, &argv, "kv_repo");
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
