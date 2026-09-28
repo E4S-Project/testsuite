@@ -390,15 +390,6 @@ def print_results(results_queue, num_tests):
 
     return final_ret, skipped, success, json_results
             
-    if shutdown_event.is_set():
-        print(red("Terminating any remaining active worker processes..."))
-        for p in Processes:
-            if p.is_alive():
-                p.terminate()
-
-    return final_ret, skipped, success, json_results
-
-
 # --- Main Orchestration ---
 
 def find_tests_to_run(testdir, skip_to, skip_if, test_only, skip_tests):
@@ -454,8 +445,8 @@ def main():
 
     global print_color
     print_color = args.print_color
-    test_only = set(args.test_only.split()) if args.test_only else set()
-    skip_tests = set(args.skip_tests.split()) if args.skip_tests else set()
+    test_only = set(args.test_only.replace(',',' ').split()) if args.test_only else set()
+    skip_tests = set(args.skip_tests.replace(',',' ').split()) if args.skip_tests else set()
     
     # Create the Manager and Queues in the main scope to ensure they live for the entire
     # duration of the script, preventing crashes from premature garbage collection.
