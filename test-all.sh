@@ -91,11 +91,15 @@ for var in TEST_CC_MPI TEST_CXX_MPI TEST_FTN_MPI TEST_RUN_CMD; do
 done
 
 # Spack, if present
-if command -v spack &>/dev/null; then
+# Spack check
+if ! command -v spack &>/dev/null; then
+    echo "Error: 'spack' command not found. Aborting test." >&2
+    return 1 2>/dev/null || exit 1
+    echo "================================="
+fi
     echo "--- Spack ---"
     echo "  spack: $(command -v spack)  ($(spack --version 2>&1))"
     echo "  env:   $(spack env status 2>&1)"
-fi
 
 #echo "PATH: $PATH"
 echo "================================="
