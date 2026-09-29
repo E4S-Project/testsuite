@@ -1,0 +1,68 @@
+*-------------------------------------------------------------------------------
+* Molecule: H2O
+* Basis: ano-s 3s2p1d/2s1p
+* Symmetry: C2v
+* Features tested: SEW(inline),SCF,RASSCF,CASPT2,CASPT2_GRAD,SLAPAF
+* Responsible person: P.-O. Widmark 041227
+* Comments: Geometry optimization with CASPT2_GRAD
+*-------------------------------------------------------------------------------
+>>>>>>>>>>>>>>>>>>> DO while <<<<<<<<<<<<<<<<<<<<
+ &SEWARD &END
+Symmetry
+x y
+Basis set
+H.ANO-L-MB
+H1             -0.83485   0.00000  -0.54410 angstrom
+End of basis
+Basis set
+O.ANO-L-MB
+O               0.00000   0.00000   0.14286 angstrom
+End of basis
+NoCD
+End of input
+*-------------------------------------------------------------------------------
+>>>>>>>>>>> if ( iter = 1 ) <<<<<<<<<<<<<<
+ &SCF &END
+Title
+Water
+OCCUPIED
+ 3 1 1 0
+End of Input
+>>>>>>>>>  endif <<<<<<<<<<<<<<<<<<<<<<<<
+*-------------------------------------------------------------------------------
+ &RASSCF &END
+Title
+water
+NACTEL
+ 8 0 0
+Inactive
+ 1 0 0 0
+Ras2
+ 3 2 1 0
+Symmetry
+ 1
+Spin
+ 1
+ITER
+100 100
+FileOrb
+  SCFORB
+End of Input
+*-------------------------------------------------------------------------------
+ &CASPT2 &End
+MaxIterations
+20
+IPEA
+0.0
+PROPerties
+End of Input
+*-------------------------------------------------------------------------------
+ &Alaska &End
+End of Input
+*-------------------------------------------------------------------------------
+ &SLAPAF &END
+Iterations
+10
+End of input
+>>>>>>>>>>>>> ENDDO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+*-------------------------------------------------------------------------------
