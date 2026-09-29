@@ -1,6 +1,6 @@
 #!/bin/bash -e
 . ./setup.sh
-
+set -x
 cd xmas_tree/build
 ./g_xmas_tree
 
