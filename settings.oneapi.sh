@@ -15,7 +15,7 @@ export TEST_RUN_CMD=mpirun
 export TEST_RUN_PROCFLAG="-np"
 export TEST_RUN_PROCARG="4"
 export TEST_RUN="$TEST_RUN_CMD $TEST_RUN_PROCFLAG $TEST_RUN_PROCARG"
-
+export TEST_RUN_SEQ="$TEST_RUN_CMD $TEST_RUN_PROCFLAG 1"
 
 # Limit threaded applications
 export OMP_NUM_THREADS=4
