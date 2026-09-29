@@ -17,4 +17,4 @@ else
         spackLoadUnique $TESTNAME ~cuda~rocm $TESTVERSION
 fi
 
-spackLoadUniqueNoX cmake@3.22.1:
+spackLoadUniqueNoX cmake@3.31.11:
