@@ -13,7 +13,7 @@ cmake_policy(VERSION 3.21...${CMAKE_VERSION})
 project(Chai-Examples LANGUAGES C CXX VERSION 2022.03.0)
 
 # 1. Standard CMake replacement for set(BLT_CXX_STD c++14) (breaks recent chai, don't use)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 2. Replicate BLT's behavior by sending all executables to build/bin/
@@ -36,7 +36,7 @@ if (CHAI_ENABLE_CUDA)
     set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
   endif()
   enable_language(CUDA)
-  set(CMAKE_CUDA_STANDARD 17)
+  set(CMAKE_CUDA_STANDARD 20)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(CMAKE_CUDA_ARCHITECTURES $ENV{SPACK_CUDA_ARCH})
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-extended-lambda")
