@@ -15,9 +15,9 @@ else
     spackLoadUnique amrex~rocm~cuda
 fi
 
-if ! command -v cmake >/dev/null 2>&1 ; then
-    spackLoadUniqueNoX cmake@3.22.2:
-fi
+#if ! command -v cmake >/dev/null 2>&1 ; then
+    spackLoadUniqueNoX cmake@3.31.12:
+#fi
 
 # Cap MPI ranks on GPU runs to avoid heavy oversubscription if only 1 GPU is present
 if [ "$USECUDA" = "1" ] || [ "$USEROCM" = "1" ]; then
