@@ -76,7 +76,7 @@ fi
 ./inout_data
 RC=$?
 echo -n "Data in/out (2):"
-if [ $? == 0 ] ; then
+if [ $RC == 0 ] ; then
     echo -e "                                 ${BGREEN}[PASSED]${NC}"
 else
     echo -e "                                 ${BRED}[FAILED]${NC}"

@@ -18,7 +18,7 @@ for PROG in initfinalize sendrecv broadcast onesided ; do
     #mpiexec --allow-run-as-root -n 4 
     eval $TEST_RUN --allow-run-as-root ./${PROG}
     RC=$?
-    if [ $? != 0 ]; then
+    if [ $RC != 0 ]; then
 	echo -e "                                 ${BRED}[FAILED]${NC}"
     else
 	echo -e "                                 ${BGREEN}[PASSED]${NC}"
