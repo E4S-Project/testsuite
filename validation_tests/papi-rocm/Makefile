@@ -1,10 +1,10 @@
 PAPI_ROCM_ROOT ?= $(ROCM_ROOT) #/path/to/rocm/
 
-CC        = $(PAPI_ROCM_ROOT)/bin/hipcc
-CXX       = $(PAPI_ROCM_ROOT)/bin/hipcc
-CXXFLAGS += -g -O2 -fopenmp
+CC        = $(HIP_ROOT)/bin/hipcc
+CXX       = $(HIP_ROOT)/bin/hipcc
+CXXFLAGS += -g -O2
 CPPFLAGS += -I$(PAPI_ROCM_ROOT)/include -I$(PAPI_ROOT)/include
-LDFLAGS  += -L$(PAPI_ROOT)/lib -lpapi -fopenmp
+LDFLAGS  += -L$(PAPI_ROOT)/lib -lpapi
 
 ALL: single_monitor multi_monitor overflow
 
