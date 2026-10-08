@@ -1,3 +1,4 @@
 #!/bin/bash
 
-echo "Nothing to clean."
+rm -rf data
+rm -rf model.pth
