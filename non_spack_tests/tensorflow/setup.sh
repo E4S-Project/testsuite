@@ -1,3 +1,16 @@
 #!/bin/bash
 
-echo "Nothing to setup."
+THISDIR=$(basename "$PWD")
+
+if [ "$THISDIR" = "tensorflow-cuda" ] && ! { command -v nvidia-smi >/dev/null && nvidia-smi -L 2>/dev/null | grep -q '^GPU'; }; then
+    echo "No NVIDIA GPU."
+    export SPACK_LOAD_RESULT=215
+elif [ "$THISDIR" = "tensorflow-rocm" ] && ! { command -v amd-smi >/dev/null && amd-smi list 2>/dev/null | grep -q '^GPU'; }; then
+    echo "No AMD GPU."
+    export SPACK_LOAD_RESULT=215
+elif ! python3 -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('tensorflow') else 1)"; then
+    echo "Tensorflow not installed."
+    export SPACK_LOAD_RESULT=215
+else
+    echo "Continuing to Tensorflow test"
+fi
