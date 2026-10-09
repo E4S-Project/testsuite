@@ -1,7 +1,9 @@
 #!/bin/bash
 
 . ./setup.sh
+set -e
+set -x
 
-./ascent_render_example
-./ascent_render_cinema_example
+${TEST_RUN_SEQ} ./ascent_render_example
+${TEST_RUN_SEQ} ./ascent_render_cinema_example
 
