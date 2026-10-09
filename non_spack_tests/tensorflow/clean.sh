@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm -rf .setup.sh.swp
+echo "Nothing to clean."
