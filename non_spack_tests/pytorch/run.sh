@@ -1,6 +1,8 @@
 #!/bin/bash -e
 set -x
 
+. ./setup.sh
+
 THISDIR=$(basename "$PWD")
 
 if [ "$THISDIR" = "pytorch-cuda" ]; then
