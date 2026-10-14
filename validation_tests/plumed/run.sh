@@ -1,5 +1,8 @@
 #!/bin/bash
 . ./setup.sh
+
+unset PLUMED_ROOT
+
 set -e
 set -x
 
