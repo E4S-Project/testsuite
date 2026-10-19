@@ -1,6 +1,7 @@
 #!/bin/bash -e
 . ./setup.sh
 set -x
+export DYNINSTAPI_RT_LIB="$DYNINST_ROOT/lib/libdyninstAPI_RT.so"
 cd xmas_tree/build
 ./g_xmas_tree
 
