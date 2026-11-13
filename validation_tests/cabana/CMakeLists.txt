@@ -3,4 +3,4 @@ project(CabanaExamples CXX)
 find_package(Cabana REQUIRED)
 
 add_executable(Cabana_Example example_aosoa.cpp)
-target_link_libraries(Cabana_Example Cabana::cabanacore)
+target_link_libraries(Cabana_Example Cabana::Core)

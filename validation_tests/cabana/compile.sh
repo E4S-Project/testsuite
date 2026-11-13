@@ -15,6 +15,6 @@ fi
 
 
 cmake $COMPDEF \
-	-DCabana_ROOT=Cabana_ROOT .
+	-DCabana_ROOT=$Cabana_ROOT .
 
 make
