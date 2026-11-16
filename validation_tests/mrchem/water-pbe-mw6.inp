@@ -1,0 +1,23 @@
+# vim:syntax=sh:
+
+world_prec = 1.0e-6     # Overall numerical precision (no default)
+world_unit = bohr       # Coordinates in bohr (default)
+
+Molecule {
+$coords
+O       0.0000  0.0000  -0.1250
+H      -1.4375  0.0000   1.0250
+H       1.4375  0.0000   1.0250
+$end
+}
+
+WaveFunction {
+  method = PBE          # Set wavefunction method (no default)
+}
+
+SCF {
+  start_prec = 1.0e-3   # Set dynamic SCF precision (default = world_prec)
+  energy_thrs = 1.0e-6  # Set energy convergence threshold (default = -1.0)
+  orbital_thrs = -1.0   # Unset orbital convergence threshold (default = 10*world_prec)
+}
+
