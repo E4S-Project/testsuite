@@ -1,0 +1,29 @@
+<input>
+ 
+   <title>Diamond</title>
+ 
+   <structure speciespath="./">
+ 
+      <crystal scale="6.7274">
+         <basevect>0.0   0.5   0.5</basevect>
+         <basevect>0.5   0.0   0.5</basevect>
+         <basevect>0.5   0.5   0.0</basevect>
+      </crystal>
+ 
+      <species speciesfile="C.xml">
+         <atom coord="0.00 0.00 0.00"/>
+         <atom coord="0.25 0.25 0.25"/>
+      </species>
+ 
+   </structure>
+ 
+   <groundstate 
+      ngridk="2 2 2"
+      rgkmax="4.0"
+      gmaxvr="8"
+      maxscl="3"
+      outputlevel="low"
+      xctype="GGA_PBE_SOL">
+   </groundstate>
+ 
+</input>
